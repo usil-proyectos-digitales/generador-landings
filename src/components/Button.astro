@@ -1,0 +1,54 @@
+---
+/**
+ * Button — Botón reutilizable con variantes y soporte para iconos.
+ * Usa tokens `bu-*` del Design System V2.
+ * @prop variant: 'primary' | 'secondary' | 'outline' | 'ghost'
+ * @prop href: si está presente, renderiza como <a>; si no, como <button>
+ * @prop size: 'sm' | 'md' | 'lg'
+ */
+interface Props {
+  variant?: 'primary' | 'secondary' | 'outline' | 'ghost';
+  size?: 'sm' | 'md' | 'lg';
+  href?: string;
+  type?: 'button' | 'submit' | 'reset';
+  class?: string;
+  ariaLabel?: string;
+}
+
+const {
+  variant = 'primary',
+  size = 'md',
+  href,
+  type = 'button',
+  class: className = '',
+  ariaLabel,
+} = Astro.props;
+
+const base =
+  'inline-flex items-center justify-center gap-2 font-montserrat font-semibold rounded-full transition-all duration-300 no-underline';
+
+const variants: Record<string, string> = {
+  primary: 'bg-bu-primary text-bu-surface hover:opacity-90',
+  secondary: 'bg-bu-secondary text-bu-surface hover:opacity-90',
+  outline: 'bg-transparent border-2 border-bu-primary text-bu-primary hover:bg-bu-primary hover:text-bu-surface',
+  ghost: 'bg-transparent text-bu-text hover:bg-bu-surface/50',
+};
+
+const sizes: Record<string, string> = {
+  sm: 'px-4 py-2 text-sm',
+  md: 'px-6 py-3 text-base',
+  lg: 'px-8 py-4 text-lg',
+};
+
+const cls = [base, variants[variant], sizes[size], className].filter(Boolean).join(' ');
+const Tag = href ? 'a' : 'button';
+---
+
+<Tag
+  href={href}
+  type={!href ? type : undefined}
+  class={cls}
+  aria-label={ariaLabel}
+>
+  <slot />
+</Tag>
