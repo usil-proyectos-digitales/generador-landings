@@ -6,84 +6,71 @@
  *
  * Renderiza un bloque con:
  *   - Título principal (Save the Date)
- *   - Hasta 6 cards con icono + etiqueta + valor (Fecha, Hora, Modalidad, etc.)
+ *   - 1–6 cards con icono SVG + etiqueta + valor
  *   - Texto de bajada (lugar / dirección)
  *
  * Sistema de color:
  *   El widget consume los 5 tokens semánticos del Design System V2,
- *   definidos en `[data-bu="..."]` dentro de `src/styles/global.css`:
- *     - --bu-color-brand-primary   → texto principal
- *     - --bu-color-surface-light   → fondo de la sección
- *     - --bu-color-neutral         → texto alterno (bajada)
- *
- *   Al cambiar `data-bu` del <html> en runtime (switcher del visor),
- *   estas variables se reescriben y el widget se repinta sin recargar.
+ *   definidos en `[data-bu="..."]` dentro de `src/styles/global.css`.
+ *   Los SVGs usan `currentColor` → cambian automáticamente con el BU.
  *
  * Iconos:
- *   Los iconos (fecha, hora, modalidad/lugar) son IMÁGENES FIJAS
- *   servidas desde `/src/components/widgets/5-save-the-date/images/`.
- *   Cambiarán cuando se suban nuevas imágenes para la unidad de negocio.
+ *   SVG INLINE definidos en `./icons.ts` (no archivos servidos).
+ *   WordPress nunca los toca → evita problemas de sanitización.
+ *   Cambian de color con `currentColor` heredado del BU (sin duplicar archivos).
  *
- * Tipografía parametrizable vía props (`fontTitle`, `fontBody`) con
- * defaults equivalentes al legacy (`font-anton` / `font-montserrat`).
+ * ACF (WordPress):
+ *   - `title`         ← ACF `text`     "Título"
+ *   - `cards[]`       ← ACF `repeater` "Cards" (label, value, iconSlug)
+ *   - `bottomText`    ← ACF `wysiwyg`  "Texto bajada"
+ *   - `id`            ← opcional, para anchors y analytics
  *
- * Pensado para integración 1:1 con Custom Fields de WordPress (ACF):
- *   - `title`             ← ACF `text`     "Título"
- *   - `cards[]`           ← ACF `repeater` "Cards" (label, value, icon)
- *   - `bottomText`        ← ACF `wysiwyg`  "Texto bajada"
- *   - `id`                ← opcional, para anchors y analytics
+ * Comportamiento:
+ *   - Cards con `label` o `value` vacíos NO se renderizan.
+ *   - Máximo 6 cards (defensa legacy).
  */
-interface CardItem {
+import { ICONS, type IconSlug } from './icons.ts';
+
+export interface CardItem {
   /** Etiqueta visible (ej. "Fecha:", "Hora:", "Modalidad:"). */
   label: string;
   /** Valor a mostrar (ej. "25 y 26 abril"). */
   value: string;
-  /** Slug del icono fijo a usar: 'fecha' | 'hora' | 'modalidad'. */
-  icon: 'fecha' | 'hora' | 'modalidad';
+  /** Slug del icono a usar. Ver `ICON_SLUGS`. */
+  iconSlug: IconSlug;
 }
 
 interface Props {
-  /** Título principal. Default: 'Save the Date'. */
+  /** Título principal. */
   title?: string;
-  /** Lista de cards a renderizar (1–6 elementos). Default: 3 cards demo. */
+  /** Lista de cards (1–6 elementos). Cards vacías se omiten automáticamente. */
   cards?: CardItem[];
-  /** Texto de bajada (HTML permitido porque viene de un WYSIWYG ACF). */
+  /** Texto de bajada (HTML permitido por venir de WYSIWYG ACF). */
   bottomText?: string;
   /** ID del <section>, útil para anchors y tracking. */
   id?: string;
-  /** Familia tipográfica del título (default: 'anton' = legacy v5.7). */
+  /** Familia tipográfica del título. */
   fontTitle?: 'anton' | 'montserrat';
-  /** Familia tipográfica del cuerpo (default: 'montserrat'). */
-  fontBody?: 'montserrat';
-  /** Color de fondo de la sección (default: gris claro #F0F0F0 del legacy). */
+  /** Color de fondo de la sección. */
   background?: 'gray' | 'white' | 'transparent';
 }
 
 const {
   title = 'Save the Date',
   cards = [
-    { label: 'Fecha:', value: '25 y 26 abril', icon: 'fecha' },
-    { label: 'Hora:', value: '9:00 - 18:00', icon: 'hora' },
-    { label: 'Modalidad:', value: 'Híbrida', icon: 'modalidad' },
+    { label: 'Fecha:', value: '25 y 26 abril', iconSlug: 'fecha' },
+    { label: 'Hora:', value: '9:00 - 18:00', iconSlug: 'hora' },
+    { label: 'Modalidad:', value: 'Híbrida', iconSlug: 'modalidad' },
   ],
   bottomText = 'USIL, campus 1 - Aula Magna<br> <span class="font-normal">(av. La Fontana 550, La Molina)</span>',
   id = 'save-the-date',
   fontTitle = 'anton',
-  fontBody = 'montserrat',
   background = 'gray',
 } = Astro.props;
 
-// Helpers: clases por familia tipográfica.
+// Helpers de tipografía.
 const titleFontClass = fontTitle === 'anton' ? 'font-anton' : 'font-montserrat';
-const bodyFontClass = fontBody === 'montserrat' ? 'font-montserrat' : 'font-montserrat';
-
-// Mapa de iconos fijos (rutas relativas servidas desde public/ o importadas).
-// Se mantienen como strings — cambiarán cuando se suban nuevas imágenes por BU.
-const ICONS: Record<CardItem['icon'], string> = {
-  fecha: './images/std_icono_fecha.webp',
-  hora: './images/std_icono_hora.webp',
-  modalidad: './images/std_icono_modalidad.webp',
-};
+const bodyFontClass = 'font-montserrat';
 
 // Fondo de la sección según prop.
 const bgClass =
@@ -93,22 +80,23 @@ const bgClass =
       ? 'bg-transparent'
       : 'bg-[#F0F0F0]';
 
-// Clases base compartidas.
 const sectionBase = 'py-16 w-full transition-opacity duration-300 md:py-24 font-montserrat';
 const containerCls = 'container relative z-10 px-4 mx-auto md:px-6';
 
-// Límite defensivo: máx 6 cards (comportamiento legacy).
-const visibleCards = (cards ?? []).slice(0, 6);
-// Caso especial de 4 cards: legacy forzaba ancho 700px (2x2).
+// ── Filtrado de cards ──────────────────────────────────────
+// Cards con label o value vacíos NO se renderizan (comportamiento
+// esperado en WP ACF cuando el editor no completa una fila del repeater).
+const validCards = (cards ?? []).filter(
+  (c) => c.label?.trim() && c.value?.trim()
+).slice(0, 6);
+
+// Caso especial legacy: 4 cards → ancho 700px (2x2 grid).
 const cardsContainerClass =
-  visibleCards.length === 4
+  validCards.length === 4
     ? 'hk-std-cards-container flex flex-wrap justify-center gap-8 w-full max-w-[700px] mx-auto'
     : 'hk-std-cards-container flex flex-wrap justify-center gap-8 w-full max-w-[1280px] mx-auto';
 ---
 
-{/* ─────────────────────────────────────────────────────────────── */}
-{/* VARIANTE 5.7 — Título + Cards + Bajada                          */}
-{/* ─────────────────────────────────────────────────────────────── */}
 <section
   id={id}
   data-widget="save-the-date"
@@ -129,40 +117,42 @@ const cardsContainerClass =
       </h2>
 
       {/* Cards */}
-      {visibleCards.length > 0 && (
+      {validCards.length > 0 && (
         <div class={cardsContainerClass}>
-          {visibleCards.map((card) => (
-            <div class="px-8 py-6 bg-bu-surface rounded-lg flex items-center justify-center gap-4 lg:w-[300px] lg:min-w-[300px] md:w-[300px] md:min-w-[300px] w-[280px] min-w-[280px] flex-none">
-              <div class="flex justify-center items-center">
-                <img
-                  src={ICONS[card.icon]}
-                  class="hk-card-fecha-img"
-                  alt={card.label.replace(':', '')}
-                  loading="lazy"
-                />
+          {validCards.map((card) => {
+            // Render SVG inline vía set:html. Si el slug es desconocido,
+            // caemos al icono 'fecha' como fallback silencioso.
+            const iconFn = ICONS[card.iconSlug] ?? ICONS.fecha;
+            const iconSvg = iconFn({ class: 'hk-card-icon', size: 48 });
+            return (
+              <div
+                class="hk-std-card px-8 py-6 bg-bu-primary text-bu-surface rounded-lg flex items-center justify-center gap-4 lg:w-[300px] lg:min-w-[300px] md:w-[300px] md:min-w-[300px] w-[280px] min-w-[280px] flex-none"
+                data-card-icon={card.iconSlug}
+              >
+                <div class="flex justify-center items-center shrink-0" set:html={iconSvg} />
+                <div class="box-contenido w-[120px] md:w-fit text-left">
+                  <h3
+                    class:list={[
+                      'hk-card-label',
+                      bodyFontClass,
+                      'text-mont-card-content-mobile md:text-mont-card-content font-normal',
+                    ]}
+                  >
+                    {card.label}
+                  </h3>
+                  <p
+                    class:list={[
+                      'hk-card-value',
+                      bodyFontClass,
+                      'text-mont-card-title-mobile md:text-mont-card-title font-extrabold',
+                    ]}
+                  >
+                    {card.value}
+                  </p>
+                </div>
               </div>
-              <div class="box-contenido w-[120px] md:w-fit text-left">
-                <h3
-                  class:list={[
-                    'hk-card-title text-bu-text w-fit',
-                    bodyFontClass,
-                    'text-mont-card-content-mobile md:text-mont-card-content',
-                  ]}
-                >
-                  {card.label}
-                </h3>
-                <p
-                  class:list={[
-                    'hk-card-text text-bu-text w-fit',
-                    bodyFontClass,
-                    'text-mont-card-title-mobile md:text-mont-card-title',
-                  ]}
-                >
-                  {card.value}
-                </p>
-              </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
 
@@ -171,7 +161,7 @@ const cardsContainerClass =
         <div class="mt-12">
           <p
             class:list={[
-              'text-base font-extrabold hk-std-texto-bajada md:text-2xl',
+              'text-base font-extrabold hk-std-texto-bajada hk-desc md:text-2xl',
               bodyFontClass,
               'text-bu-text',
             ]}

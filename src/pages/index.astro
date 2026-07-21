@@ -375,6 +375,76 @@ const busList = Object.entries(buColors.bus).map(([id, palette]) => ({
       border-radius: 0.25rem;
       margin: 0;
     }
+    .visor__control-hint-inline {
+      display: block;
+      font-weight: 400;
+      font-size: 0.625rem;
+      color: #64748b;
+      text-transform: none;
+      letter-spacing: 0;
+      margin-top: 0.125rem;
+    }
+
+    /* ── Cards editor ────────────────────────────────────────── */
+    .visor__cards-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+    .visor__card-row {
+      display: grid;
+      grid-template-columns: auto 1fr 1fr auto;
+      gap: 0.375rem;
+      align-items: center;
+    }
+    .visor__card-row select,
+    .visor__card-row input {
+      padding: 0.4375rem 0.5rem;
+      font-size: 0.8125rem;
+      border: 1px solid #334155;
+      border-radius: 0.375rem;
+      background: #1e293b;
+      color: #e2e8f0;
+    }
+    .visor__card-icon {
+      min-width: 5.5rem;
+    }
+    .visor__card-remove {
+      width: 1.75rem;
+      height: 1.75rem;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid #334155;
+      border-radius: 0.375rem;
+      background: #1e293b;
+      color: #f87171;
+      cursor: pointer;
+      font-size: 0.875rem;
+      line-height: 1;
+    }
+    .visor__card-remove:hover {
+      background: #7f1d1d;
+      color: #ffffff;
+      border-color: #7f1d1d;
+    }
+    .visor__card-add {
+      margin-top: 0.5rem;
+      padding: 0.5rem 0.75rem;
+      font-size: 0.75rem;
+      font-weight: 600;
+      border: 1px dashed #475569;
+      border-radius: 0.5rem;
+      background: transparent;
+      color: #94a3b8;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    .visor__card-add:hover {
+      border-color: #3b82f6;
+      color: #3b82f6;
+      background: rgba(59, 130, 246, 0.05);
+    }
 
     /* ── RESPONSIVE ──────────────────────────────────────────── */
     @media (max-width: 1024px) {
@@ -522,13 +592,16 @@ const busList = Object.entries(buColors.bus).map(([id, palette]) => ({
                     const previewId = `preview-${w.id}-${v.id}`;
                     // Si el widget expone un propsAdapter, lo usamos; si no, pasamos
                     // las props canónicas (title/description/variant/id) directamente.
+                    // El `cards` (si existe en defaults) se propaga al adapter también.
+                    const adapterInput = {
+                      title: w.defaults.title,
+                      description: w.defaults.description,
+                      variant: v.id,
+                      id: previewId,
+                      ...(w.defaults.cards ? { cards: w.defaults.cards } : {}),
+                    };
                     const componentProps = w.propsAdapter
-                      ? w.propsAdapter({
-                          title: w.defaults.title,
-                          description: w.defaults.description,
-                          variant: v.id,
-                          id: previewId,
-                        })
+                      ? w.propsAdapter(adapterInput)
                       : {
                           title: w.defaults.title,
                           description: w.defaults.description,
@@ -575,7 +648,7 @@ const busList = Object.entries(buColors.bus).map(([id, palette]) => ({
               </div>
 
               <div class="visor__control">
-                <label for={`desc-${w.id}`}>Descripción (HTML permitido)</label>
+                <label for={`desc-${w.id}`}>{w.defaults.cards ? 'Bajada (HTML permitido)' : 'Descripción (HTML permitido)'}</label>
                 <textarea
                   id={`desc-${w.id}`}
                   data-control="description"
@@ -584,6 +657,60 @@ const busList = Object.entries(buColors.bus).map(([id, palette]) => ({
                   set:text={w.defaults.description}
                 />
               </div>
+
+              {/* Editor de cards (solo si el widget las expone en defaults) */}
+              {w.defaults.cards && (
+                <div class="visor__control">
+                  <label>
+                    Cards
+                    <span class="visor__control-hint-inline">
+                      (vacías no se renderizan — comportamiento ACF)
+                    </span>
+                  </label>
+                  <div class="visor__cards-list" data-cards-editor={w.id}>
+                    {w.defaults.cards.map((card, i) => (
+                      <div class="visor__card-row" data-card-row={i}>
+                        <select
+                          class="visor__card-icon"
+                          data-card-field={`iconSlug-${w.id}-${i}`}
+                          aria-label="Icono"
+                        >
+                          <option value="fecha" selected={card.iconSlug === 'fecha'}>📅 Fecha</option>
+                          <option value="hora" selected={card.iconSlug === 'hora'}>🕐 Hora</option>
+                          <option value="modalidad" selected={card.iconSlug === 'modalidad'}>📱 Modalidad</option>
+                        </select>
+                        <input
+                          type="text"
+                          placeholder="Etiqueta (ej. Fecha:)"
+                          value={card.label}
+                          data-card-field={`label-${w.id}-${i}`}
+                          aria-label="Etiqueta"
+                        />
+                        <input
+                          type="text"
+                          placeholder="Valor (ej. 25 y 26 abril)"
+                          value={card.value}
+                          data-card-field={`value-${w.id}-${i}`}
+                          aria-label="Valor"
+                        />
+                        <button
+                          type="button"
+                          class="visor__card-remove"
+                          data-card-remove={i}
+                          aria-label="Eliminar card"
+                        >✕</button>
+                      </div>
+                    ))}
+                  </div>
+                  <button
+                    type="button"
+                    class="visor__card-add"
+                    data-card-add={w.id}
+                  >
+                    + Agregar card
+                  </button>
+                </div>
+              )}
 
               <p class="visor__controls-hint">
                 💡 Estos campos mapean 1:1 con los Custom Fields de WordPress (ACF).
@@ -670,6 +797,59 @@ const busList = Object.entries(buColors.bus).map(([id, palette]) => ({
       });
 
     // ── 4. Live prop editing ────────────────────────────────────
+
+    // Mapa de iconos SVG inline (mismas funciones que el componente).
+    // Lo redefinimos en cliente para el live-editing de cards.
+    const ICON_SLUGS = ['fecha', 'hora', 'modalidad'] as const;
+    type IconSlug = typeof ICON_SLUGS[number];
+    const svgAttrs = (size: number) =>
+      `xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"`;
+    const ICONS_SVG: Record<IconSlug, string> = {
+      fecha: `<svg ${svgAttrs(48)}><rect x="10" y="14" width="44" height="40" rx="3"/><line x1="10" y1="24" x2="54" y2="24"/><line x1="22" y1="8" x2="22" y2="18"/><line x1="42" y1="8" x2="42" y2="18"/></svg>`,
+      hora: `<svg ${svgAttrs(48)}><circle cx="32" cy="32" r="22"/><polyline points="32,18 32,32 42,38"/></svg>`,
+      modalidad: `<svg ${svgAttrs(48)}><rect x="20" y="8" width="24" height="48" rx="3"/><line x1="28" y1="48" x2="36" y2="48"/><line x1="20" y1="20" x2="44" y2="20"/><line x1="20" y1="42" x2="44" y2="42"/></svg>`,
+    };
+
+    function getCards(widgetId: string): { label: string; value: string; iconSlug: IconSlug }[] {
+      // Lee el estado actual del editor de cards desde el DOM.
+      const rows = document.querySelectorAll<HTMLElement>(
+        `[data-cards-editor="${widgetId}"] [data-card-row]`
+      );
+      return Array.from(rows).map((row) => {
+        const icon = row.querySelector<HTMLSelectElement>('.visor__card-icon')?.value as IconSlug;
+        const label = row.querySelector<HTMLInputElement>('input[aria-label="Etiqueta"]')?.value ?? '';
+        const value = row.querySelector<HTMLInputElement>('input[aria-label="Valor"]')?.value ?? '';
+        return { iconSlug: icon, label, value };
+      });
+    }
+
+    function renderCards(widgetId: string) {
+      const cards = getCards(widgetId);
+      const instances = document.querySelectorAll<HTMLElement>(
+        `[data-preview-instance="${widgetId}"]`
+      );
+      instances.forEach((inst) => {
+        const container = inst.querySelector<HTMLElement>('.hk-std-cards-container');
+        if (!container) return;
+        // Cards válidas (no vacías) — comportamiento ACF.
+        const valid = cards.filter((c) => c.label.trim() && c.value.trim()).slice(0, 6);
+        container.innerHTML = valid
+          .map((c) => {
+            const icon = ICONS_SVG[c.iconSlug] ?? ICONS_SVG.fecha;
+            return `
+              <div class="hk-std-card px-8 py-6 bg-bu-primary text-bu-surface rounded-lg flex items-center justify-center gap-4 lg:w-[300px] lg:min-w-[300px] md:w-[300px] md:min-w-[300px] w-[280px] min-w-[280px] flex-none" data-card-icon="${c.iconSlug}">
+                <div class="flex justify-center items-center shrink-0">${icon}</div>
+                <div class="box-contenido w-[120px] md:w-fit text-left">
+                  <h3 class="hk-card-label font-montserrat text-mont-card-content-mobile md:text-mont-card-content font-normal">${c.label}</h3>
+                  <p class="hk-card-value font-montserrat text-mont-card-title-mobile md:text-mont-card-title font-extrabold">${c.value}</p>
+                </div>
+              </div>
+            `;
+          })
+          .join('');
+      });
+    }
+
     document
       .querySelectorAll<Control>('[data-control]')
       .forEach((ctrl) => {
@@ -705,6 +885,61 @@ const busList = Object.entries(buColors.bus).map(([id, palette]) => ({
         ctrl.addEventListener('input', apply);
         ctrl.addEventListener('change', apply);
       });
+
+    // ── 4b. Cards editor (add / remove / live edit) ─────────────
+    document.querySelectorAll<HTMLDivElement>('[data-cards-editor]').forEach((editor) => {
+      const widgetId = editor.dataset.cardsEditor;
+      if (!widgetId) return;
+
+      // Live edit en cualquier campo de card → re-render
+      editor.addEventListener('input', () => renderCards(widgetId));
+      editor.addEventListener('change', () => renderCards(widgetId));
+
+      // Eliminar card
+      editor.addEventListener('click', (e) => {
+        const target = e.target as HTMLElement;
+        const removeIdx = target.dataset.cardRemove;
+        if (removeIdx === undefined) return;
+        const row = editor.querySelector(`[data-card-row="${removeIdx}"]`);
+        row?.remove();
+        // Reindexar data-card-row para que sigan siendo únicos
+        editor.querySelectorAll<HTMLElement>('[data-card-row]').forEach((r, i) => {
+          r.setAttribute('data-card-row', String(i));
+          r.querySelector<HTMLButtonElement>('[data-card-remove]')?.setAttribute('data-card-remove', String(i));
+        });
+        renderCards(widgetId);
+      });
+    });
+
+    // Botón "+ Agregar card"
+    document.querySelectorAll<HTMLButtonElement>('[data-card-add]').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const widgetId = btn.dataset.cardAdd;
+        if (!widgetId) return;
+        const editor = document.querySelector<HTMLElement>(`[data-cards-editor="${widgetId}"]`);
+        if (!editor) return;
+        const nextIdx = editor.querySelectorAll('[data-card-row]').length;
+        const row = document.createElement('div');
+        row.className = 'visor__card-row';
+        row.setAttribute('data-card-row', String(nextIdx));
+        row.innerHTML = `
+          <select class="visor__card-icon" aria-label="Icono">
+            <option value="fecha" selected>📅 Fecha</option>
+            <option value="hora">🕐 Hora</option>
+            <option value="modalidad">📱 Modalidad</option>
+          </select>
+          <input type="text" placeholder="Etiqueta (ej. Fecha:)" aria-label="Etiqueta" />
+          <input type="text" placeholder="Valor (ej. 25 y 26 abril)" aria-label="Valor" />
+          <button type="button" class="visor__card-remove" data-card-remove="${nextIdx}" aria-label="Eliminar card">✕</button>
+        `;
+        editor.appendChild(row);
+        // Re-index anteriores por seguridad
+        editor.querySelectorAll<HTMLElement>('[data-card-row]').forEach((r, i) => {
+          r.setAttribute('data-card-row', String(i));
+        });
+        renderCards(widgetId);
+      });
+    });
 
     // ── 5. Navegación del sidebar (mostrar un widget a la vez) ──
     const STORAGE_WIDGET = 'visor:widget';
