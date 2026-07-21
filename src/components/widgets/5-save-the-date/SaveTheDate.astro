@@ -2,7 +2,7 @@
 /**
  * SaveTheDate — Widget "Save the Date" (id: `5-save-the-date`).
  * --------------------------------------------------------------
- * Migración a Astro del widget legacy en `src/components/widgets/5-save-the-date/`.
+ * Migración a Astro del widget legacy.
  *
  * Renderiza un bloque con:
  *   - Título principal (Save the Date)
@@ -10,48 +10,39 @@
  *   - Texto de bajada (lugar / dirección)
  *
  * Sistema de color:
- *   El widget consume los 5 tokens semánticos del Design System V2,
- *   definidos en `[data-bu="..."]` dentro de `src/styles/global.css`.
- *   Los SVGs usan `currentColor` → cambian automáticamente con el BU.
+ *   Tokens centralizados en `./theme.ts` — editá solo ese archivo
+ *   para ajustar colores. Las clases resuelven a CSS variables
+ *   del Design System V2 → cambian con el BU en runtime.
+ *   Los SVGs usan `currentColor` → heredan color del texto padre.
  *
  * Iconos:
- *   SVG INLINE definidos en `./icons.ts` (no archivos servidos).
+ *   SVG INLINE en `./icons.ts` (no archivos servidos).
  *   WordPress nunca los toca → evita problemas de sanitización.
- *   Cambian de color con `currentColor` heredado del BU (sin duplicar archivos).
  *
  * ACF (WordPress):
- *   - `title`         ← ACF `text`     "Título"
- *   - `cards[]`       ← ACF `repeater` "Cards" (label, value, iconSlug)
- *   - `bottomText`    ← ACF `wysiwyg`  "Texto bajada"
- *   - `id`            ← opcional, para anchors y analytics
+ *   - `title`       ← ACF `text`     "Título"
+ *   - `cards[]`     ← ACF `repeater` "Cards" (label, value, iconSlug)
+ *   - `bottomText`  ← ACF `wysiwyg`  "Texto bajada"
  *
  * Comportamiento:
  *   - Cards con `label` o `value` vacíos NO se renderizan.
  *   - Máximo 6 cards (defensa legacy).
  */
 import { ICONS, type IconSlug } from './icons.ts';
+import { theme, baseClasses, backgrounds } from './theme.ts';
 
 export interface CardItem {
-  /** Etiqueta visible (ej. "Fecha:", "Hora:", "Modalidad:"). */
   label: string;
-  /** Valor a mostrar (ej. "25 y 26 abril"). */
   value: string;
-  /** Slug del icono a usar. Ver `ICON_SLUGS`. */
   iconSlug: IconSlug;
 }
 
 interface Props {
-  /** Título principal. */
   title?: string;
-  /** Lista de cards (1–6 elementos). Cards vacías se omiten automáticamente. */
   cards?: CardItem[];
-  /** Texto de bajada (HTML permitido por venir de WYSIWYG ACF). */
   bottomText?: string;
-  /** ID del <section>, útil para anchors y tracking. */
   id?: string;
-  /** Familia tipográfica del título. */
   fontTitle?: 'anton' | 'montserrat';
-  /** Color de fondo de la sección. */
   background?: 'gray' | 'white' | 'transparent';
 }
 
@@ -68,20 +59,11 @@ const {
   background = 'gray',
 } = Astro.props;
 
-// Helpers de tipografía.
+// ── Resolución de tokens desde theme.ts ─────────────────────
+const tokens = theme['v5.7'];
+const sectionBg = backgrounds[background];
+
 const titleFontClass = fontTitle === 'anton' ? 'font-anton' : 'font-montserrat';
-const bodyFontClass = 'font-montserrat';
-
-// Fondo de la sección según prop.
-const bgClass =
-  background === 'white'
-    ? 'bg-bu-surface'
-    : background === 'transparent'
-      ? 'bg-transparent'
-      : 'bg-[#F0F0F0]';
-
-const sectionBase = 'py-16 w-full transition-opacity duration-300 md:py-24 font-montserrat';
-const containerCls = 'container relative z-10 px-4 mx-auto md:px-6';
 
 // ── Filtrado de cards ──────────────────────────────────────
 // Cards con label o value vacíos NO se renderizan (comportamiento
@@ -101,16 +83,16 @@ const cardsContainerClass =
   id={id}
   data-widget="save-the-date"
   data-variant="v5.7"
-  class:list={[sectionBase, bgClass]}
+  class:list={[baseClasses.section, sectionBg]}
 >
-  <div class={containerCls}>
+  <div class={baseClasses.container}>
     <div class="relative z-10 text-center">
       {/* Título */}
       <h2
         class:list={[
-          'mb-12 text-4xl font-bold hk-title',
+          baseClasses.title,
           titleFontClass,
-          'text-anton-block-title-mobile md:text-anton-block-title text-bu-text',
+          tokens.title,
         ]}
       >
         {title}
@@ -120,33 +102,19 @@ const cardsContainerClass =
       {validCards.length > 0 && (
         <div class={cardsContainerClass}>
           {validCards.map((card) => {
-            // Render SVG inline vía set:html. Si el slug es desconocido,
-            // caemos al icono 'fecha' como fallback silencioso.
             const iconFn = ICONS[card.iconSlug] ?? ICONS.fecha;
             const iconSvg = iconFn({ class: 'hk-card-icon', size: 48 });
             return (
               <div
-                class="hk-std-card px-8 py-6 bg-bu-primary text-bu-surface rounded-lg flex items-center justify-center gap-4 lg:w-[300px] lg:min-w-[300px] md:w-[300px] md:min-w-[300px] w-[280px] min-w-[280px] flex-none"
+                class:list={[baseClasses.cardShell, tokens.card]}
                 data-card-icon={card.iconSlug}
               >
                 <div class="flex justify-center items-center shrink-0" set:html={iconSvg} />
                 <div class="box-contenido w-[120px] md:w-fit text-left">
-                  <h3
-                    class:list={[
-                      'hk-card-label',
-                      bodyFontClass,
-                      'text-mont-card-content-mobile md:text-mont-card-content font-normal',
-                    ]}
-                  >
+                  <h3 class:list={[baseClasses.cardLabel]}>
                     {card.label}
                   </h3>
-                  <p
-                    class:list={[
-                      'hk-card-value',
-                      bodyFontClass,
-                      'text-mont-card-title-mobile md:text-mont-card-title font-extrabold',
-                    ]}
-                  >
+                  <p class:list={[baseClasses.cardValue]}>
                     {card.value}
                   </p>
                 </div>
@@ -160,11 +128,7 @@ const cardsContainerClass =
       {bottomText && (
         <div class="mt-12">
           <p
-            class:list={[
-              'text-base font-extrabold hk-std-texto-bajada hk-desc md:text-2xl',
-              bodyFontClass,
-              'text-bu-text',
-            ]}
+            class:list={[baseClasses.bajada, tokens.bajada]}
             set:html={bottomText}
           />
         </div>

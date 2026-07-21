@@ -5,42 +5,34 @@
  * Migración a Astro del widget legacy en `src/widgets/2-bloque-intro/`.
  *
  * Sistema de color:
- *   El widget consume las 5 variables semánticas del Design System V2,
- *   definidas en `[data-bu="..."]` dentro de `src/styles/global.css`:
- *     - --bu-color-brand-primary   → CTAs fuertes, títulos destacados
- *     - --bu-color-brand-secondary → Soporte, texto alterno
- *     - --bu-color-accent-primary  → Highlights, badges
- *     - --bu-color-surface-light   → Fondo claro / texto sobre fondo oscuro
- *     - --bu-color-neutral         → Texto principal sobre fondos claros
- *
- *   Al cambiar `data-bu` del <html> en runtime (switcher del visor),
- *   estas 5 variables se reescriben y el widget se repinta sin recargar.
- *
- * Mapeo de tokens por variante:
- *   - v2.1 (centrado):  bg=primary,    text=surface
- *   - v2.2 (dividido):  bg=surface,    text=primary (título y descripción)
+ *   Los tokens de color están centralizados en `./theme.ts`.
+ *   Para ajustar un color del widget, editá solo ese archivo.
+ *   Las clases (`bg-bu-primary`, etc.) resuelven a CSS variables
+ *   del Design System V2 → cambian con el BU activo en runtime.
  *
  * Tipografía parametrizable vía props (`fontTitle`, `fontBody`) con
  * defaults equivalentes al legacy (`font-anton` / `font-montserrat`).
  *
- * Pensado para integración 1:1 con Custom Fields de WordPress (ACF):
+ * ACF (WordPress):
  *   - `title`       ← ACF `text`     "Título Principal"
  *   - `description` ← ACF `wysiwyg`  "Descripción Principal" (HTML permitido)
  *   - `variant`     ← switch interno  ('v2.1' centrado | 'v2.2' dividido)
  *   - `id`          ← opcional, para anchors y analytics
  */
+import { theme, baseClasses } from './theme.ts';
+
 interface Props {
-  /** Título principal (string plano, escapado automáticamente por Astro). */
+  /** Título principal. */
   title: string;
   /** Descripción / bajada. HTML permitido porque viene de un WYSIWYG ACF. */
   description: string;
-  /** Variante visual. Default: 'v2.1' (centrado). */
+  /** Variante visual. */
   variant?: 'v2.1' | 'v2.2';
-  /** ID del <section>, útil para anchors y tracking. */
+  /** ID del <section>. */
   id?: string;
-  /** Familia tipográfica del título (default: 'anton' = legacy v2.1). */
+  /** Familia tipográfica del título. */
   fontTitle?: 'anton' | 'montserrat';
-  /** Familia tipográfica del cuerpo (default: 'montserrat'). */
+  /** Familia tipográfica del cuerpo. */
   fontBody?: 'montserrat';
 }
 
@@ -50,35 +42,32 @@ const {
   variant = 'v2.1',
   id = 'bloque-intro',
   fontTitle = variant === 'v2.1' ? 'anton' : 'montserrat',
-  fontBody = 'montserrat',
 } = Astro.props;
 
-// Helpers: clases por familia tipográfica.
-const titleFontClass = fontTitle === 'anton' ? 'font-anton' : 'font-montserrat';
-const bodyFontClass = fontBody === 'montserrat' ? 'font-montserrat' : 'font-montserrat';
+// ── Resolución de tokens desde theme.ts ─────────────────────
+// Toda la lógica de color vive acá. Si querés cambiar cómo se pinta
+// cada variante, editá `./theme.ts` — no toques este archivo.
+const tokens = theme[variant];
 
-// Clases base compartidas — se reusan en ambas variantes.
-const sectionBase =
-  'relative py-16 w-full transition-opacity duration-300 md:py-24';
-const containerCls = 'container relative z-10 px-4 mx-auto md:px-6';
+// Helpers de tipografía.
+const titleFontClass = fontTitle === 'anton' ? 'font-anton' : 'font-montserrat';
+const bodyFontClass = 'font-montserrat';
 ---
 
-{/* ─────────────────────────────────────────────────────────────── */}
-{/* VARIANTE 2.1 — Centrado: fondo primary, texto surface           */}
-{/* ─────────────────────────────────────────────────────────────── */}
 {variant === 'v2.1' && (
   <section
     id={id}
     data-widget="bloque-intro"
     data-variant="v2.1"
-    class:list={[sectionBase, 'bg-bu-primary text-bu-surface']}
+    class:list={[baseClasses.section, tokens.section]}
   >
-    <div class={containerCls}>
+    <div class={baseClasses.container}>
       <div class="flex flex-col justify-center items-center mx-auto space-y-8 text-center">
         <h2
           class:list={[
             'hk-title',
             titleFontClass,
+            tokens.title,
             'text-anton-block-title-mobile md:text-anton-block-title',
           ]}
         >
@@ -90,6 +79,7 @@ const containerCls = 'container relative z-10 px-4 mx-auto md:px-6';
           class:list={[
             'mx-auto max-w-4xl hk-desc',
             bodyFontClass,
+            tokens.desc,
             'text-mont-block-p-mobile md:text-mont-block-p',
           ]}
           set:html={description}
@@ -99,25 +89,23 @@ const containerCls = 'container relative z-10 px-4 mx-auto md:px-6';
   </section>
 )}
 
-{/* ─────────────────────────────────────────────────────────────── */}
-{/* VARIANTE 2.2 — Dividido: fondo surface, texto primary           */}
-{/* ─────────────────────────────────────────────────────────────── */}
 {variant === 'v2.2' && (
   <section
     id={id}
     data-widget="bloque-intro"
     data-variant="v2.2"
-    class:list={[sectionBase, 'bg-bu-surface text-bu-primary']}
+    class:list={[baseClasses.section, tokens.section]}
   >
-    <div class={containerCls}>
+    <div class={baseClasses.container}>
       <div class="grid gap-12 items-start lg:grid-cols-12">
 
         {/* Columna izquierda: Título */}
         <div class="space-y-4 lg:col-span-5">
           <h2
             class:list={[
-              'text-center hk-title text-bu-primary',
+              'text-center hk-title',
               titleFontClass,
+              tokens.title,
               'text-mont-block-title-mobile md:text-mont-block-title md:text-left',
             ]}
           >
@@ -129,8 +117,9 @@ const containerCls = 'container relative z-10 px-4 mx-auto md:px-6';
         <div class="space-y-6 lg:col-span-7">
           <p
             class:list={[
-              'text-center hk-desc text-bu-secondary',
+              'text-center hk-desc',
               bodyFontClass,
+              tokens.desc,
               'text-mont-block-p-mobile md:text-mont-block-p md:text-left',
             ]}
             set:html={description}
