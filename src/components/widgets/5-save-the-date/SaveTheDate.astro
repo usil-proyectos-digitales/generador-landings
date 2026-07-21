@@ -1,0 +1,184 @@
+---
+/**
+ * SaveTheDate — Widget "Save the Date" (id: `5-save-the-date`).
+ * --------------------------------------------------------------
+ * Migración a Astro del widget legacy en `src/components/widgets/5-save-the-date/`.
+ *
+ * Renderiza un bloque con:
+ *   - Título principal (Save the Date)
+ *   - Hasta 6 cards con icono + etiqueta + valor (Fecha, Hora, Modalidad, etc.)
+ *   - Texto de bajada (lugar / dirección)
+ *
+ * Sistema de color:
+ *   El widget consume los 5 tokens semánticos del Design System V2,
+ *   definidos en `[data-bu="..."]` dentro de `src/styles/global.css`:
+ *     - --bu-color-brand-primary   → texto principal
+ *     - --bu-color-surface-light   → fondo de la sección
+ *     - --bu-color-neutral         → texto alterno (bajada)
+ *
+ *   Al cambiar `data-bu` del <html> en runtime (switcher del visor),
+ *   estas variables se reescriben y el widget se repinta sin recargar.
+ *
+ * Iconos:
+ *   Los iconos (fecha, hora, modalidad/lugar) son IMÁGENES FIJAS
+ *   servidas desde `/src/components/widgets/5-save-the-date/images/`.
+ *   Cambiarán cuando se suban nuevas imágenes para la unidad de negocio.
+ *
+ * Tipografía parametrizable vía props (`fontTitle`, `fontBody`) con
+ * defaults equivalentes al legacy (`font-anton` / `font-montserrat`).
+ *
+ * Pensado para integración 1:1 con Custom Fields de WordPress (ACF):
+ *   - `title`             ← ACF `text`     "Título"
+ *   - `cards[]`           ← ACF `repeater` "Cards" (label, value, icon)
+ *   - `bottomText`        ← ACF `wysiwyg`  "Texto bajada"
+ *   - `id`                ← opcional, para anchors y analytics
+ */
+interface CardItem {
+  /** Etiqueta visible (ej. "Fecha:", "Hora:", "Modalidad:"). */
+  label: string;
+  /** Valor a mostrar (ej. "25 y 26 abril"). */
+  value: string;
+  /** Slug del icono fijo a usar: 'fecha' | 'hora' | 'modalidad'. */
+  icon: 'fecha' | 'hora' | 'modalidad';
+}
+
+interface Props {
+  /** Título principal. Default: 'Save the Date'. */
+  title?: string;
+  /** Lista de cards a renderizar (1–6 elementos). Default: 3 cards demo. */
+  cards?: CardItem[];
+  /** Texto de bajada (HTML permitido porque viene de un WYSIWYG ACF). */
+  bottomText?: string;
+  /** ID del <section>, útil para anchors y tracking. */
+  id?: string;
+  /** Familia tipográfica del título (default: 'anton' = legacy v5.7). */
+  fontTitle?: 'anton' | 'montserrat';
+  /** Familia tipográfica del cuerpo (default: 'montserrat'). */
+  fontBody?: 'montserrat';
+  /** Color de fondo de la sección (default: gris claro #F0F0F0 del legacy). */
+  background?: 'gray' | 'white' | 'transparent';
+}
+
+const {
+  title = 'Save the Date',
+  cards = [
+    { label: 'Fecha:', value: '25 y 26 abril', icon: 'fecha' },
+    { label: 'Hora:', value: '9:00 - 18:00', icon: 'hora' },
+    { label: 'Modalidad:', value: 'Híbrida', icon: 'modalidad' },
+  ],
+  bottomText = 'USIL, campus 1 - Aula Magna<br> <span class="font-normal">(av. La Fontana 550, La Molina)</span>',
+  id = 'save-the-date',
+  fontTitle = 'anton',
+  fontBody = 'montserrat',
+  background = 'gray',
+} = Astro.props;
+
+// Helpers: clases por familia tipográfica.
+const titleFontClass = fontTitle === 'anton' ? 'font-anton' : 'font-montserrat';
+const bodyFontClass = fontBody === 'montserrat' ? 'font-montserrat' : 'font-montserrat';
+
+// Mapa de iconos fijos (rutas relativas servidas desde public/ o importadas).
+// Se mantienen como strings — cambiarán cuando se suban nuevas imágenes por BU.
+const ICONS: Record<CardItem['icon'], string> = {
+  fecha: './images/std_icono_fecha.webp',
+  hora: './images/std_icono_hora.webp',
+  modalidad: './images/std_icono_modalidad.webp',
+};
+
+// Fondo de la sección según prop.
+const bgClass =
+  background === 'white'
+    ? 'bg-bu-surface'
+    : background === 'transparent'
+      ? 'bg-transparent'
+      : 'bg-[#F0F0F0]';
+
+// Clases base compartidas.
+const sectionBase = 'py-16 w-full transition-opacity duration-300 md:py-24 font-montserrat';
+const containerCls = 'container relative z-10 px-4 mx-auto md:px-6';
+
+// Límite defensivo: máx 6 cards (comportamiento legacy).
+const visibleCards = (cards ?? []).slice(0, 6);
+// Caso especial de 4 cards: legacy forzaba ancho 700px (2x2).
+const cardsContainerClass =
+  visibleCards.length === 4
+    ? 'hk-std-cards-container flex flex-wrap justify-center gap-8 w-full max-w-[700px] mx-auto'
+    : 'hk-std-cards-container flex flex-wrap justify-center gap-8 w-full max-w-[1280px] mx-auto';
+---
+
+{/* ─────────────────────────────────────────────────────────────── */}
+{/* VARIANTE 5.7 — Título + Cards + Bajada                          */}
+{/* ─────────────────────────────────────────────────────────────── */}
+<section
+  id={id}
+  data-widget="save-the-date"
+  data-variant="v5.7"
+  class:list={[sectionBase, bgClass]}
+>
+  <div class={containerCls}>
+    <div class="relative z-10 text-center">
+      {/* Título */}
+      <h2
+        class:list={[
+          'mb-12 text-4xl font-bold hk-title',
+          titleFontClass,
+          'text-anton-block-title-mobile md:text-anton-block-title text-bu-text',
+        ]}
+      >
+        {title}
+      </h2>
+
+      {/* Cards */}
+      {visibleCards.length > 0 && (
+        <div class={cardsContainerClass}>
+          {visibleCards.map((card) => (
+            <div class="px-8 py-6 bg-bu-surface rounded-lg flex items-center justify-center gap-4 lg:w-[300px] lg:min-w-[300px] md:w-[300px] md:min-w-[300px] w-[280px] min-w-[280px] flex-none">
+              <div class="flex justify-center items-center">
+                <img
+                  src={ICONS[card.icon]}
+                  class="hk-card-fecha-img"
+                  alt={card.label.replace(':', '')}
+                  loading="lazy"
+                />
+              </div>
+              <div class="box-contenido w-[120px] md:w-fit text-left">
+                <h3
+                  class:list={[
+                    'hk-card-title text-bu-text w-fit',
+                    bodyFontClass,
+                    'text-mont-card-content-mobile md:text-mont-card-content',
+                  ]}
+                >
+                  {card.label}
+                </h3>
+                <p
+                  class:list={[
+                    'hk-card-text text-bu-text w-fit',
+                    bodyFontClass,
+                    'text-mont-card-title-mobile md:text-mont-card-title',
+                  ]}
+                >
+                  {card.value}
+                </p>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Texto bajada (WYSIWYG) */}
+      {bottomText && (
+        <div class="mt-12">
+          <p
+            class:list={[
+              'text-base font-extrabold hk-std-texto-bajada md:text-2xl',
+              bodyFontClass,
+              'text-bu-text',
+            ]}
+            set:html={bottomText}
+          />
+        </div>
+      )}
+    </div>
+  </div>
+</section>

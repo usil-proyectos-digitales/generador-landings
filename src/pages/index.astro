@@ -10,7 +10,7 @@
  *      - Preview a FULL WIDTH (con `max-width` aplicado según viewport).
  *      - Drawer de "Props" a la derecha, oculto por defecto (toggle).
  *      - Live editing: cambiar inputs/textarea actualiza el preview.
- *   3. Persistencia del BU en `localStorage`.
+ *   3. Persistencia del BU seleccionado en `localStorage`.
  *
  * Layout:
  *   sidebar (280px, slate-800)  │  main (slate-900)
@@ -30,10 +30,10 @@
  *   - Tailwind v4 @theme genera utilities `bg-bu-primary`, etc.
  *
  * Cómo registrar un widget nuevo:
- *   Ver `generador-landings/src/components/widgets/2-bloque-intro/widget-registry.ts`.
+ *   Ver `generador-landings/src/components/widgets/registry.ts` (registry central).
  */
 import BaseLayout from '@layouts/BaseLayout.astro';
-import { widgetRegistry } from '../components/widgets/2-bloque-intro/widget-registry.ts';
+import { widgetRegistry } from '../components/widgets/registry.ts';
 import buColors from '@data/bu-colors.json';
 
 // Normalizamos el JSON a una lista [{id, primary, secondary, ...}] para iterar.
@@ -499,21 +499,34 @@ const busList = Object.entries(buColors.bus).map(([id, palette]) => ({
             <div class="visor__preview-wrap">
               <div class="visor__preview-frame" data-preview-frame={w.id} data-viewport="desktop">
                 <div data-preview-root={w.id}>
-                  {w.variants.map((v) => (
-                    <div
-                      class="visor__preview-instance"
-                      data-preview-instance={w.id}
-                      data-preview-variant={v.id}
-                      hidden={v.id !== w.defaultVariant}
-                    >
-                      <w.component
-                        title={w.defaults.title}
-                        description={w.defaults.description}
-                        variant={v.id as 'v2.1' | 'v2.2'}
-                        id={`preview-${w.id}-${v.id}`}
-                      />
-                    </div>
-                  ))}
+                  {w.variants.map((v) => {
+                    const previewId = `preview-${w.id}-${v.id}`;
+                    // Si el widget expone un propsAdapter, lo usamos; si no, pasamos
+                    // las props canónicas (title/description/variant/id) directamente.
+                    const componentProps = w.propsAdapter
+                      ? w.propsAdapter({
+                          title: w.defaults.title,
+                          description: w.defaults.description,
+                          variant: v.id,
+                          id: previewId,
+                        })
+                      : {
+                          title: w.defaults.title,
+                          description: w.defaults.description,
+                          variant: v.id as 'v2.1' | 'v2.2',
+                          id: previewId,
+                        };
+                    return (
+                      <div
+                        class="visor__preview-instance"
+                        data-preview-instance={w.id}
+                        data-preview-variant={v.id}
+                        hidden={v.id !== w.defaultVariant}
+                      >
+                        <w.component {...componentProps} />
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
             </div>
