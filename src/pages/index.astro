@@ -3,35 +3,40 @@
  * Visor de Widgets — UI Kit / Storybook interno del Design System V2.
  * -------------------------------------------------------------------
  * Funcionalidades:
- *   1. Sidebar de navegación con índice de widgets registrados.
- *   2. Switcher de Unidad de Negocio (pills con swatch de color).
- *      Cambia `data-bu` en <html> en runtime → repinta toda la página
- *      vía CSS variables del Design System V2.
- *   3. Por cada widget:
- *      - Controles a la izquierda (selector de variante + props editables).
- *      - Preview a la derecha (server-rendered, todas las variantes pre-cargadas
- *        y ocultas/show según la selección; edición en vivo de title/description).
- *   4. Persistencia del BU seleccionado en `localStorage`.
+ *   1. Sidebar oscuro con índice de widgets + switcher de BU
+ *      (pills con swatch real, leído desde `bu-colors.json`).
+ *   2. Por cada widget:
+ *      - Header con título + viewport switcher (Desktop / Tablet / Mobile)
+ *      - Preview a FULL WIDTH (con `max-width` aplicado según viewport).
+ *      - Drawer de "Props" a la derecha, oculto por defecto (toggle).
+ *      - Live editing: cambiar inputs/textarea actualiza el preview.
+ *   3. Persistencia del BU en `localStorage`.
  *
- * ESTRATEGIA DE TEMA (multi-tenant por Unidad de Negocio):
- *   - Esta página NO fija un `bu` en build time (lo setea el switcher en runtime).
-*   - Los tokens se resuelven así:
- *       <body data-bu="pregrado">          ← seteado por JS
- *         ↓ cascada
- *       [data-bu="pregrado"] { --bu-color-brand-primary: #...; }   ← global.css
- *         ↓ cascada
- *       .bg-bu-primary { background: var(--color-bu-primary); } ← Tailwind v4
- *   - Añadir un BU nuevo = agregar un selector `[data-bu="..."]` en global.css.
- *     No requiere recompilar nada más.
+ * Layout:
+ *   sidebar (280px, slate-800)  │  main (slate-900)
+ *                                │
+ *                                │  ┌─ widget head ──────────────┐
+ *                                │  │ Title           [D|T|M] ⚙ │
+ *                                │  └────────────────────────────┘
+ *                                │  ┌─ preview ──────┐ ┌─ drawer ┐
+ *                                │  │  (full width)  │ │ (hidden)│
+ *                                │  │                │ │         │
+ *                                │  └────────────────┘ └─────────┘
  *
- * CÓMO REGISTRAR UN WIDGET NUEVO:
+ * Estrategia de tema:
+ *   - El switcher de BU setea `data-bu` en <html>.
+ *   - Los tokens se resuelven vía CSS variables en `global.css`:
+ *       [data-bu="pregrado"] { --bu-color-brand-primary: #...; }
+ *   - Tailwind v4 @theme genera utilities `bg-bu-primary`, etc.
+ *
+ * Cómo registrar un widget nuevo:
  *   Ver `generador-landings/src/components/widgets/2-bloque-intro/widget-registry.ts`.
  */
 import BaseLayout from '@layouts/BaseLayout.astro';
 import { widgetRegistry } from '../components/widgets/2-bloque-intro/widget-registry.ts';
 import buColors from '@data/bu-colors.json';
 
-// Normalizamos el JSON a una lista [{id, primary, secondary, ...}, ...] para iterar.
+// Normalizamos el JSON a una lista [{id, primary, secondary, ...}] para iterar.
 const busList = Object.entries(buColors.bus).map(([id, palette]) => ({
   id,
   ...(palette as { primary: string; secondary: string; accent: string; surface: string; text: string }),
@@ -40,89 +45,93 @@ const busList = Object.entries(buColors.bus).map(([id, palette]) => ({
 
 <BaseLayout
   title="Visor de Widgets"
-  description="Catálogo navegable del Design System V2 con switcher de unidad de negocio en tiempo real."
+  description="Catálogo navegable del Design System V2 con switcher de unidad de negocio y viewport responsive."
 >
-  {/* ⚠️ NO pasamos `bu` aquí: el switcher cliente controla data-bu en <html>. */}
-  {/* ============================================================
-      Estilos del visor — scoped a este archivo .astro
-      ============================================================ */}
   <style>
+    /* ============================================================
+       Visor — fondo oscuro para que solo el widget "salte" al ojo
+       ============================================================ */
     .visor {
       display: grid;
       grid-template-columns: 280px 1fr;
       min-height: 100vh;
-      background: var(--bu-color-surface-light, #f5f6fa);
-      color: var(--bu-color-neutral, #1a1a1a);
+      background: #0f172a;            /* slate-900 — fondo principal oscuro */
+      color: #e2e8f0;                 /* slate-200 — texto base */
+      font-family: 'Montserrat', system-ui, sans-serif;
     }
 
-    /* ── Sidebar ─────────────────────────────────────────────── */
+    /* ── SIDEBAR ──────────────────────────────────────────────── */
     .visor__sidebar {
       position: sticky;
       top: 0;
       height: 100vh;
       overflow-y: auto;
-      background: #ffffff;
-      border-right: 1px solid #e5e7eb;
+      background: #1e293b;            /* slate-800 */
+      border-right: 1px solid #334155;
       padding: 1.5rem 1rem;
       display: flex;
       flex-direction: column;
       gap: 1.5rem;
     }
     .visor__brand h1 {
-      font-family: 'Montserrat', sans-serif;
-      font-size: 1.25rem;
+      font-size: 1.125rem;
       font-weight: 800;
       letter-spacing: -0.02em;
       margin: 0;
+      color: #f1f5f9;
     }
     .visor__brand p {
-      font-size: 0.75rem;
-      color: #6b7280;
+      font-size: 0.6875rem;
+      color: #64748b;
       margin: 0.25rem 0 0;
       text-transform: uppercase;
-      letter-spacing: 0.05em;
+      letter-spacing: 0.08em;
     }
-    .visor__sidebar label {
+    .visor__sidebar-label {
       display: block;
       font-size: 0.6875rem;
       font-weight: 700;
       text-transform: uppercase;
       letter-spacing: 0.08em;
-      color: #6b7280;
-      margin-bottom: 0.5rem;
+      color: #64748b;
+      margin-bottom: 0.625rem;
     }
     .visor__bus-list {
       display: flex;
-      flex-wrap: wrap;
+      flex-direction: column;
       gap: 0.375rem;
     }
     .visor__bu-pill {
-      display: inline-flex;
+      display: flex;
       align-items: center;
-      gap: 0.375rem;
-      padding: 0.375rem 0.625rem;
-      font-size: 0.75rem;
+      gap: 0.625rem;
+      padding: 0.5rem 0.75rem;
+      font-size: 0.8125rem;
       font-weight: 600;
-      border: 1px solid #e5e7eb;
-      border-radius: 999px;
-      background: #ffffff;
+      border: 1px solid #334155;
+      border-radius: 0.5rem;
+      background: #0f172a;
       cursor: pointer;
       transition: all 0.15s ease;
-      color: #374151;
+      color: #cbd5e1;
+      text-align: left;
+      width: 100%;
     }
     .visor__bu-pill:hover {
-      border-color: #9ca3af;
+      border-color: #475569;
+      color: #f1f5f9;
     }
     .visor__bu-pill.is-active {
-      border-color: var(--bu-color-brand-primary, #012085);
-      background: var(--bu-color-brand-primary, #012085);
+      border-color: var(--bu-color-brand-primary, #3b82f6);
+      background: var(--bu-color-brand-primary, #3b82f6);
       color: #ffffff;
     }
     .visor__bu-swatch {
-      width: 0.625rem;
-      height: 0.625rem;
+      width: 0.875rem;
+      height: 0.875rem;
       border-radius: 999px;
-      box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.1);
+      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.25);
+      flex-shrink: 0;
     }
     .visor__nav ul {
       list-style: none;
@@ -136,62 +145,177 @@ const busList = Object.entries(buColors.bus).map(([id, palette]) => ({
       display: block;
       padding: 0.5rem 0.75rem;
       font-size: 0.875rem;
-      color: #374151;
+      color: #cbd5e1;
       text-decoration: none;
       border-radius: 0.5rem;
       transition: all 0.15s ease;
     }
     .visor__nav a:hover {
-      background: #f3f4f6;
-color: var(--bu-color-brand-primary, #012085);
+      background: #334155;
+      color: #f1f5f9;
     }
 
-    /* ── Main ────────────────────────────────────────────────── */
+    /* ── MAIN ────────────────────────────────────────────────── */
     .visor__main {
-      padding: 2rem;
+      padding: 1.5rem 2rem;
       display: flex;
       flex-direction: column;
-      gap: 2rem;
+      gap: 1.5rem;
+      overflow-y: auto;
+      height: 100vh;
+      box-sizing: border-box;
     }
-    .visor__widget {
-      background: #ffffff;
-      border: 1px solid #e5e7eb;
+
+    /* ── WIDGET SECTION ──────────────────────────────────────── */
+    .visor__widget-section {
+      background: #1e293b;
+      border: 1px solid #334155;
       border-radius: 1rem;
       overflow: hidden;
-      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
-    }
-    .visor__widget-head {
-      padding: 1.25rem 1.5rem;
-      border-bottom: 1px solid #e5e7eb;
-      background: linear-gradient(180deg, #fafbfc 0%, #ffffff 100%);
-    }
-    .visor__widget-head h2 {
-      font-family: 'Montserrat', sans-serif;
-      font-size: 1.125rem;
-      font-weight: 800;
-      margin: 0;
-      color: #111827;
-    }
-    .visor__widget-head p {
-      font-size: 0.875rem;
-      color: #6b7280;
-      margin: 0.375rem 0 0;
-      line-height: 1.5;
-    }
-    .visor__widget-body {
-      display: grid;
-      grid-template-columns: 320px 1fr;
-      gap: 0;
-    }
-
-    /* ── Controles (panel izquierdo de cada widget) ───────────── */
-    .visor__controls {
-      padding: 1.25rem;
-      background: #fafbfc;
-      border-right: 1px solid #e5e7eb;
       display: flex;
       flex-direction: column;
+    }
+    .visor__widget-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
       gap: 1rem;
+      padding: 1rem 1.5rem;
+      border-bottom: 1px solid #334155;
+      background: rgba(15, 23, 42, 0.5);
+      flex-wrap: wrap;
+    }
+    .visor__widget-title h2 {
+      font-size: 1rem;
+      font-weight: 800;
+      margin: 0;
+      color: #f1f5f9;
+    }
+    .visor__widget-title p {
+      font-size: 0.8125rem;
+      color: #94a3b8;
+      margin: 0.25rem 0 0;
+      max-width: 480px;
+    }
+    .visor__widget-toolbar {
+      display: flex;
+      gap: 0.5rem;
+      align-items: center;
+    }
+
+    /* ── VIEWPORT SWITCHER ───────────────────────────────────── */
+    .visor__viewport-switcher {
+      display: inline-flex;
+      background: #0f172a;
+      border: 1px solid #334155;
+      border-radius: 0.5rem;
+      padding: 0.25rem;
+      gap: 0.125rem;
+    }
+    .visor__viewport-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.375rem;
+      padding: 0.4375rem 0.75rem;
+      color: #94a3b8;
+      border: none;
+      border-radius: 0.375rem;
+      background: transparent;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      font-size: 0.75rem;
+      font-weight: 600;
+      font-family: inherit;
+    }
+    .visor__viewport-btn:hover {
+      color: #f1f5f9;
+    }
+    .visor__viewport-btn.is-active {
+      background: #3b82f6;
+      color: #ffffff;
+    }
+    .visor__viewport-btn svg {
+      width: 0.875rem;
+      height: 0.875rem;
+    }
+
+    /* ── EDIT TOGGLE ─────────────────────────────────────────── */
+    .visor__edit-toggle {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.375rem;
+      padding: 0.4375rem 0.875rem;
+      background: #0f172a;
+      color: #cbd5e1;
+      border: 1px solid #334155;
+      border-radius: 0.5rem;
+      font-size: 0.75rem;
+      font-weight: 600;
+      font-family: inherit;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    .visor__edit-toggle:hover {
+      color: #f1f5f9;
+      border-color: #475569;
+    }
+    .visor__edit-toggle.is-active {
+      background: #3b82f6;
+      color: #ffffff;
+      border-color: #3b82f6;
+    }
+
+    /* ── WIDGET BODY (preview + drawer) ──────────────────────── */
+    .visor__widget-body {
+      display: grid;
+      grid-template-columns: 1fr;
+      transition: grid-template-columns 0.3s ease;
+    }
+    .visor__widget-body.has-controls {
+      grid-template-columns: 1fr 340px;
+    }
+
+    /* ── PREVIEW ─────────────────────────────────────────────── */
+    .visor__preview-wrap {
+      padding: 1.5rem;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      min-height: 240px;
+    }
+    .visor__preview-frame {
+      width: 100%;
+      background: #ffffff;
+      border-radius: 0.5rem;
+      overflow: hidden;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.6);
+      transition: max-width 0.3s ease, width 0.3s ease;
+    }
+    /* Tamaños de viewport (como el switcher del visor V1) */
+    .visor__preview-frame[data-viewport="desktop"] { max-width: 100%; }
+    .visor__preview-frame[data-viewport="tablet"]  { max-width: 780px; }
+    .visor__preview-frame[data-viewport="mobile"]  { max-width: 375px; }
+
+    .visor__preview-instance {
+      position: relative;
+    }
+    .visor__preview-instance[hidden] {
+      display: none;
+    }
+
+    /* ── CONTROLS DRAWER ─────────────────────────────────────── */
+    .visor__controls {
+      background: #0f172a;
+      border-left: 1px solid #334155;
+      padding: 1.25rem;
+      display: none;
+      flex-direction: column;
+      gap: 1rem;
+      overflow-y: auto;
+      max-height: 80vh;
+    }
+    .visor__widget-body.has-controls .visor__controls {
+      display: flex;
     }
     .visor__control {
       display: flex;
@@ -203,7 +327,7 @@ color: var(--bu-color-brand-primary, #012085);
       font-weight: 700;
       text-transform: uppercase;
       letter-spacing: 0.08em;
-      color: #6b7280;
+      color: #64748b;
     }
     .visor__control input,
     .visor__control textarea,
@@ -212,18 +336,19 @@ color: var(--bu-color-brand-primary, #012085);
       padding: 0.5rem 0.75rem;
       font-size: 0.875rem;
       font-family: inherit;
-      border: 1px solid #d1d5db;
+      border: 1px solid #334155;
       border-radius: 0.5rem;
-      background: #ffffff;
-      color: #111827;
+      background: #1e293b;
+      color: #e2e8f0;
       transition: all 0.15s ease;
+      box-sizing: border-box;
     }
     .visor__control input:focus,
     .visor__control textarea:focus,
     .visor__control select:focus {
       outline: none;
-      border-color: var(--bu-color-brand-primary, #012085);
-      box-shadow: 0 0 0 3px color-mix(in srgb, var(--bu-color-brand-primary, #012085) 15%, transparent);
+      border-color: #3b82f6;
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
     }
     .visor__control textarea {
       resize: vertical;
@@ -231,27 +356,18 @@ color: var(--bu-color-brand-primary, #012085);
       font-family: 'JetBrains Mono', 'Menlo', monospace;
       font-size: 0.8125rem;
     }
-
-    /* ── Preview (panel derecho) ─────────────────────────────── */
-    .visor__preview {
-      position: relative;
-      min-height: 200px;
-      background:
-        linear-gradient(45deg, #f3f4f6 25%, transparent 25%),
-        linear-gradient(-45deg, #f3f4f6 25%, transparent 25%),
-        linear-gradient(45deg, transparent 75%, #f3f4f6 75%),
-        linear-gradient(-45deg, transparent 75%, #f3f4f6 75%);
-      background-size: 16px 16px;
-      background-position: 0 0, 0 8px, 8px -8px, -8px 0;
-    }
-    .visor__preview-instance {
-      position: relative;
-    }
-    .visor__preview-instance[hidden] {
-      display: none;
+    .visor__controls-hint {
+      font-size: 0.75rem;
+      color: #64748b;
+      line-height: 1.5;
+      padding: 0.625rem 0.75rem;
+      background: rgba(59, 130, 246, 0.08);
+      border-left: 2px solid #3b82f6;
+      border-radius: 0.25rem;
+      margin: 0;
     }
 
-    /* ── Responsive ──────────────────────────────────────────── */
+    /* ── RESPONSIVE ──────────────────────────────────────────── */
     @media (max-width: 1024px) {
       .visor {
         grid-template-columns: 1fr;
@@ -260,12 +376,12 @@ color: var(--bu-color-brand-primary, #012085);
         position: relative;
         height: auto;
       }
-      .visor__widget-body {
+      .visor__widget-body.has-controls {
         grid-template-columns: 1fr;
       }
-      .visor__controls {
-        border-right: none;
-        border-bottom: 1px solid #e5e7eb;
+      .visor__widget-body.has-controls .visor__controls {
+        border-left: none;
+        border-top: 1px solid #334155;
       }
     }
   </style>
@@ -279,8 +395,8 @@ color: var(--bu-color-brand-primary, #012085);
         <p>Design System · UI Kit</p>
       </header>
 
-      <section class="visor__bu">
-        <label>Unidad de Negocio</label>
+      <section>
+        <label class="visor__sidebar-label">Unidad de Negocio</label>
         <div class="visor__bus-list" role="radiogroup" aria-label="Cambiar unidad de negocio">
           {busList.map((bu, i) => (
             <button
@@ -290,7 +406,7 @@ color: var(--bu-color-brand-primary, #012085);
               role="radio"
               aria-checked={i === 0 ? 'true' : 'false'}
             >
-              <span class="visor__bu-swatch" style={`background:${bu.primary}`}></span>
+              <span class="visor__bu-swatch" style={`background:${bu.primary}; ${bu.primary.startsWith('#______') ? 'background: linear-gradient(135deg, #cbd5e1 50%, #475569 50%);' : ''}`}></span>
               <span>{bu.id}</span>
             </button>
           ))}
@@ -298,7 +414,7 @@ color: var(--bu-color-brand-primary, #012085);
       </section>
 
       <nav class="visor__nav">
-        <label>Widgets</label>
+        <label class="visor__sidebar-label">Widgets</label>
         <ul>
           {widgetRegistry.map((w) => (
             <li>
@@ -312,14 +428,97 @@ color: var(--bu-color-brand-primary, #012085);
     {/* ── MAIN ────────────────────────────────────────────────── */}
     <main class="visor__main">
       {widgetRegistry.map((w) => (
-        <section id={`widget-${w.id}`} class="visor__widget">
+        <section id={`widget-${w.id}`} class="visor__widget-section">
           <header class="visor__widget-head">
-            <h2>{w.name}</h2>
-            <p>{w.description}</p>
+            <div class="visor__widget-title">
+              <h2>{w.name}</h2>
+              <p>{w.description}</p>
+            </div>
+            <div class="visor__widget-toolbar">
+              {/* Viewport switcher — Desktop/Tablet/Mobile */}
+              <div class="visor__viewport-switcher" role="radiogroup" aria-label="Tamaño de viewport">
+                <button
+                  type="button"
+                  class="visor__viewport-btn is-active"
+                  data-viewport-target={w.id}
+                  data-viewport="desktop"
+                  aria-label="Desktop (ancho completo)"
+                >
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="2" y="3" width="20" height="14" rx="2"/>
+                    <path d="M8 21h8M12 17v4"/>
+                  </svg>
+                  Desktop
+                </button>
+                <button
+                  type="button"
+                  class="visor__viewport-btn"
+                  data-viewport-target={w.id}
+                  data-viewport="tablet"
+                  aria-label="Tablet (780px)"
+                >
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="4" y="2" width="16" height="20" rx="2"/>
+                    <path d="M11 18h2"/>
+                  </svg>
+                  Tablet
+                </button>
+                <button
+                  type="button"
+                  class="visor__viewport-btn"
+                  data-viewport-target={w.id}
+                  data-viewport="mobile"
+                  aria-label="Mobile (375px)"
+                >
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="6" y="2" width="12" height="20" rx="2"/>
+                    <path d="M11 18h2"/>
+                  </svg>
+                  Mobile
+                </button>
+              </div>
+
+              {/* Toggle del drawer de props */}
+              <button
+                type="button"
+                class="visor__edit-toggle"
+                data-edit-toggle={w.id}
+                aria-pressed="false"
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                  <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                </svg>
+                Props
+              </button>
+            </div>
           </header>
 
-          <div class="visor__widget-body">
-            {/* Controles — edición en vivo de props */}
+          <div class="visor__widget-body" data-widget-body={w.id}>
+            {/* Preview — todas las variantes pre-renderizadas; JS muestra/oculta */}
+            <div class="visor__preview-wrap">
+              <div class="visor__preview-frame" data-preview-frame={w.id} data-viewport="desktop">
+                <div data-preview-root={w.id}>
+                  {w.variants.map((v) => (
+                    <div
+                      class="visor__preview-instance"
+                      data-preview-instance={w.id}
+                      data-preview-variant={v.id}
+                      hidden={v.id !== w.defaultVariant}
+                    >
+                      <w.component
+                        title={w.defaults.title}
+                        description={w.defaults.description}
+                        variant={v.id as 'v2.1' | 'v2.2'}
+                        id={`preview-${w.id}-${v.id}`}
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Drawer de props */}
             <aside class="visor__controls">
               <div class="visor__control">
                 <label for={`variant-${w.id}`}>Variante</label>
@@ -353,26 +552,12 @@ color: var(--bu-color-brand-primary, #012085);
                   set:text={w.defaults.description}
                 />
               </div>
-            </aside>
 
-            {/* Preview — todas las variantes pre-renderizadas; JS muestra/oculta */}
-            <div class="visor__preview" data-preview-root={w.id}>
-              {w.variants.map((v) => (
-                <div
-                  class="visor__preview-instance"
-                  data-preview-instance={w.id}
-                  data-preview-variant={v.id}
-                  hidden={v.id !== w.defaultVariant}
-                >
-                  <w.component
-                    title={w.defaults.title}
-                    description={w.defaults.description}
-                    variant={v.id as 'v2.1' | 'v2.2'}
-                    id={`preview-${w.id}-${v.id}`}
-                  />
-                </div>
-              ))}
-            </div>
+              <p class="visor__controls-hint">
+                💡 Estos campos mapean 1:1 con los Custom Fields de WordPress (ACF).
+                Al editar, el preview se actualiza en vivo.
+              </p>
+            </aside>
           </div>
         </section>
       ))}
@@ -380,10 +565,9 @@ color: var(--bu-color-brand-primary, #012085);
   </div>
 
   {/* ============================================================
-      Lógica cliente del visor — bundle inline (~3KB, sin deps)
+      Lógica cliente — bundle inline (~4KB, sin deps)
       ============================================================ */}
   <script>
-    // ── Tipos locales ────────────────────────────────────────────
     type Control = HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement;
 
     const STORAGE_BU = 'visor:bu';
@@ -401,7 +585,6 @@ color: var(--bu-color-brand-primary, #012085);
         });
     }
 
-    // Restaurar BU persistido (default: pregrado)
     const savedBu = localStorage.getItem(STORAGE_BU) ?? 'pregrado';
     applyBu(savedBu);
 
@@ -416,7 +599,45 @@ color: var(--bu-color-brand-primary, #012085);
         });
       });
 
-    // ── 2. Live prop editing ────────────────────────────────────
+    // ── 2. Viewport switcher (Desktop / Tablet / Mobile) ────────
+    document
+      .querySelectorAll<HTMLButtonElement>('[data-viewport-target]')
+      .forEach((btn) => {
+        btn.addEventListener('click', () => {
+          const widgetId = btn.dataset.viewportTarget;
+          const viewport = btn.dataset.viewport;
+          if (!widgetId || !viewport) return;
+
+          const frame = document.querySelector<HTMLElement>(
+            `[data-preview-frame="${widgetId}"]`
+          );
+          if (frame) frame.setAttribute('data-viewport', viewport);
+
+          // Marcar botón activo dentro del mismo switcher
+          btn.parentElement
+            ?.querySelectorAll<HTMLButtonElement>('[data-viewport-target]')
+            .forEach((b) => b.classList.toggle('is-active', b === btn));
+        });
+      });
+
+    // ── 3. Edit Props toggle (abre/cierra el drawer) ────────────
+    document
+      .querySelectorAll<HTMLButtonElement>('[data-edit-toggle]')
+      .forEach((btn) => {
+        btn.addEventListener('click', () => {
+          const widgetId = btn.dataset.editToggle;
+          if (!widgetId) return;
+          const body = document.querySelector<HTMLElement>(
+            `[data-widget-body="${widgetId}"]`
+          );
+          if (!body) return;
+          const isOpen = body.classList.toggle('has-controls');
+          btn.classList.toggle('is-active', isOpen);
+          btn.setAttribute('aria-pressed', String(isOpen));
+        });
+      });
+
+    // ── 4. Live prop editing ────────────────────────────────────
     document
       .querySelectorAll<Control>('[data-control]')
       .forEach((ctrl) => {
@@ -431,17 +652,13 @@ color: var(--bu-color-brand-primary, #012085);
           if (!instances.length) return;
 
           if (control === 'variant') {
-            // Mostrar/ocultar la variante seleccionada
             const v = (ctrl as HTMLSelectElement).value;
             instances.forEach((inst) => {
-              const isActive = inst.dataset.previewVariant === v;
-              inst.hidden = !isActive;
+              inst.hidden = inst.dataset.previewVariant !== v;
             });
             return;
           }
 
-          // Para title y description: actualizar TODAS las instancias del widget
-          // (así, al cambiar de variante, el contenido editado persiste).
           instances.forEach((inst) => {
             if (control === 'title') {
               const h = inst.querySelector<HTMLElement>('.hk-title');
@@ -457,7 +674,7 @@ color: var(--bu-color-brand-primary, #012085);
         ctrl.addEventListener('change', apply);
       });
 
-    // ── 3. Smooth scroll al navegar desde el sidebar ────────────
+    // ── 5. Smooth scroll del sidebar ────────────────────────────
     document.querySelectorAll<HTMLAnchorElement>('.visor__nav a[href^="#"]').forEach((a) => {
       a.addEventListener('click', (e) => {
         const target = document.querySelector(a.getAttribute('href') ?? '');
