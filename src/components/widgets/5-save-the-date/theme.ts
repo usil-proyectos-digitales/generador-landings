@@ -4,15 +4,20 @@
  * Centraliza todas las clases de color del widget.
  * Editá solo este archivo para ajustar colores.
  *
- * Estructura:
- *   - theme[variant][mode]  → tokens por variante × modo
- *   - baseClasses           → clases compartidas (layout, tipografía)
- *   - backgrounds           → enum de fondos alternativos (override via prop)
+ * ESTRATEGIA DE COLORES:
+ *   - Solo existen 5 variables CSS por BU en `global.css`. Esas
+ *     variables NO cambian con `data-mode`. La elección de cuál de
+ *     los 5 roles usar (primary, secondary, accent, surface, neutral)
+ *     depende del MODO y se hace ACÁ, vía clases Tailwind.
+ *   - El fondo gris claro (`#F0F0F0`) de la sección en modo light
+ *     es independiente de los tokens del BU — está hardcoded porque
+ *     en light no queremos teñir el section con la paleta del BU.
+ *     En dark sí queremos teñirlo → usamos `bg-bu-surface`.
  *
- * Las clases resuelven a CSS variables del Design System V2.
- * Variables cambian por:
- *   - `data-bu="..."`  → paleta del BU
- *   - `data-mode="dark"` → versión oscura del BU
+ * Estructura:
+ *   - theme[variant][mode] → clases Tailwind por variante × modo
+ *   - baseClasses          → clases compartidas (layout, tipografía)
+ *   - backgrounds          → enum de fondos alternativos (override via prop)
  *
  * Los SVG usan `currentColor` → heredan color del texto padre.
  */
@@ -30,15 +35,16 @@ export const theme: Record<Variant, Record<Mode, VariantTheme>> = {
   // ── v5.7 — Título + Cards + Bajada ────────────────────────
   'v5.7': {
     light: {
-      // Light: sección gris claro neutro, cards en accent del BU.
+      // Light: sección gris claro neutro, título primary, cards en accent.
       section: 'bg-[#F0F0F0]',
       title: 'text-bu-primary',
       card: 'bg-bu-accent text-bu-surface',
       bajada: 'text-bu-primary',
     },
     dark: {
-      // Dark: sección toma el surface oscuro del BU, cards en accent
-      // (que ya es más vivo en dark), bajada clara.
+      // Dark: la sección toma el surface oscuro del BU (teñido por el BU),
+      // el título pasa a accent (resalta sobre el surface oscuro),
+      // las cards mantienen accent (contraste alto), la bajada va a surface.
       section: 'bg-bu-surface',
       title: 'text-bu-accent',
       card: 'bg-bu-accent text-bu-surface',

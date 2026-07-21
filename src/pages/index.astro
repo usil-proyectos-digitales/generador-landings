@@ -36,12 +36,11 @@ import BaseLayout from '@layouts/BaseLayout.astro';
 import { widgetRegistry } from '../components/widgets/registry.ts';
 import buColors from '@data/bu-colors.json';
 
-// Normalizamos el JSON. Cada BU tiene { light: {...}, dark: {...} }.
-// Por defecto mostramos el swatch del modo claro.
-const busList = Object.entries(buColors.bus).map(([id, palette]) => {
-  const light = (palette as { light: { primary: string } }).light;
-  return { id, primary: light.primary };
-});
+// Normalizamos el JSON a una lista [{id, primary, secondary, ...}].
+const busList = Object.entries(buColors.bus).map(([id, palette]) => ({
+  id,
+  ...(palette as { primary: string; secondary: string; accent: string; surface: string; text: string }),
+}));
 ---
 
 <BaseLayout

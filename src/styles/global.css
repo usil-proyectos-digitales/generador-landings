@@ -38,6 +38,30 @@
     --bu-color-neutral: #1a1a1a;
 }
 
+/* ============================================================
+   BU COLOR TOKENS — 5 colores fijos por BU
+   ------------------------------------------------------------
+   Cada BU define exactamente 5 tokens. La elección de cuál hex
+   va en cada rol (primary/secondary/accent/surface/neutral)
+   depende del MODO del widget (light/dark) y se resuelve en
+   el `theme.ts` de cada widget.
+
+   Por ejemplo, en `BloqueIntro` el theme.ts hace:
+     light.section = 'bg-bu-primary text-bu-surface'
+     dark.section  = 'bg-bu-surface text-bu-primary'
+
+   Si querés cambiar el color de UN BU, editás SOLO este archivo.
+   Si querés que un widget se vea diferente en dark, editás
+   SOLO su theme.ts. No hay que duplicar variables por modo.
+
+   Variables:
+     --bu-color-brand-primary    → CTA fuerte / títulos destacados
+     --bu-color-brand-secondary  → Soporte / texto alterno
+     --bu-color-accent-primary   → Highlights / badges
+     --bu-color-surface-light    → Fondo principal de la sección
+     --bu-color-neutral          → Texto principal sobre el fondo
+   ============================================================ */
+
 /* ── 1. PREGRADO ── */
 [data-bu="pregrado"] {
     --bu-color-brand-primary: #1e50dc;
@@ -45,13 +69,6 @@
     --bu-color-accent-primary: #817aff;
     --bu-color-surface-light: #DFE8F7;
     --bu-color-neutral: #FFFFFF;
-}
-[data-bu="pregrado"][data-mode="dark"] {
-    --bu-color-brand-primary: #1e50dc;
-    --bu-color-brand-secondary: #4d80ff;
-    --bu-color-accent-primary: #b3a6ff;
-    --bu-color-surface-light: #0a1a3a;
-    --bu-color-neutral: #DFE8F7;
 }
 
 /* ── 2. PREGRADO EJECUTIVO ── */
@@ -62,13 +79,6 @@
     --bu-color-surface-light: #EDEDED;
     --bu-color-neutral: #ffffff;
 }
-[data-bu="pregrado-ejecutivo"][data-mode="dark"] {
-    --bu-color-brand-primary: #4d80ff;
-    --bu-color-brand-secondary: #002663;
-    --bu-color-accent-primary: #2dd4bf;
-    --bu-color-surface-light: #1a1a2e;
-    --bu-color-neutral: #EDEDED;
-}
 
 /* ── 3. INSTITUTO DE EMPRENDEDORES ── */
 [data-bu="instituto-de-emprendedores"] {
@@ -77,13 +87,6 @@
     --bu-color-accent-primary: #00F600;
     --bu-color-surface-light: #EDEDED;
     --bu-color-neutral: #ffffff;
-}
-[data-bu="instituto-de-emprendedores"][data-mode="dark"] {
-    --bu-color-brand-primary: #1D18E4;
-    --bu-color-brand-secondary: #6d6aff;
-    --bu-color-accent-primary: #4ade80;
-    --bu-color-surface-light: #0a0824;
-    --bu-color-neutral: #EDEDED;
 }
 
 /* ── 4. POSGRADO ── */
@@ -94,13 +97,6 @@
     --bu-color-surface-light: #DEE2EC;
     --bu-color-neutral: #ffffff;
 }
-[data-bu="posgrado"][data-mode="dark"] {
-    --bu-color-brand-primary: #1a1a1a;
-    --bu-color-brand-secondary: #4d80ff;
-    --bu-color-accent-primary: #4d4dff;
-    --bu-color-surface-light: #0d0d18;
-    --bu-color-neutral: #DEE2EC;
-}
 
 /* ── 5. CSIR ── */
 [data-bu="csir"] {
@@ -109,13 +105,6 @@
     --bu-color-accent-primary: #f6b724;
     --bu-color-surface-light: #EDEDED;
     --bu-color-neutral: #ffffff;
-}
-[data-bu="csir"][data-mode="dark"] {
-    --bu-color-brand-primary: #5967D2;
-    --bu-color-brand-secondary: #8b9bff;
-    --bu-color-accent-primary: #fbbf24;
-    --bu-color-surface-light: #0a0d2e;
-    --bu-color-neutral: #EDEDED;
 }
 
 /* ── 6. SIU ── */
@@ -126,13 +115,6 @@
     --bu-color-surface-light: #EDEDED;
     --bu-color-neutral: #ffffff;
 }
-[data-bu="siu"][data-mode="dark"] {
-    --bu-color-brand-primary: #1172E3;
-    --bu-color-brand-secondary: #4d9aff;
-    --bu-color-accent-primary: #2dd4bf;
-    --bu-color-surface-light: #001028;
-    --bu-color-neutral: #EDEDED;
-}
 
 /* ── 7. COLORING DREAMS ── */
 [data-bu="coloring-dreams"] {
@@ -141,13 +123,6 @@
     --bu-color-accent-primary: #A8BD54;
     --bu-color-surface-light: #EDEDED;
     --bu-color-neutral: #ffffff;
-}
-[data-bu="coloring-dreams"][data-mode="dark"] {
-    --bu-color-brand-primary: #5967D2;
-    --bu-color-brand-secondary: #8b9bff;
-    --bu-color-accent-primary: #c0e070;
-    --bu-color-surface-light: #0a0d2e;
-    --bu-color-neutral: #EDEDED;
 }
 
 /* ── 8. USIL PARAGUAY ── */
@@ -158,13 +133,6 @@
     --bu-color-surface-light: #DFE8F7;
     --bu-color-neutral: #ffffff;
 }
-[data-bu="usil-paraguay"][data-mode="dark"] {
-    --bu-color-brand-primary: #FF4CEE;
-    --bu-color-brand-secondary: #4d80ff;
-    --bu-color-accent-primary: #ff8af0;
-    --bu-color-surface-light: #1a0a2e;
-    --bu-color-neutral: #DFE8F7;
-}
 
 /* ── 9. USIL CORPORATIVO ── */
 [data-bu="usil-corporativo"] {
@@ -173,13 +141,6 @@
     --bu-color-accent-primary: #438BE0;
     --bu-color-surface-light: #DFE8F7;
     --bu-color-neutral: #ffffff;
-}
-[data-bu="usil-corporativo"][data-mode="dark"] {
-    --bu-color-brand-primary: #438BE0;
-    --bu-color-brand-secondary: #4d80ff;
-    --bu-color-accent-primary: #7ab3ff;
-    --bu-color-surface-light: #0a1428;
-    --bu-color-neutral: #DFE8F7;
 }
 
 
