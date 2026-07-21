@@ -119,6 +119,24 @@
     --bu-color-neutral: #1a1a1a;
 }
 
+/* ── 10. EJECUTIVO ── */
+[data-bu="ejecutivo"] {
+    --bu-color-brand-primary: #0066CC;
+    --bu-color-brand-secondary: #003D7A;
+    --bu-color-accent-primary: #C5A572;
+    --bu-color-surface-light: #FFFFFF;
+    --bu-color-neutral: #1A1A1A;
+}
+
+/* ── 11. EMPRENDEDORES ── */
+[data-bu="emprendedores"] {
+    --bu-color-brand-primary: #FF6B35;
+    --bu-color-brand-secondary: #C53D18;
+    --bu-color-accent-primary: #FFB627;
+    --bu-color-surface-light: #FFFFFF;
+    --bu-color-neutral: #1A1A1A;
+}
+
 
 /* ============================================================
    Tailwind v4 theme — CSS-first config
