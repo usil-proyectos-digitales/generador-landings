@@ -1,7 +1,7 @@
 {
   "version": "2.0",
   "last_updated": "2026-07-21",
-  "note": "Catálogo de los 5 colores por BU. MANTENER SINCRONIZADO con `web/src/styles/global.css` — son la misma fuente de verdad en dos formatos (runtime vs design data). Los swatches del visor leen de aquí; los widgets resuelven desde global.css vía @theme.",
+  "note": "Catálogo de los 5 colores por BU. MANTENER SINCRONIZADO con `generador-landings/src/styles/global.css` — son la misma fuente de verdad en dos formatos (runtime vs design data). Los swatches del visor leen de aquí; los widgets resuelven desde global.css vía @theme.",
   "bus": {
     "pregrado": {
       "primary": "#1e50dc",

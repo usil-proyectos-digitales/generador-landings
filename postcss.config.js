@@ -1,5 +1,5 @@
 /**
- * PostCSS config del subproyecto Astro (web/).
+ * PostCSS config del subproyecto Astro (generador-landings/).
  * ----------------------------------------------------------------
  * Vacío explícito para evitar que Vite "herede" el
  * `postcss.config.js` de la raíz (que usa el plugin de Tailwind v3

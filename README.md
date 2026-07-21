@@ -1,6 +1,9 @@
-# Web — Astro Frontend (V2)
+# Generador de Landings — Astro Frontend (V2)
 
 Frontend público del Generador de LPs V2. Astro consume WordPress headless vía REST API y se compila a HTML estático para desplegar en AWS S3 + CloudFront.
+
+> **Nota:** Este repo es standalone (antes vivía como `web/` dentro de `usil-widgets/`).
+> El flujo Astro ↔ WP ↔ deploy se independiza del repo padre a partir de V2.
 
 ## Stack
 
@@ -14,10 +17,10 @@ Frontend público del Generador de LPs V2. Astro consume WordPress headless vía
 ## Estructura
 
 ```
-web/
+.                                 ← raíz de este repo
 ├── src/
-│   ├── pages/           # Rutas del sitio (index.astro = homepage)
-│   ├── components/      # Componentes Astro (Hero, Button, etc.)
+│   ├── pages/           # Rutas del sitio (index.astro = homepage, visor.astro = UI Kit)
+│   ├── components/      # Componentes Astro (Hero, Button, widgets/...)
 │   ├── layouts/         # Layouts base (BaseLayout.astro)
 │   ├── data/            # JSONs del Design System (catálogo widgets, ACF, colores)
 │   ├── lib/             # Utilidades (wp-api.ts = cliente REST)
@@ -25,6 +28,7 @@ web/
 │   └── env.d.ts         # Tipos del entorno
 ├── public/              # Assets estáticos (favicon, etc.)
 ├── astro.config.mjs     # Config Astro + plugin Vite de Tailwind v4
+├── postcss.config.js    # Bloquea el walk-up del postcss.config.js del repo padre
 ├── tsconfig.json        # TypeScript strict
 ├── .env.example         # Plantilla de variables de entorno
 └── package.json
@@ -37,7 +41,6 @@ web/
 Asegurate de tener [pnpm](https://pnpm.io) instalado (`npm install -g pnpm`).
 
 ```bash
-cd web
 pnpm install
 ```
 
@@ -77,13 +80,13 @@ Los tokens `bu-*` se definen en `src/styles/global.css` dentro del bloque `@them
 <body data-bu="emprendedores"> <!-- usa los 5 colores de Emprendedores -->
 ```
 
-| Token Tailwind | Variable CSS | Uso |
+| Token Tailwind | Variable CSS fuente | Uso |
 |---|---|---|
-| `bg-bu-primary` | `var(--bu-color-primary)` | Botones primarios, links, acentos |
-| `bg-bu-secondary` | `var(--bu-color-secondary)` | Botones secundarios |
-| `bg-bu-accent` | `var(--bu-color-accent)` | Highlights, badges |
-| `bg-bu-surface` | `var(--bu-color-surface)` | Fondos, cards |
-| `text-bu-text` | `var(--bu-color-text)` | Texto principal |
+| `bg-bu-primary` | `var(--bu-color-brand-primary)` | Botones primarios, links, acentos |
+| `bg-bu-secondary` | `var(--bu-color-brand-secondary)` | Botones secundarios |
+| `bg-bu-accent` | `var(--bu-color-accent-primary)` | Highlights, badges |
+| `bg-bu-surface` | `var(--bu-color-surface-light)` | Fondos, cards |
+| `text-bu-text` | `var(--bu-color-neutral)` | Texto principal |
 | `bg-bu-widget-card-bg` | `var(--bu-widget-card-bg)` | Card BG redirigible por BU |
 
 Para agregar un nuevo token, editar `src/styles/global.css`:
@@ -146,33 +149,28 @@ pnpm build
 aws s3 sync dist/ s3://usil-landings-prod --delete
 ```
 
-## Relación con otros proyectos del repo
+## Relación con el repo padre (`usil-widgets`)
+
+Este repo se independizó de `usil-widgets` (raíz). Los siguientes siguen en el repo padre y se mantienen sincronizados manualmente cuando aplica:
 
 ```
-usil-widgets/                       (raíz)
-├── src/                            (Vite + Tailwind legacy)
+usil-widgets/                       (repo padre)
+├── src/                            (Vite + Tailwind legacy — Visor V1)
 │   └── widgets/                    (preview de widgets individuales)
 ├── wp-plugin/                      (PHP Elementor legacy)
 │   └── usil-elementor-widgets/
-├── docs/
-├── public/
-└── web/                            (Astro — ESTE directorio)
-    └── src/
-        ├── components/
-        ├── pages/
-        └── data/                   (JSONs del Design System)
+└── docs/
 ```
 
-- **Vite** sigue corriendo para `src/widgets/` (preview de widgets individuales con HMR).
+- **Vite** en el padre sigue corriendo para `src/widgets/` (preview legacy).
 - **PHP plugin** sigue activo para landings V1 en producción.
-- **Astro** (este dir) es el frontend público del futuro.
-- Convivencia sin conflictos: cada uno tiene su propio `node_modules/` y puerto.
+- **Astro (este repo)** es el frontend público del futuro.
 
 ## Próximos pasos
 
 1. **Spike de 1 semana** (recomendado): validar el flujo Astro + WP Headless + Gemini
-2. **Migrar widgets V2** desde `src/widgets/` a `web/src/components/` como componentes Astro
-3. **Setup del plugin IA** que consume `web/src/data/` para generar landings con Gemini
+2. **Migrar widgets V2** desde el `src/widgets/` del repo padre a `src/components/` de este repo
+3. **Setup del plugin IA** que consume `src/data/` de este repo para generar landings con Gemini
 4. **Deploy a staging** en SiteGround o Netlify para preview del cliente
 5. **Deploy a producción** en AWS S3 + CloudFront cuando esté validado
 
