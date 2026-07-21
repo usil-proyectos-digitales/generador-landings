@@ -1,70 +1,151 @@
 {
-  "version": "2.1",
+  "version": "3.0",
   "last_updated": "2026-07-21",
-  "note": "Catálogo de los 5 colores por BU. FUENTE DE VERDAD: `generador-landings/src/styles/global.css` — este JSON es un espejo para que el visor pueda leer los swatches sin parsear CSS. Mantener sincronizado en orden y valores. Orden de las claves = orden de aparición de los selectores [data-bu='...'] en global.css.",
+  "note": "Catálogo de colores por BU con variantes light/dark. FUENTE DE VERDAD: `generador-landings/src/styles/global.css` — este JSON es un espejo. Cada BU tiene 5 colores × 2 modos = 10 valores. El switcher del visor combina `data-bu` + `data-mode` para mostrar el swatch correcto.",
   "bus": {
     "pregrado": {
-      "primary": "#1e50dc",
-      "secondary": "#002663",
-      "accent": "#817aff",
-      "surface": "#DFE8F7",
-      "text": "#FFFFFF"
+      "light": {
+        "primary": "#1e50dc",
+        "secondary": "#002663",
+        "accent": "#817aff",
+        "surface": "#DFE8F7",
+        "text": "#FFFFFF"
+      },
+      "dark": {
+        "primary": "#1e50dc",
+        "secondary": "#4d80ff",
+        "accent": "#b3a6ff",
+        "surface": "#0a1a3a",
+        "text": "#DFE8F7"
+      }
     },
     "pregrado-ejecutivo": {
-      "primary": "#0050E2",
-      "secondary": "#002663",
-      "accent": "#00B79A",
-      "surface": "#EDEDED",
-      "text": "#ffffff"
+      "light": {
+        "primary": "#0050E2",
+        "secondary": "#002663",
+        "accent": "#00B79A",
+        "surface": "#EDEDED",
+        "text": "#ffffff"
+      },
+      "dark": {
+        "primary": "#4d80ff",
+        "secondary": "#002663",
+        "accent": "#2dd4bf",
+        "surface": "#1a1a2e",
+        "text": "#EDEDED"
+      }
     },
     "instituto-de-emprendedores": {
-      "primary": "#1B1464",
-      "secondary": "#1D18E4",
-      "accent": "#00F600",
-      "surface": "#EDEDED",
-      "text": "#ffffff"
+      "light": {
+        "primary": "#1B1464",
+        "secondary": "#1D18E4",
+        "accent": "#00F600",
+        "surface": "#EDEDED",
+        "text": "#ffffff"
+      },
+      "dark": {
+        "primary": "#1D18E4",
+        "secondary": "#6d6aff",
+        "accent": "#4ade80",
+        "surface": "#0a0824",
+        "text": "#EDEDED"
+      }
     },
     "posgrado": {
-      "primary": "#000000",
-      "secondary": "#1E50DC",
-      "accent": "#01004E",
-      "surface": "#DEE2EC",
-      "text": "#ffffff"
+      "light": {
+        "primary": "#000000",
+        "secondary": "#1E50DC",
+        "accent": "#01004E",
+        "surface": "#DEE2EC",
+        "text": "#ffffff"
+      },
+      "dark": {
+        "primary": "#1a1a1a",
+        "secondary": "#4d80ff",
+        "accent": "#4d4dff",
+        "surface": "#0d0d18",
+        "text": "#DEE2EC"
+      }
     },
     "csir": {
-      "primary": "#232B91",
-      "secondary": "#5967D2",
-      "accent": "#f6b724",
-      "surface": "#EDEDED",
-      "text": "#ffffff"
+      "light": {
+        "primary": "#232B91",
+        "secondary": "#5967D2",
+        "accent": "#f6b724",
+        "surface": "#EDEDED",
+        "text": "#ffffff"
+      },
+      "dark": {
+        "primary": "#5967D2",
+        "secondary": "#8b9bff",
+        "accent": "#fbbf24",
+        "surface": "#0a0d2e",
+        "text": "#EDEDED"
+      }
     },
     "siu": {
-      "primary": "#002663",
-      "secondary": "#1172E3",
-      "accent": "#00BBBA",
-      "surface": "#EDEDED",
-      "text": "#ffffff"
+      "light": {
+        "primary": "#002663",
+        "secondary": "#1172E3",
+        "accent": "#00BBBA",
+        "surface": "#EDEDED",
+        "text": "#ffffff"
+      },
+      "dark": {
+        "primary": "#1172E3",
+        "secondary": "#4d9aff",
+        "accent": "#2dd4bf",
+        "surface": "#001028",
+        "text": "#EDEDED"
+      }
     },
     "coloring-dreams": {
-      "primary": "#002663",
-      "secondary": "#5967D2",
-      "accent": "#A8BD54",
-      "surface": "#EDEDED",
-      "text": "#ffffff"
+      "light": {
+        "primary": "#002663",
+        "secondary": "#5967D2",
+        "accent": "#A8BD54",
+        "surface": "#EDEDED",
+        "text": "#ffffff"
+      },
+      "dark": {
+        "primary": "#5967D2",
+        "secondary": "#8b9bff",
+        "accent": "#c0e070",
+        "surface": "#0a0d2e",
+        "text": "#EDEDED"
+      }
     },
     "usil-paraguay": {
-      "primary": "#1E50DC",
-      "secondary": "#002663",
-      "accent": "#FF4CEE",
-      "surface": "#DFE8F7",
-      "text": "#ffffff"
+      "light": {
+        "primary": "#1E50DC",
+        "secondary": "#002663",
+        "accent": "#FF4CEE",
+        "surface": "#DFE8F7",
+        "text": "#ffffff"
+      },
+      "dark": {
+        "primary": "#FF4CEE",
+        "secondary": "#4d80ff",
+        "accent": "#ff8af0",
+        "surface": "#1a0a2e",
+        "text": "#DFE8F7"
+      }
     },
     "usil-corporativo": {
-      "primary": "#1E50DC",
-      "secondary": "#002663",
-      "accent": "#438BE0",
-      "surface": "#DFE8F7",
-      "text": "#ffffff"
+      "light": {
+        "primary": "#1E50DC",
+        "secondary": "#002663",
+        "accent": "#438BE0",
+        "surface": "#DFE8F7",
+        "text": "#ffffff"
+      },
+      "dark": {
+        "primary": "#438BE0",
+        "secondary": "#4d80ff",
+        "accent": "#7ab3ff",
+        "surface": "#0a1428",
+        "text": "#DFE8F7"
+      }
     }
   }
 }

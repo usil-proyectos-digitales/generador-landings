@@ -43,81 +43,146 @@
     --bu-color-brand-primary: #1e50dc;
     --bu-color-brand-secondary: #002663;
     --bu-color-accent-primary: #817aff;
-    --bu-color-surface-light: #ffffff;
-    --bu-color-neutral: #1a1a1a;
+    --bu-color-surface-light: #DFE8F7;
+    --bu-color-neutral: #FFFFFF;
+}
+[data-bu="pregrado"][data-mode="dark"] {
+    --bu-color-brand-primary: #1e50dc;
+    --bu-color-brand-secondary: #4d80ff;
+    --bu-color-accent-primary: #b3a6ff;
+    --bu-color-surface-light: #0a1a3a;
+    --bu-color-neutral: #DFE8F7;
 }
 
 /* ── 2. PREGRADO EJECUTIVO ── */
 [data-bu="pregrado-ejecutivo"] {
-    --bu-color-brand-primary: #0050e2;
+    --bu-color-brand-primary: #0050E2;
     --bu-color-brand-secondary: #002663;
-    --bu-color-accent-primary: #00b79a;
-    --bu-color-surface-light: #ededed;
-    --bu-color-neutral: #1a1a1a;
+    --bu-color-accent-primary: #00B79A;
+    --bu-color-surface-light: #EDEDED;
+    --bu-color-neutral: #ffffff;
+}
+[data-bu="pregrado-ejecutivo"][data-mode="dark"] {
+    --bu-color-brand-primary: #4d80ff;
+    --bu-color-brand-secondary: #002663;
+    --bu-color-accent-primary: #2dd4bf;
+    --bu-color-surface-light: #1a1a2e;
+    --bu-color-neutral: #EDEDED;
 }
 
 /* ── 3. INSTITUTO DE EMPRENDEDORES ── */
 [data-bu="instituto-de-emprendedores"] {
-    --bu-color-brand-primary: #01004e;
-    --bu-color-brand-secondary: #1d18e4;
-    --bu-color-accent-primary: #00f600;
-    --bu-color-surface-light: #ededed;
-    --bu-color-neutral: #1a1a1a;
+    --bu-color-brand-primary: #1B1464;
+    --bu-color-brand-secondary: #1D18E4;
+    --bu-color-accent-primary: #00F600;
+    --bu-color-surface-light: #EDEDED;
+    --bu-color-neutral: #ffffff;
+}
+[data-bu="instituto-de-emprendedores"][data-mode="dark"] {
+    --bu-color-brand-primary: #1D18E4;
+    --bu-color-brand-secondary: #6d6aff;
+    --bu-color-accent-primary: #4ade80;
+    --bu-color-surface-light: #0a0824;
+    --bu-color-neutral: #EDEDED;
 }
 
 /* ── 4. POSGRADO ── */
 [data-bu="posgrado"] {
     --bu-color-brand-primary: #000000;
-    --bu-color-brand-secondary: #1e50dc;
-    --bu-color-accent-primary: #00b79a;
-    --bu-color-surface-light: #dee2ec;
-    --bu-color-neutral: #1a1a1a;
+    --bu-color-brand-secondary: #1E50DC;
+    --bu-color-accent-primary: #01004E;
+    --bu-color-surface-light: #DEE2EC;
+    --bu-color-neutral: #ffffff;
+}
+[data-bu="posgrado"][data-mode="dark"] {
+    --bu-color-brand-primary: #1a1a1a;
+    --bu-color-brand-secondary: #4d80ff;
+    --bu-color-accent-primary: #4d4dff;
+    --bu-color-surface-light: #0d0d18;
+    --bu-color-neutral: #DEE2EC;
 }
 
 /* ── 5. CSIR ── */
 [data-bu="csir"] {
-    --bu-color-brand-primary: #232b91;
-    --bu-color-brand-secondary: #5967d2;
+    --bu-color-brand-primary: #232B91;
+    --bu-color-brand-secondary: #5967D2;
     --bu-color-accent-primary: #f6b724;
-    --bu-color-surface-light: #ededed;
-    --bu-color-neutral: #1a1a1a;
+    --bu-color-surface-light: #EDEDED;
+    --bu-color-neutral: #ffffff;
+}
+[data-bu="csir"][data-mode="dark"] {
+    --bu-color-brand-primary: #5967D2;
+    --bu-color-brand-secondary: #8b9bff;
+    --bu-color-accent-primary: #fbbf24;
+    --bu-color-surface-light: #0a0d2e;
+    --bu-color-neutral: #EDEDED;
 }
 
 /* ── 6. SIU ── */
 [data-bu="siu"] {
     --bu-color-brand-primary: #002663;
-    --bu-color-brand-secondary: #1172e3;
-    --bu-color-accent-primary: #00bbba;
-    --bu-color-surface-light: #ededed;
-    --bu-color-neutral: #1a1a1a;
+    --bu-color-brand-secondary: #1172E3;
+    --bu-color-accent-primary: #00BBBA;
+    --bu-color-surface-light: #EDEDED;
+    --bu-color-neutral: #ffffff;
+}
+[data-bu="siu"][data-mode="dark"] {
+    --bu-color-brand-primary: #1172E3;
+    --bu-color-brand-secondary: #4d9aff;
+    --bu-color-accent-primary: #2dd4bf;
+    --bu-color-surface-light: #001028;
+    --bu-color-neutral: #EDEDED;
 }
 
-/* ── 7. USIL CORPORATIVO ── */
-[data-bu="usil-corporativo"] {
-    --bu-color-brand-primary: #1e50dc;
-    --bu-color-brand-secondary: #002663;
-    --bu-color-accent-primary: #438be0;
-    --bu-color-surface-light: #ededed;
-    --bu-color-neutral: #1a1a1a;
-}
-
-/* ── 8. COLORING DREAMS ── */
+/* ── 7. COLORING DREAMS ── */
 [data-bu="coloring-dreams"] {
     --bu-color-brand-primary: #002663;
-    --bu-color-brand-secondary: #5967d2;
-    --bu-color-accent-primary: #8abd56;
-    --bu-color-surface-light: #ededed;
-    --bu-color-neutral: #1a1a1a;
+    --bu-color-brand-secondary: #5967D2;
+    --bu-color-accent-primary: #A8BD54;
+    --bu-color-surface-light: #EDEDED;
+    --bu-color-neutral: #ffffff;
+}
+[data-bu="coloring-dreams"][data-mode="dark"] {
+    --bu-color-brand-primary: #5967D2;
+    --bu-color-brand-secondary: #8b9bff;
+    --bu-color-accent-primary: #c0e070;
+    --bu-color-surface-light: #0a0d2e;
+    --bu-color-neutral: #EDEDED;
 }
 
-/* ── 9. USIL PARAGUAY ── */
+/* ── 8. USIL PARAGUAY ── */
 [data-bu="usil-paraguay"] {
-    --bu-color-brand-primary: #1e50dc;
+    --bu-color-brand-primary: #1E50DC;
     --bu-color-brand-secondary: #002663;
-    --bu-color-accent-primary: #817aff;
-    --bu-color-surface-light: #ededed;
-    --bu-color-neutral: #1a1a1a;
+    --bu-color-accent-primary: #FF4CEE;
+    --bu-color-surface-light: #DFE8F7;
+    --bu-color-neutral: #ffffff;
 }
+[data-bu="usil-paraguay"][data-mode="dark"] {
+    --bu-color-brand-primary: #FF4CEE;
+    --bu-color-brand-secondary: #4d80ff;
+    --bu-color-accent-primary: #ff8af0;
+    --bu-color-surface-light: #1a0a2e;
+    --bu-color-neutral: #DFE8F7;
+}
+
+/* ── 9. USIL CORPORATIVO ── */
+[data-bu="usil-corporativo"] {
+    --bu-color-brand-primary: #1E50DC;
+    --bu-color-brand-secondary: #002663;
+    --bu-color-accent-primary: #438BE0;
+    --bu-color-surface-light: #DFE8F7;
+    --bu-color-neutral: #ffffff;
+}
+[data-bu="usil-corporativo"][data-mode="dark"] {
+    --bu-color-brand-primary: #438BE0;
+    --bu-color-brand-secondary: #4d80ff;
+    --bu-color-accent-primary: #7ab3ff;
+    --bu-color-surface-light: #0a1428;
+    --bu-color-neutral: #DFE8F7;
+}
+
+
 
 
 /* ============================================================

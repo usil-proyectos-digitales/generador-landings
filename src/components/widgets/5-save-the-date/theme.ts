@@ -4,34 +4,50 @@
  * Centraliza todas las clases de color del widget.
  * Editá solo este archivo para ajustar colores.
  *
- * Las clases resuelven a CSS variables del Design System V2
- * (cambian automáticamente con el BU activo en runtime).
+ * Estructura:
+ *   - theme[variant][mode]  → tokens por variante × modo
+ *   - baseClasses           → clases compartidas (layout, tipografía)
+ *   - backgrounds           → enum de fondos alternativos (override via prop)
+ *
+ * Las clases resuelven a CSS variables del Design System V2.
+ * Variables cambian por:
+ *   - `data-bu="..."`  → paleta del BU
+ *   - `data-mode="dark"` → versión oscura del BU
+ *
  * Los SVG usan `currentColor` → heredan color del texto padre.
  */
+export type Mode = 'light' | 'dark';
+export type Variant = 'v5.7';
+
 export interface VariantTheme {
-  /** Clases para el contenedor raíz `<section>`. */
   section: string;
-  /** Clases para el `<h2>` del título principal. */
   title: string;
-  /** Clases para cada `<div class="hk-std-card">`. */
   card: string;
-  /** Clases para el `<p>` de bajada (lugar / dirección). */
   bajada: string;
 }
 
-export const theme: Record<'v5.7', VariantTheme> = {
-  // Título + Cards + Bajada — fondo gris claro, cards en accent del BU.
+export const theme: Record<Variant, Record<Mode, VariantTheme>> = {
+  // ── v5.7 — Título + Cards + Bajada ────────────────────────
   'v5.7': {
-    section: 'bg-[#F0F0F0]',
-    title: 'text-bu-primary',
-    card: 'bg-bu-accent text-bu-surface',
-    bajada: 'text-bu-primary',
+    light: {
+      // Light: sección gris claro neutro, cards en accent del BU.
+      section: 'bg-[#F0F0F0]',
+      title: 'text-bu-primary',
+      card: 'bg-bu-accent text-bu-surface',
+      bajada: 'text-bu-primary',
+    },
+    dark: {
+      // Dark: sección toma el surface oscuro del BU, cards en accent
+      // (que ya es más vivo en dark), bajada clara.
+      section: 'bg-bu-surface',
+      title: 'text-bu-accent',
+      card: 'bg-bu-accent text-bu-surface',
+      bajada: 'text-bu-surface',
+    },
   },
 };
 
-/**
- * Clases base compartidas (layout, tipografía, transiciones).
- */
+/** Clases compartidas (layout, tipografía, transiciones). */
 export const baseClasses = {
   section: 'py-16 w-full transition-opacity duration-300 md:py-24 font-montserrat',
   container: 'container relative z-10 px-4 mx-auto md:px-6',

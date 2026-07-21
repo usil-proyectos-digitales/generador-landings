@@ -2,34 +2,29 @@
 /**
  * SaveTheDate — Widget "Save the Date" (id: `5-save-the-date`).
  * --------------------------------------------------------------
- * Migración a Astro del widget legacy.
  *
- * Renderiza un bloque con:
- *   - Título principal (Save the Date)
+ * Renderiza:
+ *   - Título principal
  *   - 1–6 cards con icono SVG + etiqueta + valor
  *   - Texto de bajada (lugar / dirección)
  *
  * Sistema de color:
- *   Tokens centralizados en `./theme.ts` — editá solo ese archivo
- *   para ajustar colores. Las clases resuelven a CSS variables
- *   del Design System V2 → cambian con el BU en runtime.
- *   Los SVGs usan `currentColor` → heredan color del texto padre.
- *
- * Iconos:
- *   SVG INLINE en `./icons.ts` (no archivos servidos).
- *   WordPress nunca los toca → evita problemas de sanitización.
+ *   Tokens centralizados en `./theme.ts` por variante × modo.
+ *   Permite mezclar widgets claros y oscuros en una misma landing.
+ *   Los SVG usan `currentColor` → heredan color del texto padre.
  *
  * ACF (WordPress):
- *   - `title`       ← ACF `text`     "Título"
- *   - `cards[]`     ← ACF `repeater` "Cards" (label, value, iconSlug)
- *   - `bottomText`  ← ACF `wysiwyg`  "Texto bajada"
+ *   - `title`      ← ACF `text`     "Título"
+ *   - `cards[]`    ← ACF `repeater` "Cards" (label, value, iconSlug)
+ *   - `bottomText` ← ACF `wysiwyg`  "Texto bajada"
+ *   - `mode`       ← toggle        ('light' | 'dark') — NUEVO
  *
  * Comportamiento:
  *   - Cards con `label` o `value` vacíos NO se renderizan.
  *   - Máximo 6 cards (defensa legacy).
  */
 import { ICONS, type IconSlug } from './icons.ts';
-import { theme, baseClasses, backgrounds } from './theme.ts';
+import { theme, baseClasses, backgrounds, type Mode } from './theme.ts';
 
 export interface CardItem {
   label: string;
@@ -44,6 +39,7 @@ interface Props {
   id?: string;
   fontTitle?: 'anton' | 'montserrat';
   background?: 'gray' | 'white' | 'transparent';
+  mode?: Mode;
 }
 
 const {
@@ -57,17 +53,16 @@ const {
   id = 'save-the-date',
   fontTitle = 'anton',
   background = 'gray',
+  mode = 'light',
 } = Astro.props;
 
 // ── Resolución de tokens desde theme.ts ─────────────────────
-const tokens = theme['v5.7'];
+const tokens = theme['v5.7'][mode];
 const sectionBg = backgrounds[background];
 
 const titleFontClass = fontTitle === 'anton' ? 'font-anton' : 'font-montserrat';
 
-// ── Filtrado de cards ──────────────────────────────────────
-// Cards con label o value vacíos NO se renderizan (comportamiento
-// esperado en WP ACF cuando el editor no completa una fila del repeater).
+// Cards vacías no se renderizan (comportamiento esperado en WP ACF).
 const validCards = (cards ?? []).filter(
   (c) => c.label?.trim() && c.value?.trim()
 ).slice(0, 6);
@@ -83,22 +78,17 @@ const cardsContainerClass =
   id={id}
   data-widget="save-the-date"
   data-variant="v5.7"
+  data-mode={mode}
   class:list={[baseClasses.section, sectionBg]}
 >
   <div class={baseClasses.container}>
     <div class="relative z-10 text-center">
-      {/* Título */}
       <h2
-        class:list={[
-          baseClasses.title,
-          titleFontClass,
-          tokens.title,
-        ]}
+        class:list={[baseClasses.title, titleFontClass, tokens.title]}
       >
         {title}
       </h2>
 
-      {/* Cards */}
       {validCards.length > 0 && (
         <div class={cardsContainerClass}>
           {validCards.map((card) => {
@@ -124,7 +114,6 @@ const cardsContainerClass =
         </div>
       )}
 
-      {/* Texto bajada (WYSIWYG) */}
       {bottomText && (
         <div class="mt-12">
           <p

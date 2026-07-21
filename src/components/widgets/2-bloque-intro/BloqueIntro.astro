@@ -6,61 +6,61 @@
  *
  * Sistema de color:
  *   Los tokens de color están centralizados en `./theme.ts`.
- *   Para ajustar un color del widget, editá solo ese archivo.
- *   Las clases (`bg-bu-primary`, etc.) resuelven a CSS variables
- *   del Design System V2 → cambian con el BU activo en runtime.
- *
- * Tipografía parametrizable vía props (`fontTitle`, `fontBody`) con
- * defaults equivalentes al legacy (`font-anton` / `font-montserrat`).
+ *   Cada variante (`v2.1`, `v2.2`) tiene tokens para `light` y `dark`,
+ *   así el editor de ACF puede mezclar widgets claros y oscuros en una
+ *   misma landing.
  *
  * ACF (WordPress):
  *   - `title`       ← ACF `text`     "Título Principal"
  *   - `description` ← ACF `wysiwyg`  "Descripción Principal" (HTML permitido)
- *   - `variant`     ← switch interno  ('v2.1' centrado | 'v2.2' dividido)
- *   - `id`          ← opcional, para anchors y analytics
+ *   - `variant`     ← switch        ('v2.1' centrado | 'v2.2' dividido)
+ *   - `mode`        ← toggle        ('light' | 'dark') — NUEVO
+ *   - `id`          ← opcional, anchors y analytics
  */
-import { theme, baseClasses } from './theme.ts';
+import { theme, baseClasses, type Mode, type Variant } from './theme.ts';
 
 interface Props {
   /** Título principal. */
   title: string;
-  /** Descripción / bajada. HTML permitido porque viene de un WYSIWYG ACF. */
+  /** Descripción / bajada. HTML permitido (WYSIWYG ACF). */
   description: string;
   /** Variante visual. */
-  variant?: 'v2.1' | 'v2.2';
+  variant?: Variant;
+  /** Modo claro u oscuro. Default: 'light'. */
+  mode?: Mode;
   /** ID del <section>. */
   id?: string;
   /** Familia tipográfica del título. */
   fontTitle?: 'anton' | 'montserrat';
-  /** Familia tipográfica del cuerpo. */
-  fontBody?: 'montserrat';
 }
 
 const {
   title,
   description,
   variant = 'v2.1',
+  mode = 'light',
   id = 'bloque-intro',
   fontTitle = variant === 'v2.1' ? 'anton' : 'montserrat',
 } = Astro.props;
 
 // ── Resolución de tokens desde theme.ts ─────────────────────
 // Toda la lógica de color vive acá. Si querés cambiar cómo se pinta
-// cada variante, editá `./theme.ts` — no toques este archivo.
-const tokens = theme[variant];
+// cada combinación variante × modo, editá `./theme.ts`.
+const tokens = theme[variant][mode];
 
 // Helpers de tipografía.
 const titleFontClass = fontTitle === 'anton' ? 'font-anton' : 'font-montserrat';
 const bodyFontClass = 'font-montserrat';
 ---
 
-{variant === 'v2.1' && (
-  <section
-    id={id}
-    data-widget="bloque-intro"
-    data-variant="v2.1"
-    class:list={[baseClasses.section, tokens.section]}
-  >
+<section
+  id={id}
+  data-widget="bloque-intro"
+  data-variant={variant}
+  data-mode={mode}
+  class:list={[baseClasses.section, tokens.section]}
+>
+  {variant === 'v2.1' && (
     <div class={baseClasses.container}>
       <div class="flex flex-col justify-center items-center mx-auto space-y-8 text-center">
         <h2
@@ -73,8 +73,6 @@ const bodyFontClass = 'font-montserrat';
         >
           {title}
         </h2>
-
-        {/* set:html permite contenido enriquecido del WYSIWYG (p, strong, em, ul, etc.) */}
         <p
           class:list={[
             'mx-auto max-w-4xl hk-desc',
@@ -86,20 +84,11 @@ const bodyFontClass = 'font-montserrat';
         />
       </div>
     </div>
-  </section>
-)}
+  )}
 
-{variant === 'v2.2' && (
-  <section
-    id={id}
-    data-widget="bloque-intro"
-    data-variant="v2.2"
-    class:list={[baseClasses.section, tokens.section]}
-  >
+  {variant === 'v2.2' && (
     <div class={baseClasses.container}>
       <div class="grid gap-12 items-start lg:grid-cols-12">
-
-        {/* Columna izquierda: Título */}
         <div class="space-y-4 lg:col-span-5">
           <h2
             class:list={[
@@ -112,8 +101,6 @@ const bodyFontClass = 'font-montserrat';
             {title}
           </h2>
         </div>
-
-        {/* Columna derecha: Texto */}
         <div class="space-y-6 lg:col-span-7">
           <p
             class:list={[
@@ -127,5 +114,5 @@ const bodyFontClass = 'font-montserrat';
         </div>
       </div>
     </div>
-  </section>
-)}
+  )}
+</section>
