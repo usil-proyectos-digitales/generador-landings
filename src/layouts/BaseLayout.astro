@@ -1,0 +1,45 @@
+---
+/**
+ * BaseLayout — Layout raíz para todas las páginas Astro.
+ * Aplica `data-bu` al `<html>` para que toda la cascada CSS
+ * del Design System V2 funcione.
+ *
+ * Para páginas que NO necesitan un BU fijo en build time (como el
+ * visor/UI Kit), pasar `bu={undefined}` o no pasar nada: el `<html>`
+ * queda sin `data-bu` y el switcher cliente lo controla.
+ *
+ * @param {string} title - Título de la página
+ * @param {string} bu - Slug de la BU. Si se omite, no se setea data-bu.
+ * @param {string} description - Meta description para SEO
+ */
+import '../styles/global.css';
+
+interface Props {
+  title: string;
+  bu?: string;
+  description?: string;
+}
+
+const { title, bu, description = 'Landing page generada con el sistema V2.' } = Astro.props;
+---
+
+<!DOCTYPE html>
+<html lang="es" {...(bu ? { 'data-bu': bu } : {})}>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content={description} />
+    <title>{title} | USIL</title>
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Anton&family=Antonio:wght@100..700&family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body class="min-h-screen bg-bu-surface text-bu-text">
+    <slot />
+  </body>
+</html>

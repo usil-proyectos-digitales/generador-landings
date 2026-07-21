@@ -1,0 +1,79 @@
+{
+  "version": "2.0",
+  "last_updated": "2026-07-20",
+  "note": "Catálogo de widgets disponibles. Cada widget define las props que la IA puede generar.",
+  "widgets": [
+    {
+      "id": "header",
+      "name": "Header",
+      "variants": ["v1-1", "v1-2", "v1-3"],
+      "description": "Cabecera de la landing con logo, navegación y CTA",
+      "props": {
+        "background": { "type": "string", "enum": ["primary", "surface", "transparent"], "default": "surface" },
+        "logo_url": { "type": "url" },
+        "nav_items": { "type": "array", "items": { "label": "string", "url": "url" } },
+        "cta_text": { "type": "string" },
+        "cta_url": { "type": "url" }
+      }
+    },
+    {
+      "id": "hero",
+      "name": "Hero / Intro text",
+      "variants": ["v2-1", "v2-2"],
+      "description": "Bloque principal con título, subtítulo y CTA. Primera impresión del usuario.",
+      "props": {
+        "eyebrow": { "type": "string", "maxLength": 50 },
+        "title": { "type": "string", "required": true, "maxLength": 80 },
+        "subtitle": { "type": "string", "maxLength": 200 },
+        "cta_text": { "type": "string", "required": true, "maxLength": 30 },
+        "cta_url": { "type": "url", "required": true },
+        "image_url": { "type": "url" },
+        "image_alt": { "type": "string" }
+      }
+    },
+    {
+      "id": "cards",
+      "name": "Cards estáticas",
+      "variants": ["v6-6", "v6-8", "v6-10", "v6-11", "v6-12"],
+      "description": "Grid de cards con título, contenido y opcional CTA",
+      "props": {
+        "section_title": { "type": "string" },
+        "section_body": { "type": "string" },
+        "items": {
+          "type": "array",
+          "items": {
+            "title": "string",
+            "body": "string",
+            "image_url": "url",
+            "cta_text": "string",
+            "cta_url": "url"
+          }
+        }
+      }
+    },
+    {
+      "id": "form",
+      "name": "Formulario",
+      "variants": ["v4-2"],
+      "description": "Formulario de captura (HubSpot)",
+      "props": {
+        "title": { "type": "string" },
+        "body": { "type": "string" },
+        "hubspot_form_id": { "type": "string", "required": true },
+        "disclaimer_text": { "type": "string" }
+      }
+    },
+    {
+      "id": "footer",
+      "name": "Footer",
+      "variants": ["v13-1", "v13-2", "v13-3"],
+      "description": "Pie de página con links, social y copyright",
+      "props": {
+        "background": { "type": "string", "enum": ["primary", "surface-dark"], "default": "primary" },
+        "columns": { "type": "array", "items": { "title": "string", "links": "array" } },
+        "social_links": { "type": "array" },
+        "copyright": { "type": "string" }
+      }
+    }
+  ]
+}

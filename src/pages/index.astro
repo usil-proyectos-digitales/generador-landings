@@ -1,0 +1,470 @@
+---
+/**
+ * Visor de Widgets — UI Kit / Storybook interno del Design System V2.
+ * -------------------------------------------------------------------
+ * Funcionalidades:
+ *   1. Sidebar de navegación con índice de widgets registrados.
+ *   2. Switcher de Unidad de Negocio (pills con swatch de color).
+ *      Cambia `data-bu` en <html> en runtime → repinta toda la página
+ *      vía CSS variables del Design System V2.
+ *   3. Por cada widget:
+ *      - Controles a la izquierda (selector de variante + props editables).
+ *      - Preview a la derecha (server-rendered, todas las variantes pre-cargadas
+ *        y ocultas/show según la selección; edición en vivo de title/description).
+ *   4. Persistencia del BU seleccionado en `localStorage`.
+ *
+ * ESTRATEGIA DE TEMA (multi-tenant por Unidad de Negocio):
+ *   - Esta página NO fija un `bu` en build time (lo setea el switcher en runtime).
+*   - Los tokens se resuelven así:
+ *       <body data-bu="pregrado">          ← seteado por JS
+ *         ↓ cascada
+ *       [data-bu="pregrado"] { --bu-color-brand-primary: #...; }   ← global.css
+ *         ↓ cascada
+ *       .bg-bu-primary { background: var(--color-bu-primary); } ← Tailwind v4
+ *   - Añadir un BU nuevo = agregar un selector `[data-bu="..."]` en global.css.
+ *     No requiere recompilar nada más.
+ *
+ * CÓMO REGISTRAR UN WIDGET NUEVO:
+ *   Ver `web/src/components/widgets/2-bloque-intro/widget-registry.ts`.
+ */
+import BaseLayout from '@layouts/BaseLayout.astro';
+import { widgetRegistry } from '../components/widgets/2-bloque-intro/widget-registry.ts';
+import buColors from '@data/bu-colors.json';
+
+// Normalizamos el JSON a una lista [{id, primary, secondary, ...}, ...] para iterar.
+const busList = Object.entries(buColors.bus).map(([id, palette]) => ({
+  id,
+  ...(palette as { primary: string; secondary: string; accent: string; surface: string; text: string }),
+}));
+---
+
+<BaseLayout
+  title="Visor de Widgets"
+  description="Catálogo navegable del Design System V2 con switcher de unidad de negocio en tiempo real."
+>
+  {/* ⚠️ NO pasamos `bu` aquí: el switcher cliente controla data-bu en <html>. */}
+  {/* ============================================================
+      Estilos del visor — scoped a este archivo .astro
+      ============================================================ */}
+  <style>
+    .visor {
+      display: grid;
+      grid-template-columns: 280px 1fr;
+      min-height: 100vh;
+      background: var(--bu-color-surface-light, #f5f6fa);
+      color: var(--bu-color-neutral, #1a1a1a);
+    }
+
+    /* ── Sidebar ─────────────────────────────────────────────── */
+    .visor__sidebar {
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      overflow-y: auto;
+      background: #ffffff;
+      border-right: 1px solid #e5e7eb;
+      padding: 1.5rem 1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+    }
+    .visor__brand h1 {
+      font-family: 'Montserrat', sans-serif;
+      font-size: 1.25rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      margin: 0;
+    }
+    .visor__brand p {
+      font-size: 0.75rem;
+      color: #6b7280;
+      margin: 0.25rem 0 0;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .visor__sidebar label {
+      display: block;
+      font-size: 0.6875rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: #6b7280;
+      margin-bottom: 0.5rem;
+    }
+    .visor__bus-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.375rem;
+    }
+    .visor__bu-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.375rem;
+      padding: 0.375rem 0.625rem;
+      font-size: 0.75rem;
+      font-weight: 600;
+      border: 1px solid #e5e7eb;
+      border-radius: 999px;
+      background: #ffffff;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      color: #374151;
+    }
+    .visor__bu-pill:hover {
+      border-color: #9ca3af;
+    }
+    .visor__bu-pill.is-active {
+      border-color: var(--bu-color-brand-primary, #012085);
+      background: var(--bu-color-brand-primary, #012085);
+      color: #ffffff;
+    }
+    .visor__bu-swatch {
+      width: 0.625rem;
+      height: 0.625rem;
+      border-radius: 999px;
+      box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.1);
+    }
+    .visor__nav ul {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 0.125rem;
+    }
+    .visor__nav a {
+      display: block;
+      padding: 0.5rem 0.75rem;
+      font-size: 0.875rem;
+      color: #374151;
+      text-decoration: none;
+      border-radius: 0.5rem;
+      transition: all 0.15s ease;
+    }
+    .visor__nav a:hover {
+      background: #f3f4f6;
+color: var(--bu-color-brand-primary, #012085);
+    }
+
+    /* ── Main ────────────────────────────────────────────────── */
+    .visor__main {
+      padding: 2rem;
+      display: flex;
+      flex-direction: column;
+      gap: 2rem;
+    }
+    .visor__widget {
+      background: #ffffff;
+      border: 1px solid #e5e7eb;
+      border-radius: 1rem;
+      overflow: hidden;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+    }
+    .visor__widget-head {
+      padding: 1.25rem 1.5rem;
+      border-bottom: 1px solid #e5e7eb;
+      background: linear-gradient(180deg, #fafbfc 0%, #ffffff 100%);
+    }
+    .visor__widget-head h2 {
+      font-family: 'Montserrat', sans-serif;
+      font-size: 1.125rem;
+      font-weight: 800;
+      margin: 0;
+      color: #111827;
+    }
+    .visor__widget-head p {
+      font-size: 0.875rem;
+      color: #6b7280;
+      margin: 0.375rem 0 0;
+      line-height: 1.5;
+    }
+    .visor__widget-body {
+      display: grid;
+      grid-template-columns: 320px 1fr;
+      gap: 0;
+    }
+
+    /* ── Controles (panel izquierdo de cada widget) ───────────── */
+    .visor__controls {
+      padding: 1.25rem;
+      background: #fafbfc;
+      border-right: 1px solid #e5e7eb;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+    .visor__control {
+      display: flex;
+      flex-direction: column;
+      gap: 0.375rem;
+    }
+    .visor__control label {
+      font-size: 0.6875rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: #6b7280;
+    }
+    .visor__control input,
+    .visor__control textarea,
+    .visor__control select {
+      width: 100%;
+      padding: 0.5rem 0.75rem;
+      font-size: 0.875rem;
+      font-family: inherit;
+      border: 1px solid #d1d5db;
+      border-radius: 0.5rem;
+      background: #ffffff;
+      color: #111827;
+      transition: all 0.15s ease;
+    }
+    .visor__control input:focus,
+    .visor__control textarea:focus,
+    .visor__control select:focus {
+      outline: none;
+      border-color: var(--bu-color-brand-primary, #012085);
+      box-shadow: 0 0 0 3px color-mix(in srgb, var(--bu-color-brand-primary, #012085) 15%, transparent);
+    }
+    .visor__control textarea {
+      resize: vertical;
+      min-height: 5rem;
+      font-family: 'JetBrains Mono', 'Menlo', monospace;
+      font-size: 0.8125rem;
+    }
+
+    /* ── Preview (panel derecho) ─────────────────────────────── */
+    .visor__preview {
+      position: relative;
+      min-height: 200px;
+      background:
+        linear-gradient(45deg, #f3f4f6 25%, transparent 25%),
+        linear-gradient(-45deg, #f3f4f6 25%, transparent 25%),
+        linear-gradient(45deg, transparent 75%, #f3f4f6 75%),
+        linear-gradient(-45deg, transparent 75%, #f3f4f6 75%);
+      background-size: 16px 16px;
+      background-position: 0 0, 0 8px, 8px -8px, -8px 0;
+    }
+    .visor__preview-instance {
+      position: relative;
+    }
+    .visor__preview-instance[hidden] {
+      display: none;
+    }
+
+    /* ── Responsive ──────────────────────────────────────────── */
+    @media (max-width: 1024px) {
+      .visor {
+        grid-template-columns: 1fr;
+      }
+      .visor__sidebar {
+        position: relative;
+        height: auto;
+      }
+      .visor__widget-body {
+        grid-template-columns: 1fr;
+      }
+      .visor__controls {
+        border-right: none;
+        border-bottom: 1px solid #e5e7eb;
+      }
+    }
+  </style>
+
+  <div class="visor">
+
+    {/* ── SIDEBAR ─────────────────────────────────────────────── */}
+    <aside class="visor__sidebar">
+      <header class="visor__brand">
+        <h1>Visor V2</h1>
+        <p>Design System · UI Kit</p>
+      </header>
+
+      <section class="visor__bu">
+        <label>Unidad de Negocio</label>
+        <div class="visor__bus-list" role="radiogroup" aria-label="Cambiar unidad de negocio">
+          {busList.map((bu, i) => (
+            <button
+              type="button"
+              class="visor__bu-pill"
+              data-bu-target={bu.id}
+              role="radio"
+              aria-checked={i === 0 ? 'true' : 'false'}
+            >
+              <span class="visor__bu-swatch" style={`background:${bu.primary}`}></span>
+              <span>{bu.id}</span>
+            </button>
+          ))}
+        </div>
+      </section>
+
+      <nav class="visor__nav">
+        <label>Widgets</label>
+        <ul>
+          {widgetRegistry.map((w) => (
+            <li>
+              <a href={`#widget-${w.id}`}>{w.name}</a>
+            </li>
+          ))}
+        </ul>
+      </nav>
+    </aside>
+
+    {/* ── MAIN ────────────────────────────────────────────────── */}
+    <main class="visor__main">
+      {widgetRegistry.map((w) => (
+        <section id={`widget-${w.id}`} class="visor__widget">
+          <header class="visor__widget-head">
+            <h2>{w.name}</h2>
+            <p>{w.description}</p>
+          </header>
+
+          <div class="visor__widget-body">
+            {/* Controles — edición en vivo de props */}
+            <aside class="visor__controls">
+              <div class="visor__control">
+                <label for={`variant-${w.id}`}>Variante</label>
+                <select id={`variant-${w.id}`} data-control="variant" data-widget={w.id}>
+                  {w.variants.map((v) => (
+                    <option value={v.id} selected={v.id === w.defaultVariant}>
+                      {v.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div class="visor__control">
+                <label for={`title-${w.id}`}>Título</label>
+                <input
+                  id={`title-${w.id}`}
+                  type="text"
+                  data-control="title"
+                  data-widget={w.id}
+                  value={w.defaults.title}
+                />
+              </div>
+
+              <div class="visor__control">
+                <label for={`desc-${w.id}`}>Descripción (HTML permitido)</label>
+                <textarea
+                  id={`desc-${w.id}`}
+                  data-control="description"
+                  data-widget={w.id}
+                  rows="5"
+                  set:text={w.defaults.description}
+                />
+              </div>
+            </aside>
+
+            {/* Preview — todas las variantes pre-renderizadas; JS muestra/oculta */}
+            <div class="visor__preview" data-preview-root={w.id}>
+              {w.variants.map((v) => (
+                <div
+                  class="visor__preview-instance"
+                  data-preview-instance={w.id}
+                  data-preview-variant={v.id}
+                  hidden={v.id !== w.defaultVariant}
+                >
+                  <w.component
+                    title={w.defaults.title}
+                    description={w.defaults.description}
+                    variant={v.id as 'v2.1' | 'v2.2'}
+                    id={`preview-${w.id}-${v.id}`}
+                  />
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      ))}
+    </main>
+  </div>
+
+  {/* ============================================================
+      Lógica cliente del visor — bundle inline (~3KB, sin deps)
+      ============================================================ */}
+  <script>
+    // ── Tipos locales ────────────────────────────────────────────
+    type Control = HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement;
+
+    const STORAGE_BU = 'visor:bu';
+    const root = document.documentElement;
+
+    // ── 1. Switcher de Unidad de Negocio ────────────────────────
+    function applyBu(bu: string) {
+      root.setAttribute('data-bu', bu);
+      document
+        .querySelectorAll<HTMLButtonElement>('[data-bu-target]')
+        .forEach((btn) => {
+          const isActive = btn.dataset.buTarget === bu;
+          btn.setAttribute('aria-checked', String(isActive));
+          btn.classList.toggle('is-active', isActive);
+        });
+    }
+
+    // Restaurar BU persistido (default: pregrado)
+    const savedBu = localStorage.getItem(STORAGE_BU) ?? 'pregrado';
+    applyBu(savedBu);
+
+    document
+      .querySelectorAll<HTMLButtonElement>('[data-bu-target]')
+      .forEach((btn) => {
+        btn.addEventListener('click', () => {
+          const bu = btn.dataset.buTarget;
+          if (!bu) return;
+          applyBu(bu);
+          localStorage.setItem(STORAGE_BU, bu);
+        });
+      });
+
+    // ── 2. Live prop editing ────────────────────────────────────
+    document
+      .querySelectorAll<Control>('[data-control]')
+      .forEach((ctrl) => {
+        const widgetId = ctrl.dataset.widget;
+        const control = ctrl.dataset.control;
+        if (!widgetId || !control) return;
+
+        const apply = () => {
+          const instances = document.querySelectorAll<HTMLElement>(
+            `[data-preview-instance="${widgetId}"]`
+          );
+          if (!instances.length) return;
+
+          if (control === 'variant') {
+            // Mostrar/ocultar la variante seleccionada
+            const v = (ctrl as HTMLSelectElement).value;
+            instances.forEach((inst) => {
+              const isActive = inst.dataset.previewVariant === v;
+              inst.hidden = !isActive;
+            });
+            return;
+          }
+
+          // Para title y description: actualizar TODAS las instancias del widget
+          // (así, al cambiar de variante, el contenido editado persiste).
+          instances.forEach((inst) => {
+            if (control === 'title') {
+              const h = inst.querySelector<HTMLElement>('.hk-title');
+              if (h) h.textContent = (ctrl as HTMLInputElement).value;
+            } else if (control === 'description') {
+              const d = inst.querySelector<HTMLElement>('.hk-desc');
+              if (d) d.innerHTML = (ctrl as HTMLTextAreaElement).value;
+            }
+          });
+        };
+
+        ctrl.addEventListener('input', apply);
+        ctrl.addEventListener('change', apply);
+      });
+
+    // ── 3. Smooth scroll al navegar desde el sidebar ────────────
+    document.querySelectorAll<HTMLAnchorElement>('.visor__nav a[href^="#"]').forEach((a) => {
+      a.addEventListener('click', (e) => {
+        const target = document.querySelector(a.getAttribute('href') ?? '');
+        if (!target) return;
+        e.preventDefault();
+        target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      });
+    });
+  </script>
+</BaseLayout>

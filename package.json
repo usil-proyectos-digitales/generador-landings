@@ -1,0 +1,26 @@
+{
+  "name": "usil-widgets-astro",
+  "type": "module",
+  "version": "0.2.0",
+  "private": true,
+  "description": "Frontend público del Generador de LPs V2. Astro consume WP headless via REST API y se compila a HTML estático para S3+CloudFront.",
+  "scripts": {
+    "dev": "astro dev --port 4321 --host",
+    "start": "astro dev --port 4321 --host",
+    "build": "astro build",
+    "preview": "astro preview",
+    "astro": "astro",
+    "check": "astro check",
+    "typecheck": "astro check && tsc --noEmit"
+  },
+  "dependencies": {
+    "@astrojs/check": "^0.9.9",
+    "@tailwindcss/vite": "^4.1.7",
+    "astro": "^7.1.3",
+    "tailwindcss": "^4.1.7"
+  },
+  "devDependencies": {
+    "@types/node": "^22.20.1",
+    "typescript": "^5.9.3"
+  }
+}

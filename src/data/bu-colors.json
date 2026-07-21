@@ -1,0 +1,84 @@
+{
+  "version": "2.0",
+  "last_updated": "2026-07-21",
+  "note": "Catálogo de los 5 colores por BU. MANTENER SINCRONIZADO con `web/src/styles/global.css` — son la misma fuente de verdad en dos formatos (runtime vs design data). Los swatches del visor leen de aquí; los widgets resuelven desde global.css vía @theme.",
+  "bus": {
+    "pregrado": {
+      "primary": "#1e50dc",
+      "secondary": "#002663",
+      "accent": "#817aff",
+      "surface": "#ffffff",
+      "text": "#1a1a1a"
+    },
+    "ejecutivo": {
+      "primary": "#0066CC",
+      "secondary": "#003D7A",
+      "accent": "#C5A572",
+      "surface": "#FFFFFF",
+      "text": "#1A1A1A"
+    },
+    "emprendedores": {
+      "primary": "#FF6B35",
+      "secondary": "#C53D18",
+      "accent": "#FFB627",
+      "surface": "#FFFFFF",
+      "text": "#1A1A1A"
+    },
+    "pregrado-ejecutivo": {
+      "primary": "#0050e2",
+      "secondary": "#002663",
+      "accent": "#00b79a",
+      "surface": "#ededed",
+      "text": "#1a1a1a"
+    },
+    "instituto-de-emprendedores": {
+      "primary": "#01004e",
+      "secondary": "#1d18e4",
+      "accent": "#00f600",
+      "surface": "#ededed",
+      "text": "#1a1a1a"
+    },
+    "posgrado": {
+      "primary": "#000000",
+      "secondary": "#1e50dc",
+      "accent": "#00b79a",
+      "surface": "#dee2ec",
+      "text": "#1a1a1a"
+    },
+    "csir": {
+      "primary": "#232b91",
+      "secondary": "#5967d2",
+      "accent": "#f6b724",
+      "surface": "#ededed",
+      "text": "#1a1a1a"
+    },
+    "siu": {
+      "primary": "#002663",
+      "secondary": "#1172e3",
+      "accent": "#00bbba",
+      "surface": "#ededed",
+      "text": "#1a1a1a"
+    },
+    "usil-corporativo": {
+      "primary": "#1e50dc",
+      "secondary": "#002663",
+      "accent": "#438be0",
+      "surface": "#ededed",
+      "text": "#1a1a1a"
+    },
+    "coloring-dreams": {
+      "primary": "#002663",
+      "secondary": "#5967d2",
+      "accent": "#8abd56",
+      "surface": "#ededed",
+      "text": "#1a1a1a"
+    },
+    "usil-paraguay": {
+      "primary": "#1e50dc",
+      "secondary": "#002663",
+      "accent": "#817aff",
+      "surface": "#ededed",
+      "text": "#1a1a1a"
+    }
+  }
+}

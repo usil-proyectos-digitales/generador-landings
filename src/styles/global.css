@@ -1,0 +1,407 @@
+/* ============================================================
+   BU COLOR TOKENS — V2 Design System (5 colores por BU)
+   ------------------------------------------------------------
+   Cada BU define 5 colores fijos que se activan con
+   `data-bu="<slug>"` en el <html>.
+
+   Las 5 variables canónicas (NO agregar alias ni duplicados):
+     --bu-color-brand-primary       (#1) Botones primarios, links, acentos fuertes
+     --bu-color-brand-secondary     (#2) Color complementario, soporte
+     --bu-color-accent-primary        (#3) Highlights, badges, iconos destacados
+     --bu-color-surface-light       (#4) Fondos claros, cards, superficies
+     --bu-color-neutral          (#5) Texto sobre fondos claros
+
+   Cómo se activa:
+     <html data-bu="pregrado">  →  carga los 5 colores de Pregrado
+     <html data-bu="ejecutivo"> →  carga los 5 colores de Ejecutivo
+     <html> (sin data-bu)        →  usa los defaults (compatibilidad V1)
+
+   Tailwind v4 — @theme genera utilities `bg-bu-primary`,
+   `text-bu-text`, etc. automáticamente desde estos nombres.
+
+   Para agregar un BU nuevo: copiar un bloque [data-bu="..."] y
+   cambiar SOLO los 5 valores. Eso es todo.
+   ============================================================ */
+
+@import "tailwindcss";
+
+/* ============================================================
+   FUENTES DE VERDAD — defaults + overrides por BU
+   ============================================================ */
+
+:root {
+    /* Defaults — coinciden con brand V1 para retrocompatibilidad */
+    --bu-color-brand-primary: #012085;
+    --bu-color-brand-secondary: #1e50dc;
+    --bu-color-accent-primary: #c5a572;
+    --bu-color-surface-light: #ffffff;
+    --bu-color-neutral: #1a1a1a;
+}
+
+/* ── 1. PREGRADO ── */
+[data-bu="pregrado"] {
+    --bu-color-brand-primary: #1e50dc;
+    --bu-color-brand-secondary: #002663;
+    --bu-color-accent-primary: #817aff;
+    --bu-color-surface-light: #ffffff;
+    --bu-color-neutral: #1a1a1a;
+}
+
+/* ── 2. PREGRADO EJECUTIVO ── */
+[data-bu="pregrado-ejecutivo"] {
+    --bu-color-brand-primary: #0050e2;
+    --bu-color-brand-secondary: #002663;
+    --bu-color-accent-primary: #00b79a;
+    --bu-color-surface-light: #ededed;
+    --bu-color-neutral: #1a1a1a;
+}
+
+/* ── 3. INSTITUTO DE EMPRENDEDORES ── */
+[data-bu="instituto-de-emprendedores"] {
+    --bu-color-brand-primary: #01004e;
+    --bu-color-brand-secondary: #1d18e4;
+    --bu-color-accent-primary: #00f600;
+    --bu-color-surface-light: #ededed;
+    --bu-color-neutral: #1a1a1a;
+}
+
+/* ── 4. POSGRADO ── */
+[data-bu="posgrado"] {
+    --bu-color-brand-primary: #000000;
+    --bu-color-brand-secondary: #1e50dc;
+    --bu-color-accent-primary: #00b79a;
+    --bu-color-surface-light: #dee2ec;
+    --bu-color-neutral: #1a1a1a;
+}
+
+/* ── 5. CSIR ── */
+[data-bu="csir"] {
+    --bu-color-brand-primary: #232b91;
+    --bu-color-brand-secondary: #5967d2;
+    --bu-color-accent-primary: #f6b724;
+    --bu-color-surface-light: #ededed;
+    --bu-color-neutral: #1a1a1a;
+}
+
+/* ── 6. SIU ── */
+[data-bu="siu"] {
+    --bu-color-brand-primary: #002663;
+    --bu-color-brand-secondary: #1172e3;
+    --bu-color-accent-primary: #00bbba;
+    --bu-color-surface-light: #ededed;
+    --bu-color-neutral: #1a1a1a;
+}
+
+/* ── 7. USIL CORPORATIVO ── */
+[data-bu="usil-corporativo"] {
+    --bu-color-brand-primary: #1e50dc;
+    --bu-color-brand-secondary: #002663;
+    --bu-color-accent-primary: #438be0;
+    --bu-color-surface-light: #ededed;
+    --bu-color-neutral: #1a1a1a;
+}
+
+/* ── 8. COLORING DREAMS ── */
+[data-bu="coloring-dreams"] {
+    --bu-color-brand-primary: #002663;
+    --bu-color-brand-secondary: #5967d2;
+    --bu-color-accent-primary: #8abd56;
+    --bu-color-surface-light: #ededed;
+    --bu-color-neutral: #1a1a1a;
+}
+
+/* ── 9. USIL PARAGUAY ── */
+[data-bu="usil-paraguay"] {
+    --bu-color-brand-primary: #1e50dc;
+    --bu-color-brand-secondary: #002663;
+    --bu-color-accent-primary: #817aff;
+    --bu-color-surface-light: #ededed;
+    --bu-color-neutral: #1a1a1a;
+}
+
+
+/* ============================================================
+   Tailwind v4 theme — CSS-first config
+   Las variables dentro de @theme generan utilities automáticamente.
+   `--color-bu-primary` → `bg-bu-primary`, `text-bu-primary`, etc.
+   `--font-sans` → `font-sans` (default)
+   ============================================================ */
+
+@theme {
+    /* ── Colores: BU tokens (CSS variables que cambian por data-bu) ── */
+    --color-bu-primary: var(--bu-color-brand-primary);
+    --color-bu-secondary: var(--bu-color-brand-secondary);
+    --color-bu-accent: var(--bu-color-accent-primary);
+    --color-bu-surface: var(--bu-color-surface-light);
+    --color-bu-text: var(--bu-color-neutral);
+
+    --color-bu-widget-card-bg: var(--bu-widget-card-bg);
+    --color-bu-widget-card-cta-bg: var(--bu-widget-card-cta-bg);
+    --color-bu-widget-card-cta-text: var(--bu-widget-card-cta-text);
+
+    /* Brand legacy V1 — mantener por compat */
+    --color-brand-dark: #002663;
+    --color-brand: #012085;
+    --color-brand-light: #1e50dc;
+
+    /* ── Familias tipográficas ── */
+    --font-sans: "Montserrat", sans-serif;
+    --font-montserrat: "Montserrat", sans-serif;
+    --font-anton: "Anton", sans-serif;
+    --font-antonio: "Antonio", sans-serif;
+
+    /* ── Tipografías del Design System (migradas desde tailwind.config.js) ──
+       Cada `--text-*` genera utilities como `text-mont-block-title`,
+       `text-anton-block-title-mobile`, etc.
+       Formato Tailwind v4: --text-<name>: [<size>, { lineHeight, fontWeight, ... }] */
+
+    /* Montserrat */
+    --text-mont-header: 62px;
+    --text-mont-header--line-height: 1;
+    --text-mont-header--font-weight: 900;
+    --text-mont-header-mobile: 42px;
+    --text-mont-header-mobile--line-height: 1.1;
+    --text-mont-header-mobile--font-weight: 900;
+
+    --text-mont-bajada-01: 40px;
+    --text-mont-bajada-01--line-height: 1.2;
+    --text-mont-bajada-01--font-weight: 700;
+    --text-mont-bajada-01-mobile: 28px;
+    --text-mont-bajada-01-mobile--line-height: 1.25;
+    --text-mont-bajada-01-mobile--font-weight: 700;
+
+    --text-mont-bajada-02: 25px;
+    --text-mont-bajada-02--line-height: 1.3;
+    --text-mont-bajada-02--font-weight: 700;
+    --text-mont-bajada-02-mobile: 20px;
+    --text-mont-bajada-02-mobile--line-height: 1.4;
+    --text-mont-bajada-02-mobile--font-weight: 700;
+
+    --text-mont-paragraph: 21px;
+    --text-mont-paragraph--line-height: 1.6;
+    --text-mont-paragraph--font-weight: 500;
+    --text-mont-paragraph-mobile: 16px;
+    --text-mont-paragraph-mobile--line-height: 1.6;
+    --text-mont-paragraph-mobile--font-weight: 500;
+
+    --text-mont-form-title: 26px;
+    --text-mont-form-title--line-height: 1.3;
+    --text-mont-form-title--font-weight: 800;
+    --text-mont-form-title-mobile: 22px;
+    --text-mont-form-title-mobile--line-height: 1.3;
+    --text-mont-form-title-mobile--font-weight: 800;
+
+    --text-mont-form-field: 16px;
+    --text-mont-form-field--line-height: 1.5;
+    --text-mont-form-field--font-weight: 400;
+
+    --text-mont-form-cta: 18px;
+    --text-mont-form-cta--line-height: 1;
+    --text-mont-form-cta--font-weight: 700;
+
+    --text-mont-block-title: 46px;
+    --text-mont-block-title--line-height: 1.1;
+    --text-mont-block-title--font-weight: 800;
+    --text-mont-block-title-mobile: 32px;
+    --text-mont-block-title-mobile--line-height: 1.2;
+    --text-mont-block-title-mobile--font-weight: 800;
+
+    --text-mont-block-subtitle: 35px;
+    --text-mont-block-subtitle--line-height: 1.2;
+    --text-mont-block-subtitle--font-weight: 700;
+    --text-mont-block-subtitle-mobile: 24px;
+    --text-mont-block-subtitle-mobile--line-height: 1.3;
+    --text-mont-block-subtitle-mobile--font-weight: 700;
+
+    --text-mont-block-p: 20px;
+    --text-mont-block-p--line-height: 1.6;
+    --text-mont-block-p--font-weight: 400;
+    --text-mont-block-p-mobile: 16px;
+    --text-mont-block-p-mobile--line-height: 1.6;
+    --text-mont-block-p-mobile--font-weight: 400;
+
+    --text-mont-card-title: 22px;
+    --text-mont-card-title--line-height: 1.3;
+    --text-mont-card-title--font-weight: 800;
+    --text-mont-card-title-mobile: 18px;
+    --text-mont-card-title-mobile--line-height: 1.3;
+    --text-mont-card-title-mobile--font-weight: 800;
+
+    --text-mont-card-content: 20px;
+    --text-mont-card-content--line-height: 1.5rem;
+    --text-mont-card-content--font-weight: 400;
+    --text-mont-card-content-mobile: 16px;
+    --text-mont-card-content-mobile--line-height: 1.5;
+    --text-mont-card-content-mobile--font-weight: 400;
+
+    --text-mont-item-content: 18px;
+    --text-mont-item-content--line-height: 1.5;
+    --text-mont-item-content--font-weight: 400;
+    --text-mont-item-content-mobile: 15px;
+    --text-mont-item-content-mobile--line-height: 1.5;
+    --text-mont-item-content-mobile--font-weight: 400;
+
+    --text-mont-std-title: 25px;
+    --text-mont-std-title--line-height: 1.3;
+    --text-mont-std-title--font-weight: 800;
+    --text-mont-std-title-mobile: 20px;
+    --text-mont-std-title-mobile--line-height: 1.3;
+    --text-mont-std-title-mobile--font-weight: 800;
+
+    --text-mont-std-content: 22px;
+    --text-mont-std-content--line-height: 1.5;
+    --text-mont-std-content--font-weight: 400;
+    --text-mont-std-content-mobile: 18px;
+    --text-mont-std-content-mobile--line-height: 1.5;
+    --text-mont-std-content-mobile--font-weight: 400;
+
+    --text-mont-tabs-title: 25px;
+    --text-mont-tabs-title--line-height: 1.3;
+    --text-mont-tabs-title--font-weight: 500;
+    --text-mont-tabs-title-mobile: 18px;
+    --text-mont-tabs-title-mobile--line-height: 1.3;
+    --text-mont-tabs-title-mobile--font-weight: 500;
+
+    --text-mont-tabs-content-title: 32px;
+    --text-mont-tabs-content-title--line-height: 1.2;
+    --text-mont-tabs-content-title--font-weight: 700;
+    --text-mont-tabs-content-title-mobile: 20px;
+    --text-mont-tabs-content-title-mobile--line-height: 1.3;
+    --text-mont-tabs-content-title-mobile--font-weight: 700;
+
+    --text-mont-tabs-content-paragraph: 20px;
+    --text-mont-tabs-content-paragraph--line-height: 1.6;
+    --text-mont-tabs-content-paragraph--font-weight: 400;
+    --text-mont-tabs-content-paragraph-mobile: 16px;
+    --text-mont-tabs-content-paragraph-mobile--line-height: 1.6;
+    --text-mont-tabs-content-paragraph-mobile--font-weight: 400;
+
+    /* Anton */
+    --text-anton-header: 92px;
+    --text-anton-header--line-height: 1;
+    --text-anton-header--font-weight: 900;
+    --text-anton-header-mobile: 56px;
+    --text-anton-header-mobile--line-height: 1;
+    --text-anton-header-mobile--font-weight: 900;
+
+    --text-anton-bajada-01: 52px;
+    --text-anton-bajada-01--line-height: 1.2;
+    --text-anton-bajada-01--font-weight: 700;
+    --text-anton-bajada-01-mobile: 36px;
+    --text-anton-bajada-01-mobile--line-height: 1.2;
+    --text-anton-bajada-01-mobile--font-weight: 700;
+
+    --text-anton-form-title: 38px;
+    --text-anton-form-title--line-height: 1.2;
+    --text-anton-form-title--font-weight: 400;
+    --text-anton-form-title-mobile: 26px;
+    --text-anton-form-title-mobile--line-height: 1.25;
+    --text-anton-form-title-mobile--font-weight: 400;
+
+    --text-anton-form-cta: 28px;
+    --text-anton-form-cta--line-height: 1;
+    --text-anton-form-cta--font-weight: 900;
+    --text-anton-form-cta-mobile: 22px;
+    --text-anton-form-cta-mobile--line-height: 1;
+    --text-anton-form-cta-mobile--font-weight: 900;
+
+    --text-anton-block-title: 48px;
+    --text-anton-block-title--line-height: 1.1;
+    --text-anton-block-title--font-weight: 400;
+    --text-anton-block-title-mobile: 36px;
+    --text-anton-block-title-mobile--line-height: 1.15;
+    --text-anton-block-title-mobile--font-weight: 400;
+
+    --text-anton-block-subtitle: 35px;
+    --text-anton-block-subtitle--line-height: 1.2;
+    --text-anton-block-subtitle--font-weight: 700;
+    --text-anton-block-subtitle-mobile: 26px;
+    --text-anton-block-subtitle-mobile--line-height: 1.25;
+    --text-anton-block-subtitle-mobile--font-weight: 700;
+
+    --text-anton-card-title: 22px;
+    --text-anton-card-title--line-height: 1.1;
+    --text-anton-card-title--font-weight: 400;
+    --text-anton-card-title-mobile: 18px;
+    --text-anton-card-title-mobile--line-height: 1.1;
+    --text-anton-card-title-mobile--font-weight: 400;
+
+    --text-anton-card-content: 20px;
+    --text-anton-card-content--line-height: 1.2;
+    --text-anton-card-content--font-weight: 400;
+    --text-anton-card-content-mobile: 16px;
+    --text-anton-card-content-mobile--line-height: 1.2;
+    --text-anton-card-content-mobile--font-weight: 400;
+
+    --text-anton-item-content: 18px;
+    --text-anton-item-content--line-height: 1.2;
+    --text-anton-item-content--font-weight: 400;
+    --text-anton-item-content-mobile: 15px;
+    --text-anton-item-content-mobile--line-height: 1.2;
+    --text-anton-item-content-mobile--font-weight: 400;
+
+    /* Antonio */
+    --text-antonio-card-title: 22px;
+    --text-antonio-card-title--line-height: 1.1;
+    --text-antonio-card-title--font-weight: 400;
+    --text-antonio-card-title-mobile: 18px;
+    --text-antonio-card-title-mobile--line-height: 1.1;
+    --text-antonio-card-title-mobile--font-weight: 400;
+
+    --text-antonio-card-content: 20px;
+    --text-antonio-card-content--line-height: 1.2;
+    --text-antonio-card-content--font-weight: 400;
+    --text-antonio-card-content-mobile: 16px;
+    --text-antonio-card-content-mobile--line-height: 1.2;
+    --text-antonio-card-content-mobile--font-weight: 400;
+
+    --text-antonio-card-cta: 24px;
+    --text-antonio-card-cta--line-height: 1.2;
+    --text-antonio-card-cta--font-weight: 400;
+    --text-antonio-card-cta-mobile: 20px;
+    --text-antonio-card-cta-mobile--line-height: 1.2;
+    --text-antonio-card-cta-mobile--font-weight: 400;
+
+    --text-antonio-item-content: 18px;
+    --text-antonio-item-content--line-height: 1.2;
+    --text-antonio-item-content--font-weight: 400;
+    --text-antonio-item-content-mobile: 15px;
+    --text-antonio-item-content-mobile--line-height: 1.2;
+    --text-antonio-item-content-mobile--font-weight: 400;
+
+    /* Container (Tailwind v4 usa CSS @utility en lugar de config) */
+    --container-center: true;
+}
+
+/* ============================================================
+   Base styles — estilos globales (CSS plano, sin @layer)
+   ------------------------------------------------------------
+   En Tailwind v4 NO se usan `@tailwind base/components/utilities`
+   ni `@layer base { ... }` para estilos globales. El import de
+   `@import "tailwindcss"` arriba ya inicializa los layers.
+   Escribir CSS plano aquí garantiza que se aplica siempre.
+   ============================================================ */
+
+html {
+    font-family: var(--font-sans);
+    scroll-behavior: smooth;
+}
+
+body {
+    background-color: var(--bu-color-surface-light);
+    color: var(--bu-color-neutral);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+/* ============================================================
+   Utilidades globales (CSS plano, sin @layer)
+   ============================================================ */
+
+.text-balance {
+    text-wrap: balance;
+}
+
+.text-pretty {
+    text-wrap: pretty;
+}

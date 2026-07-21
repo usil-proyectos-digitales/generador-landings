@@ -1,0 +1,63 @@
+{
+  "version": "2.0",
+  "last_updated": "2026-07-20",
+  "note": "Esquema ACF Flexible Content. Cada 'layout' representa un widget configurable en WP admin. Astro consume este JSON para saber qué esperar del REST API.",
+  "layouts": [
+    {
+      "key": "hero",
+      "label": "Hero",
+      "fields": {
+        "eyebrow": { "type": "text", "maxLength": 50 },
+        "title": { "type": "text", "required": true, "maxLength": 80 },
+        "subtitle": { "type": "textarea", "maxLength": 200 },
+        "cta_text": { "type": "text", "required": true, "maxLength": 30 },
+        "cta_url": { "type": "url", "required": true },
+        "image_url": { "type": "image" },
+        "image_alt": { "type": "text" }
+      }
+    },
+    {
+      "key": "cards",
+      "label": "Cards",
+      "fields": {
+        "section_title": { "type": "text" },
+        "section_body": { "type": "textarea" },
+        "items": {
+          "type": "repeater",
+          "fields": {
+            "title": { "type": "text", "required": true },
+            "body": { "type": "textarea" },
+            "image_url": { "type": "image" },
+            "cta_text": { "type": "text" },
+            "cta_url": { "type": "url" }
+          }
+        }
+      }
+    },
+    {
+      "key": "form",
+      "label": "Formulario",
+      "fields": {
+        "title": { "type": "text" },
+        "body": { "type": "textarea" },
+        "hubspot_form_id": { "type": "text", "required": true },
+        "disclaimer_text": { "type": "textarea" }
+      }
+    },
+    {
+      "key": "footer",
+      "label": "Footer",
+      "fields": {
+        "copyright": { "type": "text" },
+        "columns": { "type": "repeater", "fields": {
+          "title": { "type": "text" },
+          "links": { "type": "repeater", "fields": {
+            "label": { "type": "text" },
+            "url": { "type": "url" }
+          }}
+        }},
+        "social_links": { "type": "repeater" }
+      }
+    }
+  ]
+}
