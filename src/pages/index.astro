@@ -149,10 +149,15 @@ const busList = Object.entries(buColors.bus).map(([id, palette]) => ({
       text-decoration: none;
       border-radius: 0.5rem;
       transition: all 0.15s ease;
+      cursor: pointer;
     }
     .visor__nav a:hover {
       background: #334155;
       color: #f1f5f9;
+    }
+    .visor__nav a.is-active {
+      background: var(--bu-color-brand-primary, #3b82f6);
+      color: #ffffff;
     }
 
     /* ── MAIN ────────────────────────────────────────────────── */
@@ -174,6 +179,10 @@ const busList = Object.entries(buColors.bus).map(([id, palette]) => ({
       overflow: hidden;
       display: flex;
       flex-direction: column;
+    }
+    .visor__widget-section.is-hidden,
+    .visor__widget-section[hidden] {
+      display: none;
     }
     .visor__widget-head {
       display: flex;
@@ -416,9 +425,14 @@ const busList = Object.entries(buColors.bus).map(([id, palette]) => ({
       <nav class="visor__nav">
         <label class="visor__sidebar-label">Widgets</label>
         <ul>
-          {widgetRegistry.map((w) => (
+          {widgetRegistry.map((w, i) => (
             <li>
-              <a href={`#widget-${w.id}`}>{w.name}</a>
+              <a
+                href={`#${w.id}`}
+                data-widget-nav={w.id}
+                class:list={[i === 0 && 'is-active']}
+                aria-current={i === 0 ? 'true' : undefined}
+              >{w.name}</a>
             </li>
           ))}
         </ul>
@@ -427,8 +441,13 @@ const busList = Object.entries(buColors.bus).map(([id, palette]) => ({
 
     {/* ── MAIN ────────────────────────────────────────────────── */}
     <main class="visor__main">
-      {widgetRegistry.map((w) => (
-        <section id={`widget-${w.id}`} class="visor__widget-section">
+      {widgetRegistry.map((w, i) => (
+        <section
+          id={`widget-${w.id}`}
+          data-widget-panel={w.id}
+          class:list={['visor__widget-section', i !== 0 && 'is-hidden']}
+          hidden={i !== 0}
+        >
           <header class="visor__widget-head">
             <div class="visor__widget-title">
               <h2>{w.name}</h2>
@@ -687,14 +706,55 @@ const busList = Object.entries(buColors.bus).map(([id, palette]) => ({
         ctrl.addEventListener('change', apply);
       });
 
-    // ── 5. Smooth scroll del sidebar ────────────────────────────
-    document.querySelectorAll<HTMLAnchorElement>('.visor__nav a[href^="#"]').forEach((a) => {
+    // ── 5. Navegación del sidebar (mostrar un widget a la vez) ──
+    const STORAGE_WIDGET = 'visor:widget';
+
+    function showWidget(widgetId: string) {
+      // Ocultar todos los panels y mostrar solo el seleccionado
+      document.querySelectorAll<HTMLElement>('[data-widget-panel]').forEach((panel) => {
+        const isActive = panel.dataset.widgetPanel === widgetId;
+        panel.hidden = !isActive;
+        panel.classList.toggle('is-hidden', !isActive);
+      });
+
+      // Marcar el link activo en el sidebar
+      document.querySelectorAll<HTMLAnchorElement>('[data-widget-nav]').forEach((link) => {
+        const isActive = link.dataset.widgetNav === widgetId;
+        link.classList.toggle('is-active', isActive);
+        if (isActive) link.setAttribute('aria-current', 'true');
+        else link.removeAttribute('aria-current');
+      });
+
+      // Cerrar el drawer de props al cambiar de widget
+      document.querySelectorAll<HTMLElement>('[data-widget-body]').forEach((body) => {
+        body.classList.remove('has-controls');
+      });
+      document.querySelectorAll<HTMLButtonElement>('[data-edit-toggle]').forEach((btn) => {
+        btn.classList.remove('is-active');
+        btn.setAttribute('aria-pressed', 'false');
+      });
+
+      // Scroll al top del main
+      document.querySelector<HTMLElement>('.visor__main')?.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    document.querySelectorAll<HTMLAnchorElement>('[data-widget-nav]').forEach((a) => {
       a.addEventListener('click', (e) => {
-        const target = document.querySelector(a.getAttribute('href') ?? '');
-        if (!target) return;
+        const widgetId = a.dataset.widgetNav;
+        if (!widgetId) return;
         e.preventDefault();
-        target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        showWidget(widgetId);
+        localStorage.setItem(STORAGE_WIDGET, widgetId);
+        // Actualizar el hash sin scroll nativo
+        history.replaceState(null, '', `#${widgetId}`);
       });
     });
+
+    // Restaurar widget seleccionado (o abrir el primero)
+    const initialWidget =
+      location.hash.replace('#', '') ||
+      localStorage.getItem(STORAGE_WIDGET) ||
+      document.querySelector<HTMLElement>('[data-widget-panel]')?.dataset.widgetPanel;
+    if (initialWidget) showWidget(initialWidget);
   </script>
 </BaseLayout>
