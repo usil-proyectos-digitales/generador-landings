@@ -1,70 +1,70 @@
 {
-  "version": "2.0",
+  "version": "2.1",
   "last_updated": "2026-07-21",
-  "note": "Catálogo de los 5 colores por BU. MANTENER SINCRONIZADO con `generador-landings/src/styles/global.css` — son la misma fuente de verdad en dos formatos (runtime vs design data). Los swatches del visor leen de aquí; los widgets resuelven desde global.css vía @theme. Los BUs canónicos son los que están en `global.css` (9 slugs); 'ejecutivo' y 'emprendedores' son aliases legacy.",
+  "note": "Catálogo de los 5 colores por BU. FUENTE DE VERDAD: `generador-landings/src/styles/global.css` — este JSON es un espejo para que el visor pueda leer los swatches sin parsear CSS. Mantener sincronizado en orden y valores. Orden de las claves = orden de aparición de los selectores [data-bu='...'] en global.css.",
   "bus": {
     "pregrado": {
       "primary": "#1e50dc",
       "secondary": "#002663",
       "accent": "#817aff",
-      "surface": "#ffffff",
-      "text": "#1a1a1a"
+      "surface": "#DFE8F7",
+      "text": "#FFFFFF"
     },
     "pregrado-ejecutivo": {
-      "primary": "#0050e2",
+      "primary": "#0050E2",
       "secondary": "#002663",
-      "accent": "#00b79a",
-      "surface": "#ededed",
-      "text": "#1a1a1a"
+      "accent": "#00B79A",
+      "surface": "#EDEDED",
+      "text": "#ffffff"
     },
     "instituto-de-emprendedores": {
-      "primary": "#01004e",
-      "secondary": "#1d18e4",
-      "accent": "#00f600",
-      "surface": "#ededed",
-      "text": "#1a1a1a"
+      "primary": "#1B1464",
+      "secondary": "#1D18E4",
+      "accent": "#00F600",
+      "surface": "#EDEDED",
+      "text": "#ffffff"
     },
     "posgrado": {
       "primary": "#000000",
-      "secondary": "#1e50dc",
-      "accent": "#00b79a",
-      "surface": "#dee2ec",
-      "text": "#1a1a1a"
+      "secondary": "#1E50DC",
+      "accent": "#01004E",
+      "surface": "#DEE2EC",
+      "text": "#ffffff"
     },
     "csir": {
-      "primary": "#232b91",
-      "secondary": "#5967d2",
+      "primary": "#232B91",
+      "secondary": "#5967D2",
       "accent": "#f6b724",
-      "surface": "#ededed",
-      "text": "#1a1a1a"
+      "surface": "#EDEDED",
+      "text": "#ffffff"
     },
     "siu": {
       "primary": "#002663",
-      "secondary": "#1172e3",
-      "accent": "#00bbba",
-      "surface": "#ededed",
-      "text": "#1a1a1a"
-    },
-    "usil-corporativo": {
-      "primary": "#1e50dc",
-      "secondary": "#002663",
-      "accent": "#438be0",
-      "surface": "#ededed",
-      "text": "#1a1a1a"
+      "secondary": "#1172E3",
+      "accent": "#00BBBA",
+      "surface": "#EDEDED",
+      "text": "#ffffff"
     },
     "coloring-dreams": {
       "primary": "#002663",
-      "secondary": "#5967d2",
-      "accent": "#8abd56",
-      "surface": "#ededed",
-      "text": "#1a1a1a"
+      "secondary": "#5967D2",
+      "accent": "#A8BD54",
+      "surface": "#EDEDED",
+      "text": "#ffffff"
     },
     "usil-paraguay": {
-      "primary": "#1e50dc",
+      "primary": "#1E50DC",
       "secondary": "#002663",
-      "accent": "#817aff",
-      "surface": "#ededed",
-      "text": "#1a1a1a"
+      "accent": "#FF4CEE",
+      "surface": "#DFE8F7",
+      "text": "#ffffff"
+    },
+    "usil-corporativo": {
+      "primary": "#1E50DC",
+      "secondary": "#002663",
+      "accent": "#438BE0",
+      "surface": "#DFE8F7",
+      "text": "#ffffff"
     }
   }
 }
