@@ -8,63 +8,63 @@
       "secondary": "#002663",
       "accent": "#817aff",
       "surface": "#DFE8F7",
-      "text": "#FFFFFF"
+      "neutral": "#FFFFFF"
     },
     "pregrado-ejecutivo": {
       "primary": "#0050E2",
       "secondary": "#002663",
       "accent": "#00B79A",
       "surface": "#EDEDED",
-      "text": "#ffffff"
+      "neutral": "#ffffff"
     },
     "instituto-de-emprendedores": {
       "primary": "#1B1464",
       "secondary": "#1D18E4",
       "accent": "#00F600",
       "surface": "#EDEDED",
-      "text": "#ffffff"
+      "neutral": "#ffffff"
     },
     "posgrado": {
       "primary": "#000000",
       "secondary": "#1E50DC",
       "accent": "#01004E",
       "surface": "#DEE2EC",
-      "text": "#ffffff"
+      "neutral": "#ffffff"
     },
     "csir": {
       "primary": "#232B91",
       "secondary": "#5967D2",
       "accent": "#f6b724",
       "surface": "#EDEDED",
-      "text": "#ffffff"
+      "neutral": "#ffffff"
     },
     "siu": {
       "primary": "#002663",
       "secondary": "#1172E3",
       "accent": "#00BBBA",
       "surface": "#EDEDED",
-      "text": "#ffffff"
+      "neutral": "#ffffff"
     },
     "coloring-dreams": {
       "primary": "#002663",
       "secondary": "#5967D2",
       "accent": "#A8BD54",
       "surface": "#EDEDED",
-      "text": "#ffffff"
+      "neutral": "#ffffff"
     },
     "usil-paraguay": {
       "primary": "#1E50DC",
       "secondary": "#002663",
       "accent": "#FF4CEE",
       "surface": "#DFE8F7",
-      "text": "#ffffff"
+      "neutral": "#ffffff"
     },
     "usil-corporativo": {
       "primary": "#1E50DC",
       "secondary": "#002663",
       "accent": "#438BE0",
       "surface": "#DFE8F7",
-      "text": "#ffffff"
+      "neutral": "#ffffff"
     }
   }
 }

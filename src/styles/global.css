@@ -159,7 +159,7 @@
     --color-bu-secondary: var(--bu-color-brand-secondary);
     --color-bu-accent: var(--bu-color-accent-primary);
     --color-bu-surface: var(--bu-color-surface-light);
-    --color-bu-text: var(--bu-color-neutral);
+    --color-bu-neutral: var(--bu-color-neutral);
 
     --color-bu-widget-card-bg: var(--bu-widget-card-bg);
     --color-bu-widget-card-cta-bg: var(--bu-widget-card-cta-bg);

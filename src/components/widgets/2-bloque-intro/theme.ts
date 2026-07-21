@@ -66,13 +66,9 @@ export const theme: Record<Variant, Record<Mode, VariantTheme>> = {
     },
     dark: {
       // Dark: se invierten los roles — el section pasa a primary
-      // (oscuro del BU) y los textos pasan a text (claro del BU).
-      // OJO: la utility es `text-bu-text`, no `text-bu-neutral` —
-      // aunque la CSS variable se llama --bu-color-neutral, Tailwind
-      // genera utilities con el nombre definido en @theme → text-bu-text.
-      section: 'bg-bu-primary text-bu-text',
-      title: 'text-bu-text',
-      desc: 'text-bu-text',
+      section: 'bg-bu-primary',
+      title: 'text-bu-neutral',
+      desc: 'text-bu-neutral',
     },
   },
 };

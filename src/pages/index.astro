@@ -623,40 +623,45 @@ const busList = Object.entries(buColors.bus).map(([id, palette]) => ({
             <div class="visor__preview-wrap">
               <div class="visor__preview-frame" data-preview-frame={w.id} data-viewport="desktop">
                 <div data-preview-root={w.id}>
-                  {w.variants.map((v) => {
-                    const previewId = `preview-${w.id}-${v.id}-${w.defaults.mode ?? 'light'}`;
-                    // Si el widget expone un propsAdapter, lo usamos; si no, pasamos
-                    // las props canónicas (title/description/variant/mode/id) directamente.
-                    // El `cards` (si existe en defaults) se propaga al adapter también.
-                    const adapterInput = {
-                      title: w.defaults.title,
-                      description: w.defaults.description,
-                      variant: v.id,
-                      id: previewId,
-                      mode: (w.defaults.mode ?? 'light') as 'light' | 'dark',
-                      ...(w.defaults.cards ? { cards: w.defaults.cards } : {}),
-                    };
-                    const componentProps = w.propsAdapter
-                      ? w.propsAdapter(adapterInput)
-                      : {
-                          title: w.defaults.title,
-                          description: w.defaults.description,
-                          variant: v.id as 'v2.1' | 'v2.2',
-                          id: previewId,
-                          mode: (w.defaults.mode ?? 'light') as 'light' | 'dark',
-                        };
-                    return (
-                      <div
-                        class="visor__preview-instance"
-                        data-preview-instance={w.id}
-                        data-preview-variant={v.id}
-                        data-preview-mode={w.defaults.mode ?? 'light'}
-                        hidden={v.id !== w.defaultVariant}
-                      >
-                        <w.component {...componentProps} />
-                      </div>
-                    );
-                  })}
+                  {w.variants.flatMap((v) =>
+                    (['light', 'dark'] as const).map((mode) => {
+                      const previewId = `preview-${w.id}-${v.id}-${mode}`;
+                      
+                      const adapterInput = {
+                        title: w.defaults.title,
+                        description: w.defaults.description,
+                        variant: v.id,
+                        id: previewId,
+                        mode: mode, // 👈 Se pre-renderizan ambas versiones (light y dark)
+                        ...(w.defaults.cards ? { cards: w.defaults.cards } : {}),
+                      };
+
+                      const componentProps = w.propsAdapter
+                        ? w.propsAdapter(adapterInput)
+                        : {
+                            title: w.defaults.title,
+                            description: w.defaults.description,
+                            variant: v.id as 'v2.1' | 'v2.2',
+                            id: previewId,
+                            mode: mode,
+                          };
+
+                      const isDefaultVariant = v.id === w.defaultVariant;
+                      const isDefaultMode = mode === (w.defaults.mode ?? 'light');
+
+                      return (
+                        <div
+                          class="visor__preview-instance"
+                          data-preview-instance={w.id}
+                          data-preview-variant={v.id}
+                          data-preview-mode={mode}
+                          hidden={!(isDefaultVariant && isDefaultMode)}
+                        >
+                          <w.component {...componentProps} />
+                        </div>
+                      );
+                    })
+                  )}
                 </div>
               </div>
             </div>
@@ -1092,5 +1097,48 @@ const busList = Object.entries(buColors.bus).map(([id, palette]) => ({
       localStorage.getItem(STORAGE_WIDGET) ||
       document.querySelector<HTMLElement>('[data-widget-panel]')?.dataset.widgetPanel;
     if (initialWidget) showWidget(initialWidget);
+  </script>
+
+
+  <script>
+    document.addEventListener('click', (e) => {
+      const target = e.target as HTMLElement;
+      const modeBtn = target.closest('[data-mode-set]') as HTMLButtonElement;
+  
+      if (!modeBtn) return;
+  
+      const widgetId = modeBtn.getAttribute('data-mode-set');
+      const selectedMode = modeBtn.getAttribute('data-mode-value');
+  
+      if (!widgetId || !selectedMode) return;
+  
+      // 1. Actualizar estado visual de los botones (is-active)
+      const switcher = modeBtn.closest('.visor__mode-switcher');
+      if (switcher) {
+        switcher.querySelectorAll('[data-mode-set]').forEach((btn) => {
+          btn.classList.remove('is-active');
+          btn.setAttribute('aria-checked', 'false');
+        });
+        modeBtn.classList.add('is-active');
+        modeBtn.setAttribute('aria-checked', 'true');
+      }
+  
+      // 2. Obtener la variante actualmente seleccionada en el select del drawer
+      const variantSelect = document.querySelector(`select[data-control="variant"][data-widget="${widgetId}"]`) as HTMLSelectElement;
+      const currentVariant = variantSelect ? variantSelect.value : null;
+  
+      // 3. Mostrar la instancia que coincide con (variante + modo) y ocultar las demás
+      const instances = document.querySelectorAll(`[data-preview-instance="${widgetId}"]`);
+      instances.forEach((instance) => {
+        const instVariant = instance.getAttribute('data-preview-variant');
+        const instMode = instance.getAttribute('data-preview-mode');
+  
+        if (instVariant === currentVariant && instMode === selectedMode) {
+          instance.removeAttribute('hidden');
+        } else {
+          instance.setAttribute('hidden', '');
+        }
+      });
+    });
   </script>
 </BaseLayout>
