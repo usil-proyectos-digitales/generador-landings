@@ -50,10 +50,8 @@ export const theme: Record<Variant, Record<Mode, VariantTheme>> = {
       desc: '',
     },
     dark: {
-      // Dark: invertimos — fondo surface oscuro del BU, texto primary
-      // (el primary del BU en modo dark sigue siendo un azul vibrante
-      // que funciona como texto destacado sobre el surface oscuro).
-      section: 'bg-bu-surface text-bu-primary',
+      // Dark: invertimos — fondo surface oscuro del BU + texto claro.
+      section: 'bg-bu-surface text-bu-text',
       title: 'text-bu-primary',
       desc: 'text-bu-secondary',
     },
@@ -62,16 +60,19 @@ export const theme: Record<Variant, Record<Mode, VariantTheme>> = {
   'v2.2': {
     light: {
       // Light: fondo surface claro, título primary, descripción secondary.
-      section: 'bg-bu-surface text-bu-primary',
+      section: 'bg-bu-surface',
       title: 'text-bu-primary',
       desc: 'text-bu-secondary',
     },
     dark: {
       // Dark: se invierten los roles — el section pasa a primary
-      // (oscuro del BU) y los textos pasan a surface (claro).
-      section: 'bg-bu-primary text-bu-surface',
-      title: 'text-bu-surface',
-      desc: 'text-bu-accent',
+      // (oscuro del BU) y los textos pasan a text (claro del BU).
+      // OJO: la utility es `text-bu-text`, no `text-bu-neutral` —
+      // aunque la CSS variable se llama --bu-color-neutral, Tailwind
+      // genera utilities con el nombre definido en @theme → text-bu-text.
+      section: 'bg-bu-primary text-bu-text',
+      title: 'text-bu-text',
+      desc: 'text-bu-text',
     },
   },
 };
