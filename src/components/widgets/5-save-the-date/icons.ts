@@ -1,14 +1,19 @@
 /**
  * Iconos SVG inline para SaveTheDate.
  * ------------------------------------
+ * Paths de Font Awesome Free (MIT License).
  * - Usan `currentColor` para heredar el color del texto padre → cambian
  *   automáticamente con el BU sin duplicar archivos.
- * - Inline (no son archivos .svg servidos) → WordPress nunca los toca,
- *   evitando el problema conocido de sanitización de SVG en WP.
- * - Stroke/fill coherentes con el visual: blanco translúcido sobre fondo
- *   de BU, simulando el look de la referencia (icono + texto en card).
+ * - Inline (no son archivos .svg servidos) → WordPress nunca los toca.
  *
- * Shape: 64x64 viewBox, stroke 2, fill none, currentColor.
+ * Shape: 512x512 viewBox (Font Awesome estándar), fill="currentColor".
+ *
+ * EXPORTAMOS DOS FORMATES:
+ *   - Funciones `Icon*` que devuelven strings SVG completos.
+ *     → Usadas por el widget Astro server-side (set:html).
+ *   - Objeto `ICON_PATHS` con solo los `<path d="..."/>`.
+ *     → Usado por el visor (renderCards en cliente) para mantener
+ *       consistencia sin duplicar paths.
  */
 export const ICON_SLUGS = ['fecha', 'hora', 'modalidad'] as const;
 export type IconSlug = typeof ICON_SLUGS[number];
@@ -16,62 +21,52 @@ export type IconSlug = typeof ICON_SLUGS[number];
 interface IconProps {
   class?: string;
   size?: number | string;
-  strokeWidth?: number;
 }
 
 const baseProps = (p: IconProps) => ({
   class: p.class,
   width: p.size ?? 48,
   height: p.size ?? 48,
-  viewBox: '0 0 64 64',
-  fill: 'none',
-  stroke: 'currentColor',
-  'stroke-width': p.strokeWidth ?? 2,
-  'stroke-linecap': 'round' as const,
-  'stroke-linejoin': 'round' as const,
+  viewBox: '0 0 512 512',
+  fill: 'currentColor',
   'aria-hidden': 'true',
 });
 
-export function IconFecha(props: IconProps = {}): string {
-  // Calendario: rectángulo con grilla + pestaña superior
+/**
+ * Solo los paths `<path d="..."/>` de Font Awesome Free.
+ * Reutilizables desde el cliente (visor) sin duplicar lógica.
+ * Fuentes verificadas en https://fontawesome.com/icons (Free, MIT).
+ */
+export const ICON_PATHS: Record<IconSlug, string> = {
+  // fa-calendar-days — calendario con grid
+  fecha: 'M96 32l0 32L480 32l0-32c0-17.7-14.3-32-32-32s-32 14.3-32 32l0 32L160 64l0-32c0-17.7-14.3-32-32-32S96 14.3 96 32zM480 96L32 96 32 480c0 17.7 14.3 32 32 32l384 0c17.7 0 32-14.3 32-32l0-384zM256 272c0 17.7-14.3 32-32 32s-32-14.3-32-32 14.3-32 32-32 32 14.3 32 32zm96 0c0 17.7-14.3 32-32 32s-32-14.3-32-32 14.3-32 32-32 32 14.3 32 32zm96 0c0 17.7-14.3 32-32 32s-32-14.3-32-32 14.3-32 32-32 32 14.3 32 32zM224 368c0 17.7-14.3 32-32 32s-32-14.3-32-32 14.3-32 32-32 32 14.3 32 32zm96 0c0 17.7-14.3 32-32 32s-32-14.3-32-32 14.3-32 32-32 32 14.3 32 32zm96 0c0 17.7-14.3 32-32 32s-32-14.3-32-32 14.3-32 32-32 32 14.3 32 32z',
+  // fa-clock — reloj con manecillas
+  hora: 'M256 0a256 256 0 1 1 0 512A256 256 0 1 1 256 0zM232 120l0 136c0 8 4 15.5 10.7 20l96 64c11 7.4 25.9 4.4 33.3-6.7s4.4-25.9-6.7-33.3L280 243.2 280 120c0-13.3-10.7-24-24-24s-24 10.7-24 24z',
+  // fa-mobile-screen — dispositivo móvil
+  modalidad: 'M160 0c-35.3 0-64 28.7-64 64L96 448c0 35.3 28.7 64 64 64l192 0c35.3 0 64-28.7 64-64l0-384c0-35.3-28.7-64-64-64L160 0zM192 64l128 0 0 16-128 0 0-16zm128 384l-128 0 0-320 128 0 0 320z',
+};
+
+/** Helpers server-side: devuelve un SVG completo listo para set:html. */
+function wrapPath(path: string, props: IconProps): string {
   const a = baseProps(props);
-  return `<svg xmlns="http://www.w3.org/2000/svg" width="${a.width}" height="${a.height}" viewBox="${a.viewBox}" fill="${a.fill}" stroke="${a.stroke}" stroke-width="${a['stroke-width']}" stroke-linecap="${a['stroke-linecap']}" stroke-linejoin="${a['stroke-linejoin']}" aria-hidden="${a['aria-hidden']}"${a.class ? ` class="${a.class}"` : ''}>
-  <rect x="10" y="14" width="44" height="40" rx="3"/>
-  <line x1="10" y1="24" x2="54" y2="24"/>
-  <line x1="22" y1="8" x2="22" y2="18"/>
-  <line x1="42" y1="8" x2="42" y2="18"/>
-  <line x1="20" y1="32" x2="20" y2="32.01"/>
-  <line x1="32" y1="32" x2="32" y2="32.01"/>
-  <line x1="44" y1="32" x2="44" y2="32.01"/>
-  <line x1="20" y1="42" x2="20" y2="42.01"/>
-  <line x1="32" y1="42" x2="32" y2="42.01"/>
-  <line x1="44" y1="42" x2="44" y2="42.01"/>
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="${a.width}" height="${a.height}" viewBox="${a.viewBox}" fill="${a.fill}" aria-hidden="${a['aria-hidden']}"${a.class ? ` class="${a.class}"` : ''}>
+  <path d="${path}"/>
 </svg>`;
+}
+
+export function IconFecha(props: IconProps = {}): string {
+  return wrapPath(ICON_PATHS.fecha, props);
 }
 
 export function IconHora(props: IconProps = {}): string {
-  // Reloj: círculo + manecillas (10:10 aprox)
-  const a = baseProps(props);
-  return `<svg xmlns="http://www.w3.org/2000/svg" width="${a.width}" height="${a.height}" viewBox="${a.viewBox}" fill="${a.fill}" stroke="${a.stroke}" stroke-width="${a['stroke-width']}" stroke-linecap="${a['stroke-linecap']}" stroke-linejoin="${a['stroke-linejoin']}" aria-hidden="${a['aria-hidden']}"${a.class ? ` class="${a.class}"` : ''}>
-  <circle cx="32" cy="32" r="22"/>
-  <polyline points="32,18 32,32 42,38"/>
-</svg>`;
+  return wrapPath(ICON_PATHS.hora, props);
 }
 
 export function IconModalidad(props: IconProps = {}): string {
-  // Dispositivo móvil (representa presencial/virtual/híbrida)
-  const a = baseProps(props);
-  return `<svg xmlns="http://www.w3.org/2000/svg" width="${a.width}" height="${a.height}" viewBox="${a.viewBox}" fill="${a.fill}" stroke="${a.stroke}" stroke-width="${a['stroke-width']}" stroke-linecap="${a['stroke-linecap']}" stroke-linejoin="${a['stroke-linejoin']}" aria-hidden="${a['aria-hidden']}"${a.class ? ` class="${a.class}"` : ''}>
-  <rect x="20" y="8" width="24" height="48" rx="3"/>
-  <line x1="28" y1="48" x2="36" y2="48"/>
-  <line x1="20" y1="20" x2="44" y2="20"/>
-  <line x1="20" y1="42" x2="44" y2="42"/>
-  <circle cx="27" cy="30" r="0.8" fill="${a.stroke}"/>
-  <circle cx="32" cy="30" r="0.8" fill="${a.stroke}"/>
-  <circle cx="37" cy="30" r="0.8" fill="${a.stroke}"/>
-</svg>`;
+  return wrapPath(ICON_PATHS.modalidad, props);
 }
 
+/** Mapa de factories para usar con `set:html` desde el .astro. */
 export const ICONS: Record<IconSlug, (props?: IconProps) => string> = {
   fecha: IconFecha,
   hora: IconHora,

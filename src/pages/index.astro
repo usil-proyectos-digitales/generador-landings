@@ -34,6 +34,7 @@
  */
 import BaseLayout from '@layouts/BaseLayout.astro';
 import { widgetRegistry } from '../components/widgets/registry.ts';
+import { ICON_PATHS } from '../components/widgets/5-save-the-date/icons.ts';
 import buColors from '@data/bu-colors.json';
 
 // Normalizamos el JSON a una lista [{id, primary, secondary, ...}].
@@ -811,17 +812,18 @@ const busList = Object.entries(buColors.bus).map(([id, palette]) => ({
   {/* ============================================================
       Lógica cliente — bundle inline (~4KB, sin deps)
       ============================================================ */}
-  <script>
-    type Control = HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement;
+  <script is:inline define:vars={{ ICON_PATHS }}>
+    /* Script inline — Astro lo trata como is:inline por usar define:vars.
+       Mantenido como JS plano (sin tipos TS) para que Astro no lo parsee. */
 
     const STORAGE_BU = 'visor:bu';
     const root = document.documentElement;
 
     // ── 1. Switcher de Unidad de Negocio ────────────────────────
-    function applyBu(bu: string) {
+function applyBu(bu) {
       root.setAttribute('data-bu', bu);
       document
-        .querySelectorAll<HTMLButtonElement>('[data-bu-target]')
+        .querySelectorAll('[data-bu-target]')
         .forEach((btn) => {
           const isActive = btn.dataset.buTarget === bu;
           btn.setAttribute('aria-checked', String(isActive));
@@ -833,7 +835,7 @@ const busList = Object.entries(buColors.bus).map(([id, palette]) => ({
     applyBu(savedBu);
 
     document
-      .querySelectorAll<HTMLButtonElement>('[data-bu-target]')
+      .querySelectorAll('[data-bu-target]')
       .forEach((btn) => {
         btn.addEventListener('click', () => {
           const bu = btn.dataset.buTarget;
@@ -845,35 +847,31 @@ const busList = Object.entries(buColors.bus).map(([id, palette]) => ({
 
     // ── 2. Viewport switcher (Desktop / Tablet / Mobile) ────────
     document
-      .querySelectorAll<HTMLButtonElement>('[data-viewport-target]')
+      .querySelectorAll('[data-viewport-target]')
       .forEach((btn) => {
         btn.addEventListener('click', () => {
           const widgetId = btn.dataset.viewportTarget;
           const viewport = btn.dataset.viewport;
           if (!widgetId || !viewport) return;
 
-          const frame = document.querySelector<HTMLElement>(
-            `[data-preview-frame="${widgetId}"]`
-          );
+          const frame = document.querySelector(`[data-preview-frame="${widgetId}"]`);
           if (frame) frame.setAttribute('data-viewport', viewport);
 
           // Marcar botón activo dentro del mismo switcher
           btn.parentElement
-            ?.querySelectorAll<HTMLButtonElement>('[data-viewport-target]')
+            ?.querySelectorAll('[data-viewport-target]')
             .forEach((b) => b.classList.toggle('is-active', b === btn));
         });
       });
 
     // ── 3. Edit Props toggle (abre/cierra el drawer) ────────────
     document
-      .querySelectorAll<HTMLButtonElement>('[data-edit-toggle]')
+      .querySelectorAll('[data-edit-toggle]')
       .forEach((btn) => {
         btn.addEventListener('click', () => {
           const widgetId = btn.dataset.editToggle;
           if (!widgetId) return;
-          const body = document.querySelector<HTMLElement>(
-            `[data-widget-body="${widgetId}"]`
-          );
+          const body = document.querySelector(`[data-widget-body="${widgetId}"]`);
           if (!body) return;
           const isOpen = body.classList.toggle('has-controls');
           btn.classList.toggle('is-active', isOpen);
@@ -883,47 +881,39 @@ const busList = Object.entries(buColors.bus).map(([id, palette]) => ({
 
     // ── 4. Live prop editing ────────────────────────────────────
 
-    // Mapa de iconos SVG inline (mismas funciones que el componente).
-    // Lo redefinimos en cliente para el live-editing de cards.
-    const ICON_SLUGS = ['fecha', 'hora', 'modalidad'] as const;
-    type IconSlug = typeof ICON_SLUGS[number];
-    const svgAttrs = (size: number) =>
-      `xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"`;
-    const ICONS_SVG: Record<IconSlug, string> = {
-      fecha: `<svg ${svgAttrs(48)}><rect x="10" y="14" width="44" height="40" rx="3"/><line x1="10" y1="24" x2="54" y2="24"/><line x1="22" y1="8" x2="22" y2="18"/><line x1="42" y1="8" x2="42" y2="18"/></svg>`,
-      hora: `<svg ${svgAttrs(48)}><circle cx="32" cy="32" r="22"/><polyline points="32,18 32,32 42,38"/></svg>`,
-      modalidad: `<svg ${svgAttrs(48)}><rect x="20" y="8" width="24" height="48" rx="3"/><line x1="28" y1="48" x2="36" y2="48"/><line x1="20" y1="20" x2="44" y2="20"/><line x1="20" y1="42" x2="44" y2="42"/></svg>`,
-    };
+    // Iconos Font Awesome Free (paths completos) — inyectados desde
+    // `widgets/5-save-the-date/icons.ts` vía <script define:vars>.
+    // Si querés cambiar un icono, editá solo ese archivo.
+    const ICONS_SVG = ICON_PATHS;
 
-    function getCards(widgetId: string): { label: string; value: string; iconSlug: IconSlug }[] {
+    function getCards(widgetId) {
       // Lee el estado actual del editor de cards desde el DOM.
-      const rows = document.querySelectorAll<HTMLElement>(
+      const rows = document.querySelectorAll(
         `[data-cards-editor="${widgetId}"] [data-card-row]`
       );
       return Array.from(rows).map((row) => {
-        const icon = row.querySelector<HTMLSelectElement>('.visor__card-icon')?.value as IconSlug;
-        const label = row.querySelector<HTMLInputElement>('input[aria-label="Etiqueta"]')?.value ?? '';
-        const value = row.querySelector<HTMLInputElement>('input[aria-label="Valor"]')?.value ?? '';
+        const icon = row.querySelector('.visor__card-icon')?.value ?? 'fecha';
+        const label = row.querySelector('input[aria-label="Etiqueta"]')?.value ?? '';
+        const value = row.querySelector('input[aria-label="Valor"]')?.value ?? '';
         return { iconSlug: icon, label, value };
       });
     }
 
-    function renderCards(widgetId: string) {
+    function renderCards(widgetId) {
       const cards = getCards(widgetId);
-      const instances = document.querySelectorAll<HTMLElement>(
-        `[data-preview-instance="${widgetId}"]`
-      );
+      const instances = document.querySelectorAll(`[data-preview-instance="${widgetId}"]`);
       instances.forEach((inst) => {
-        const container = inst.querySelector<HTMLElement>('.hk-std-cards-container');
+        const container = inst.querySelector('.hk-std-cards-container');
         if (!container) return;
         // Cards válidas (no vacías) — comportamiento ACF.
         const valid = cards.filter((c) => c.label.trim() && c.value.trim()).slice(0, 6);
         container.innerHTML = valid
           .map((c) => {
-            const icon = ICONS_SVG[c.iconSlug] ?? ICONS_SVG.fecha;
+            const path = ICONS_SVG[c.iconSlug] ?? ICONS_SVG.fecha;
+            const iconSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 512 512" fill="currentColor" aria-hidden="true" class="hk-card-icon"><path d="${path}"/></svg>`;
             return `
-              <div class="hk-std-card px-8 py-6 bg-bu-primary text-bu-surface rounded-lg flex items-center justify-center gap-4 lg:w-[300px] lg:min-w-[300px] md:w-[300px] md:min-w-[300px] w-[280px] min-w-[280px] flex-none" data-card-icon="${c.iconSlug}">
-                <div class="flex justify-center items-center shrink-0">${icon}</div>
+              <div class="hk-std-card px-8 py-6 bg-bu-accent text-bu-surface rounded-lg flex items-center justify-center gap-4 lg:w-[300px] lg:min-w-[300px] md:w-[300px] md:min-w-[300px] w-[280px] min-w-[280px] flex-none" data-card-icon="${c.iconSlug}">
+                <div class="flex justify-center items-center shrink-0">${iconSvg}</div>
                 <div class="box-contenido w-[120px] md:w-fit text-left">
                   <h3 class="hk-card-label font-montserrat text-mont-card-content-mobile md:text-mont-card-content font-normal">${c.label}</h3>
                   <p class="hk-card-value font-montserrat text-mont-card-title-mobile md:text-mont-card-title font-extrabold">${c.value}</p>
@@ -936,24 +926,25 @@ const busList = Object.entries(buColors.bus).map(([id, palette]) => ({
     }
 
     document
-      .querySelectorAll<Control>('[data-control]')
+      .querySelectorAll('[data-control]')
       .forEach((ctrl) => {
         const widgetId = ctrl.dataset.widget;
         const control = ctrl.dataset.control;
         if (!widgetId || !control) return;
 
         const apply = () => {
-          const instances = document.querySelectorAll<HTMLElement>(
+          const instances = document.querySelectorAll(
             `[data-preview-instance="${widgetId}"]`
           );
           if (!instances.length) return;
 
           if (control === 'variant') {
-            const v = (ctrl as HTMLSelectElement).value;
+            const v = ctrl.value;
             // Detectar el modo actual (de la instancia visible).
-            const currentMode = document
-              .querySelector<HTMLElement>(`[data-preview-instance="${widgetId}"]:not([hidden])`)
-              ?.dataset.previewMode ?? 'light';
+            const currentMode =
+              document
+                .querySelector(`[data-preview-instance="${widgetId}"]:not([hidden])`)
+                ?.dataset.previewMode ?? 'light';
             instances.forEach((inst) => {
               const match =
                 inst.dataset.previewVariant === v &&
@@ -965,11 +956,11 @@ const busList = Object.entries(buColors.bus).map(([id, palette]) => ({
 
           instances.forEach((inst) => {
             if (control === 'title') {
-              const h = inst.querySelector<HTMLElement>('.hk-title');
-              if (h) h.textContent = (ctrl as HTMLInputElement).value;
+              const h = inst.querySelector('.hk-title');
+              if (h) h.textContent = ctrl.value;
             } else if (control === 'description') {
-              const d = inst.querySelector<HTMLElement>('.hk-desc');
-              if (d) d.innerHTML = (ctrl as HTMLTextAreaElement).value;
+              const d = inst.querySelector('.hk-desc');
+              if (d) d.innerHTML = ctrl.value;
             }
           });
         };
@@ -979,7 +970,7 @@ const busList = Object.entries(buColors.bus).map(([id, palette]) => ({
       });
 
     // ── 4b. Cards editor (add / remove / live edit) ─────────────
-    document.querySelectorAll<HTMLDivElement>('[data-cards-editor]').forEach((editor) => {
+    document.querySelectorAll('[data-cards-editor]').forEach((editor) => {
       const widgetId = editor.dataset.cardsEditor;
       if (!widgetId) return;
 
@@ -989,26 +980,26 @@ const busList = Object.entries(buColors.bus).map(([id, palette]) => ({
 
       // Eliminar card
       editor.addEventListener('click', (e) => {
-        const target = e.target as HTMLElement;
+        const target = e.target;
         const removeIdx = target.dataset.cardRemove;
         if (removeIdx === undefined) return;
         const row = editor.querySelector(`[data-card-row="${removeIdx}"]`);
         row?.remove();
         // Reindexar data-card-row para que sigan siendo únicos
-        editor.querySelectorAll<HTMLElement>('[data-card-row]').forEach((r, i) => {
+        editor.querySelectorAll('[data-card-row]').forEach((r, i) => {
           r.setAttribute('data-card-row', String(i));
-          r.querySelector<HTMLButtonElement>('[data-card-remove]')?.setAttribute('data-card-remove', String(i));
+          r.querySelector('[data-card-remove]')?.setAttribute('data-card-remove', String(i));
         });
         renderCards(widgetId);
       });
     });
 
     // Botón "+ Agregar card"
-    document.querySelectorAll<HTMLButtonElement>('[data-card-add]').forEach((btn) => {
+    document.querySelectorAll('[data-card-add]').forEach((btn) => {
       btn.addEventListener('click', () => {
         const widgetId = btn.dataset.cardAdd;
         if (!widgetId) return;
-        const editor = document.querySelector<HTMLElement>(`[data-cards-editor="${widgetId}"]`);
+        const editor = document.querySelector(`[data-cards-editor="${widgetId}"]`);
         if (!editor) return;
         const nextIdx = editor.querySelectorAll('[data-card-row]').length;
         const row = document.createElement('div');
@@ -1026,7 +1017,7 @@ const busList = Object.entries(buColors.bus).map(([id, palette]) => ({
         `;
         editor.appendChild(row);
         // Re-index anteriores por seguridad
-        editor.querySelectorAll<HTMLElement>('[data-card-row]').forEach((r, i) => {
+        editor.querySelectorAll('[data-card-row]').forEach((r, i) => {
           r.setAttribute('data-card-row', String(i));
         });
         renderCards(widgetId);
@@ -1035,23 +1026,23 @@ const busList = Object.entries(buColors.bus).map(([id, palette]) => ({
 
     // ── 4c. Mode switcher (light / dark por instancia) ─────────
     document
-      .querySelectorAll<HTMLButtonElement>('[data-mode-set]')
+      .querySelectorAll('[data-mode-set]')
       .forEach((btn) => {
         btn.addEventListener('click', () => {
           const widgetId = btn.dataset.modeSet;
-          const mode = btn.dataset.modeValue as 'light' | 'dark' | undefined;
+          const mode = btn.dataset.modeValue;
           if (!widgetId || !mode) return;
 
           // 1. Encontrar la variante actualmente visible para este widget
           //    (la única instancia sin `hidden`).
           const currentVariant = document
-            .querySelector<HTMLElement>(`[data-preview-instance="${widgetId}"]:not([hidden])`)
+            .querySelector(`[data-preview-instance="${widgetId}"]:not([hidden])`)
             ?.dataset.previewVariant;
 
           // 2. Mostrar/ocultar las instancias correctas: misma variante,
           //    nuevo mode. Las demás (otras variantes) quedan ocultas.
           document
-            .querySelectorAll<HTMLElement>(`[data-preview-instance="${widgetId}"]`)
+            .querySelectorAll(`[data-preview-instance="${widgetId}"]`)
             .forEach((inst) => {
               const matchesNew =
                 inst.dataset.previewVariant === currentVariant &&
@@ -1061,7 +1052,7 @@ const busList = Object.entries(buColors.bus).map(([id, palette]) => ({
 
           // 3. Marcar botón activo en el switcher
           btn.parentElement
-            ?.querySelectorAll<HTMLButtonElement>('[data-mode-set]')
+            ?.querySelectorAll('[data-mode-set]')
             .forEach((b) => {
               const isActive = b === btn;
               b.classList.toggle('is-active', isActive);
@@ -1073,16 +1064,16 @@ const busList = Object.entries(buColors.bus).map(([id, palette]) => ({
     // ── 5. Navegación del sidebar (mostrar un widget a la vez) ──
     const STORAGE_WIDGET = 'visor:widget';
 
-    function showWidget(widgetId: string) {
+    function showWidget(widgetId) {
       // Ocultar todos los panels y mostrar solo el seleccionado
-      document.querySelectorAll<HTMLElement>('[data-widget-panel]').forEach((panel) => {
+      document.querySelectorAll('[data-widget-panel]').forEach((panel) => {
         const isActive = panel.dataset.widgetPanel === widgetId;
         panel.hidden = !isActive;
         panel.classList.toggle('is-hidden', !isActive);
       });
 
       // Marcar el link activo en el sidebar
-      document.querySelectorAll<HTMLAnchorElement>('[data-widget-nav]').forEach((link) => {
+      document.querySelectorAll('[data-widget-nav]').forEach((link) => {
         const isActive = link.dataset.widgetNav === widgetId;
         link.classList.toggle('is-active', isActive);
         if (isActive) link.setAttribute('aria-current', 'true');
@@ -1090,10 +1081,10 @@ const busList = Object.entries(buColors.bus).map(([id, palette]) => ({
       });
 
       // Cerrar el drawer de props al cambiar de widget
-      document.querySelectorAll<HTMLElement>('[data-widget-body]').forEach((body) => {
+      document.querySelectorAll('[data-widget-body]').forEach((body) => {
         body.classList.remove('has-controls');
       });
-      document.querySelectorAll<HTMLButtonElement>('[data-edit-toggle]').forEach((btn) => {
+      document.querySelectorAll('[data-edit-toggle]').forEach((btn) => {
         btn.classList.remove('is-active');
         btn.setAttribute('aria-pressed', 'false');
       });
@@ -1102,7 +1093,7 @@ const busList = Object.entries(buColors.bus).map(([id, palette]) => ({
       document.querySelector<HTMLElement>('.visor__main')?.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
-    document.querySelectorAll<HTMLAnchorElement>('[data-widget-nav]').forEach((a) => {
+    document.querySelectorAll('[data-widget-nav]').forEach((a) => {
       a.addEventListener('click', (e) => {
         const widgetId = a.dataset.widgetNav;
         if (!widgetId) return;
