@@ -15,13 +15,16 @@
  *
  * ACF (WordPress):
  *   - `title`      ← ACF `text`     "Título"
- *   - `cards[]`    ← ACF `repeater` "Cards" (label, value, iconSlug)
+ *   - `cards[]`    ← ACF `repeater` "Cards"
+ *     Cada card tiene: label, value, iconSlug (ver ICON_SLUGS en icons.ts)
+ *     Para "modalidad" el slug debe ser uno de: presencial | virtual | hibrida.
  *   - `bottomText` ← ACF `wysiwyg`  "Texto bajada"
- *   - `mode`       ← toggle        ('light' | 'dark') — NUEVO
+ *   - `mode`       ← toggle        ('light' | 'dark')
  *
  * Comportamiento:
  *   - Cards con `label` o `value` vacíos NO se renderizan.
  *   - Máximo 6 cards (defensa legacy).
+ *   - Si el iconSlug no es válido, se usa el de 'fecha' como fallback.
  */
 import { ICONS, type IconSlug } from './icons.ts';
 import { theme, baseClasses, backgrounds, type Mode } from './theme.ts';
@@ -29,6 +32,7 @@ import { theme, baseClasses, backgrounds, type Mode } from './theme.ts';
 export interface CardItem {
   label: string;
   value: string;
+  /** Slug del icono a usar. Ver ICON_SLUGS en icons.ts. */
   iconSlug: IconSlug;
 }
 
@@ -47,7 +51,7 @@ const {
   cards = [
     { label: 'Fecha:', value: '25 y 26 abril', iconSlug: 'fecha' },
     { label: 'Hora:', value: '9:00 - 18:00', iconSlug: 'hora' },
-    { label: 'Modalidad:', value: 'Híbrida', iconSlug: 'modalidad' },
+    { label: 'Modalidad:', value: 'Híbrida', iconSlug: 'hibrida' },
   ],
   bottomText = 'USIL, campus 1 - Aula Magna<br> <span class="font-normal">(av. La Fontana 550, La Molina)</span>',
   id = 'save-the-date',

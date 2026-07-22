@@ -763,7 +763,9 @@ const busList = Object.entries(buColors.bus).map(([id, palette]) => ({
                         >
                           <option value="fecha" selected={card.iconSlug === 'fecha'}>📅 Fecha</option>
                           <option value="hora" selected={card.iconSlug === 'hora'}>🕐 Hora</option>
-                          <option value="modalidad" selected={card.iconSlug === 'modalidad'}>📱 Modalidad</option>
+                          <option value="presencial" selected={card.iconSlug === 'presencial'}>👥 Presencial</option>
+                          <option value="virtual" selected={card.iconSlug === 'virtual'}>📶 Virtual</option>
+                          <option value="hibrida" selected={card.iconSlug === 'hibrida'}>💻 Híbrida</option>
                         </select>
                         <input
                           type="text"
@@ -1009,7 +1011,9 @@ function applyBu(bu) {
           <select class="visor__card-icon" aria-label="Icono">
             <option value="fecha" selected>📅 Fecha</option>
             <option value="hora">🕐 Hora</option>
-            <option value="modalidad">📱 Modalidad</option>
+            <option value="presencial">👥 Presencial</option>
+            <option value="virtual">📶 Virtual</option>
+            <option value="hibrida">💻 Híbrida</option>
           </select>
           <input type="text" placeholder="Etiqueta (ej. Fecha:)" aria-label="Etiqueta" />
           <input type="text" placeholder="Valor (ej. 25 y 26 abril)" aria-label="Valor" />

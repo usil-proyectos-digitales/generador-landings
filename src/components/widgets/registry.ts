@@ -100,7 +100,7 @@ export const widgetRegistry: WidgetRegistration[] = [
       cards: [
         { label: 'Fecha:', value: '25 y 26 abril', iconSlug: 'fecha' },
         { label: 'Hora:', value: '9:00 - 18:00', iconSlug: 'hora' },
-        { label: 'Modalidad:', value: 'Híbrida', iconSlug: 'modalidad' },
+        { label: 'Modalidad:', value: 'Híbrida', iconSlug: 'hibrida' },
       ],
     },
     component: SaveTheDate,

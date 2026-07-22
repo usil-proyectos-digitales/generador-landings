@@ -96,7 +96,7 @@
     --bu-color-accent-primary: #01004E;
     --bu-color-surface-light: #DEE2EC;
     --bu-color-neutral: #ffffff;
-}
+} 
 
 /* ── 5. CSIR ── */
 [data-bu="csir"] {
@@ -136,8 +136,8 @@
 
 /* ── 9. USIL CORPORATIVO ── */
 [data-bu="usil-corporativo"] {
-    --bu-color-brand-primary: #1E50DC;
-    --bu-color-brand-secondary: #002663;
+    --bu-color-brand-primary: #002663;
+    --bu-color-brand-secondary: #1E50DC;
     --bu-color-accent-primary: #438BE0;
     --bu-color-surface-light: #DFE8F7;
     --bu-color-neutral: #ffffff;
