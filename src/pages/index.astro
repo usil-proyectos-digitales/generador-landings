@@ -39,7 +39,7 @@ import buColors from '@data/bu-colors.json';
 // Normalizamos el JSON a una lista [{id, primary, secondary, ...}].
 const busList = Object.entries(buColors.bus).map(([id, palette]) => ({
   id,
-  ...(palette as { primary: string; secondary: string; accent: string; surface: string; text: string }),
+  ...(palette as { primary: string; secondary: string; accent: string; surface: string; neutral: string }),
 }));
 ---
 
@@ -623,8 +623,9 @@ const busList = Object.entries(buColors.bus).map(([id, palette]) => ({
             <div class="visor__preview-wrap">
               <div class="visor__preview-frame" data-preview-frame={w.id} data-viewport="desktop">
                 <div data-preview-root={w.id}>
-                  {w.variants.flatMap((v) =>
+{w.variants.flatMap((v) =>
                     (['light', 'dark'] as const).map((mode) => {
+                      // ID único por combinación variant × mode (sin espacios problemáticos).
                       const previewId = `preview-${w.id}-${v.id}-${mode}`;
                       
                       const adapterInput = {
@@ -632,7 +633,7 @@ const busList = Object.entries(buColors.bus).map(([id, palette]) => ({
                         description: w.defaults.description,
                         variant: v.id,
                         id: previewId,
-                        mode: mode, // 👈 Se pre-renderizan ambas versiones (light y dark)
+                        mode: mode,
                         ...(w.defaults.cards ? { cards: w.defaults.cards } : {}),
                       };
 
@@ -645,9 +646,14 @@ const busList = Object.entries(buColors.bus).map(([id, palette]) => ({
                             id: previewId,
                             mode: mode,
                           };
-
+                      
+                      // Por defecto solo se muestra la combinación variant × mode por defecto.
+                      // Las demás quedan en el DOM (con [hidden]) para que el cambio de
+                      // variante o modo sea instantáneo sin re-render del servidor.
+                      // El JS muestra/oculta cambiando este atributo según la selección.
                       const isDefaultVariant = v.id === w.defaultVariant;
                       const isDefaultMode = mode === (w.defaults.mode ?? 'light');
+                      const isVisible = isDefaultVariant && isDefaultMode;
 
                       return (
                         <div
@@ -655,7 +661,7 @@ const busList = Object.entries(buColors.bus).map(([id, palette]) => ({
                           data-preview-instance={w.id}
                           data-preview-variant={v.id}
                           data-preview-mode={mode}
-                          hidden={!(isDefaultVariant && isDefaultMode)}
+                          hidden={!isVisible}
                         >
                           <w.component {...componentProps} />
                         </div>
@@ -944,8 +950,15 @@ const busList = Object.entries(buColors.bus).map(([id, palette]) => ({
 
           if (control === 'variant') {
             const v = (ctrl as HTMLSelectElement).value;
+            // Detectar el modo actual (de la instancia visible).
+            const currentMode = document
+              .querySelector<HTMLElement>(`[data-preview-instance="${widgetId}"]:not([hidden])`)
+              ?.dataset.previewMode ?? 'light';
             instances.forEach((inst) => {
-              inst.hidden = inst.dataset.previewVariant !== v;
+              const match =
+                inst.dataset.previewVariant === v &&
+                inst.dataset.previewMode === currentMode;
+              inst.hidden = !match;
             });
             return;
           }
@@ -1029,14 +1042,24 @@ const busList = Object.entries(buColors.bus).map(([id, palette]) => ({
           const mode = btn.dataset.modeValue as 'light' | 'dark' | undefined;
           if (!widgetId || !mode) return;
 
-          // Aplicar data-mode a TODAS las instancias (visibles o no)
-          // del widget activo (todas las variantes) — así al alternar
-          // variante también se mantiene el modo.
-          document
-            .querySelectorAll<HTMLElement>(`[data-preview-instance="${widgetId}"] [data-widget]`)
-            .forEach((el) => el.setAttribute('data-mode', mode));
+          // 1. Encontrar la variante actualmente visible para este widget
+          //    (la única instancia sin `hidden`).
+          const currentVariant = document
+            .querySelector<HTMLElement>(`[data-preview-instance="${widgetId}"]:not([hidden])`)
+            ?.dataset.previewVariant;
 
-          // Marcar botón activo en el switcher
+          // 2. Mostrar/ocultar las instancias correctas: misma variante,
+          //    nuevo mode. Las demás (otras variantes) quedan ocultas.
+          document
+            .querySelectorAll<HTMLElement>(`[data-preview-instance="${widgetId}"]`)
+            .forEach((inst) => {
+              const matchesNew =
+                inst.dataset.previewVariant === currentVariant &&
+                inst.dataset.previewMode === mode;
+              inst.hidden = !matchesNew;
+            });
+
+          // 3. Marcar botón activo en el switcher
           btn.parentElement
             ?.querySelectorAll<HTMLButtonElement>('[data-mode-set]')
             .forEach((b) => {
@@ -1097,48 +1120,5 @@ const busList = Object.entries(buColors.bus).map(([id, palette]) => ({
       localStorage.getItem(STORAGE_WIDGET) ||
       document.querySelector<HTMLElement>('[data-widget-panel]')?.dataset.widgetPanel;
     if (initialWidget) showWidget(initialWidget);
-  </script>
-
-
-  <script>
-    document.addEventListener('click', (e) => {
-      const target = e.target as HTMLElement;
-      const modeBtn = target.closest('[data-mode-set]') as HTMLButtonElement;
-  
-      if (!modeBtn) return;
-  
-      const widgetId = modeBtn.getAttribute('data-mode-set');
-      const selectedMode = modeBtn.getAttribute('data-mode-value');
-  
-      if (!widgetId || !selectedMode) return;
-  
-      // 1. Actualizar estado visual de los botones (is-active)
-      const switcher = modeBtn.closest('.visor__mode-switcher');
-      if (switcher) {
-        switcher.querySelectorAll('[data-mode-set]').forEach((btn) => {
-          btn.classList.remove('is-active');
-          btn.setAttribute('aria-checked', 'false');
-        });
-        modeBtn.classList.add('is-active');
-        modeBtn.setAttribute('aria-checked', 'true');
-      }
-  
-      // 2. Obtener la variante actualmente seleccionada en el select del drawer
-      const variantSelect = document.querySelector(`select[data-control="variant"][data-widget="${widgetId}"]`) as HTMLSelectElement;
-      const currentVariant = variantSelect ? variantSelect.value : null;
-  
-      // 3. Mostrar la instancia que coincide con (variante + modo) y ocultar las demás
-      const instances = document.querySelectorAll(`[data-preview-instance="${widgetId}"]`);
-      instances.forEach((instance) => {
-        const instVariant = instance.getAttribute('data-preview-variant');
-        const instMode = instance.getAttribute('data-preview-mode');
-  
-        if (instVariant === currentVariant && instMode === selectedMode) {
-          instance.removeAttribute('hidden');
-        } else {
-          instance.setAttribute('hidden', '');
-        }
-      });
-    });
   </script>
 </BaseLayout>
