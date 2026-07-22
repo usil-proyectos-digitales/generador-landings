@@ -25,8 +25,8 @@ interface IconProps {
 
 const baseProps = (p: IconProps) => ({
   class: p.class,
-  width: p.size ?? 80,
-  height: p.size ?? 80,
+  width: p.size ?? 48,
+  height: p.size ?? 48,
   viewBox: '0 0 512 512',
   fill: 'currentColor',
   'aria-hidden': 'true',
@@ -52,15 +52,6 @@ function wrapPath(path: string, props: IconProps): string {
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${a.width}" height="${a.height}" viewBox="${a.viewBox}" fill="${a.fill}" aria-hidden="${a['aria-hidden']}"${a.class ? ` class="${a.class}"` : ''}>
   <path d="${path}"/>
 </svg>`;
-}
-
-/**
- * Helper genérico: wrappea cualquier path en un SVG. Útil desde el
- * cliente (visor) que tiene los paths como `ICON_PATHS` y no las
- * funciones Icon*.
- */
-export function wrapIconSvg(path: string, props: IconProps = {}): string {
-  return wrapPath(path, props);
 }
 
 export function IconFecha(props: IconProps = {}): string {

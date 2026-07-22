@@ -910,7 +910,7 @@ function applyBu(bu) {
         container.innerHTML = valid
           .map((c) => {
             const path = ICONS_SVG[c.iconSlug] ?? ICONS_SVG.fecha;
-            const iconSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="80" height="80" viewBox="0 0 512 512" fill="currentColor" aria-hidden="true" class="hk-card-icon"><path d="${path}"/></svg>`;
+            const iconSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 512 512" fill="currentColor" aria-hidden="true" class="hk-card-icon"><path d="${path}"/></svg>`;
             return `
               <div class="hk-std-card px-8 py-6 bg-bu-accent text-bu-surface rounded-lg flex items-center justify-center gap-4 lg:w-[300px] lg:min-w-[300px] md:w-[300px] md:min-w-[300px] w-[280px] min-w-[280px] flex-none" data-card-icon="${c.iconSlug}">
                 <div class="flex justify-center items-center shrink-0">${iconSvg}</div>

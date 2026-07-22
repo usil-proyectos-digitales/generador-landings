@@ -93,7 +93,7 @@ const cardsContainerClass =
         <div class={cardsContainerClass}>
           {validCards.map((card) => {
             const iconFn = ICONS[card.iconSlug] ?? ICONS.fecha;
-            const iconSvg = iconFn({ class: 'hk-card-icon', size: 80 });
+            const iconSvg = iconFn({ class: 'hk-card-icon', size: 48 });
             return (
               <div
                 class:list={[baseClasses.cardShell, tokens.card]}
