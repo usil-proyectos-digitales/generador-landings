@@ -1,19 +1,20 @@
 /**
  * Iconos SVG inline para SaveTheDate.
  * ------------------------------------
- * Paths de Font Awesome Free (MIT License).
- * - Usan `currentColor` para heredar el color del texto padre → cambian
- *   automáticamente con el BU sin duplicar archivos.
- * - Inline (no son archivos .svg servidos) → WordPress nunca los toca.
+ * Paths de Font Awesome Free v6.5.x (MIT License).
+ * - Usan `currentColor` para heredar el color del texto padre y cambian
+ *   automaticamente con el BU sin duplicar archivos.
+ * - Inline (no son archivos .svg servidos): WordPress nunca los toca.
  *
- * Shape: 512x512 viewBox (Font Awesome estándar), fill="currentColor".
+ * Shape: 24x24 viewBox (estandar Heroicons-style), fill="currentColor".
+ * El SVG se renderiza con width/height 48px (configurable via prop `size`).
  *
  * EXPORTAMOS DOS FORMATES:
  *   - Funciones `Icon*` que devuelven strings SVG completos.
- *     → Usadas por el widget Astro server-side (set:html).
+ *     Usadas por el widget Astro server-side (set:html).
  *   - Objeto `ICON_PATHS` con solo los `<path d="..."/>`.
- *     → Usado por el visor (renderCards en cliente) para mantener
- *       consistencia sin duplicar paths.
+ *     Usado por el visor (renderCards en cliente) para mantener
+ *     consistencia sin duplicar paths.
  */
 export const ICON_SLUGS = ['fecha', 'hora', 'modalidad'] as const;
 export type IconSlug = typeof ICON_SLUGS[number];
@@ -27,26 +28,31 @@ const baseProps = (p: IconProps) => ({
   class: p.class,
   width: p.size ?? 48,
   height: p.size ?? 48,
-  viewBox: '0 0 512 512',
+  viewBox: '0 0 24 24',
   fill: 'currentColor',
   'aria-hidden': 'true',
 });
 
 /**
- * Solo los paths `<path d="..."/>` de Font Awesome Free.
- * Reutilizables desde el cliente (visor) sin duplicar lógica.
+ * Paths `<path d="..."/>` de Font Awesome Free v6.5.x.
+ * Reutilizables desde el cliente (visor) que tiene los paths como
+ * `ICON_PATHS` y no las funciones Icon*.
  * Fuentes verificadas en https://fontawesome.com/icons (Free, MIT).
+ *
+ * ViewBox unificado: 24x24 (todos encajan a width=48 sin padding raro).
+ * fill: currentColor (hereda color del texto padre).
  */
 export const ICON_PATHS: Record<IconSlug, string> = {
-  // fa-calendar-days — calendario con grid
-  fecha: 'M96 32l0 32L480 32l0-32c0-17.7-14.3-32-32-32s-32 14.3-32 32l0 32L160 64l0-32c0-17.7-14.3-32-32-32S96 14.3 96 32zM480 96L32 96 32 480c0 17.7 14.3 32 32 32l384 0c17.7 0 32-14.3 32-32l0-384zM256 272c0 17.7-14.3 32-32 32s-32-14.3-32-32 14.3-32 32-32 32 14.3 32 32zm96 0c0 17.7-14.3 32-32 32s-32-14.3-32-32 14.3-32 32-32 32 14.3 32 32zm96 0c0 17.7-14.3 32-32 32s-32-14.3-32-32 14.3-32 32-32 32 14.3 32 32zM224 368c0 17.7-14.3 32-32 32s-32-14.3-32-32 14.3-32 32-32 32 14.3 32 32zm96 0c0 17.7-14.3 32-32 32s-32-14.3-32-32 14.3-32 32-32 32 14.3 32 32zm96 0c0 17.7-14.3 32-32 32s-32-14.3-32-32 14.3-32 32-32 32 14.3 32 32z',
-  // fa-clock — reloj con manecillas
-  hora: 'M256 0a256 256 0 1 1 0 512A256 256 0 1 1 256 0zM232 120l0 136c0 8 4 15.5 10.7 20l96 64c11 7.4 25.9 4.4 33.3-6.7s4.4-25.9-6.7-33.3L280 243.2 280 120c0-13.3-10.7-24-24-24s-24 10.7-24 24z',
-  // fa-mobile-screen — dispositivo móvil
-  modalidad: 'M160 0c-35.3 0-64 28.7-64 64L96 448c0 35.3 28.7 64 64 64l192 0c35.3 0 64-28.7 64-64l0-384c0-35.3-28.7-64-64-64L160 0zM192 64l128 0 0 16-128 0 0-16zm128 384l-128 0 0-320 128 0 0 320z',
+  // fa-calendar: mes con grid de numeros (lineas horizontales + verticales)
+  fecha: 'M19 4h-1V2h-2v2H8V2H6v2H5c-1.11 0-1.99.9-1.99 2L3 20a2 2 0 0 0 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V10h14v10zM9 14H7v-2h2v2zm4 0h-2v-2h2v2zm4 0h-2v-2h2v2zm-4-4h-2V8h2v2zm4 0h-2V8h2v2z',
+  // fa-clock: reloj circular con manecillas (incluye el aro redondo)
+  hora: 'M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67z',
+  // fa-mobile-screen: dispositivo movil con pantalla y boton home
+  modalidad: 'M17 1.01L7 1c-1.1 0-2 .9-2 2v18c0 1.1.9 2 2 2h10c1.1 0 2-.9 2-2V3c0-1.1-.9-1.99-2-1.99zM17 19H7V5h10v14z',
 };
 
-/** Helpers server-side: devuelve un SVG completo listo para set:html. */
+/** Helper genérico: wrappea cualquier path en un SVG. Útil desde el
+ * cliente (visor) que tiene los paths como `ICON_PATHS`. */
 function wrapPath(path: string, props: IconProps): string {
   const a = baseProps(props);
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${a.width}" height="${a.height}" viewBox="${a.viewBox}" fill="${a.fill}" aria-hidden="${a['aria-hidden']}"${a.class ? ` class="${a.class}"` : ''}>
