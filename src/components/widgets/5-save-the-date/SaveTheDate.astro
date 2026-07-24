@@ -27,7 +27,7 @@
  *   - Si el iconSlug no es válido, se usa el de 'fecha' como fallback.
  */
 import { ICONS, type IconSlug } from './icons.ts';
-import { theme, baseClasses, backgrounds, type Mode } from './theme.ts';
+import { theme, baseClasses, type Mode } from './theme.ts';
 
 export interface CardItem {
   label: string;
@@ -62,7 +62,6 @@ const {
 
 // ── Resolución de tokens desde theme.ts ─────────────────────
 const tokens = theme['v5.7'][mode];
-const sectionBg = backgrounds[background];
 
 const titleFontClass = fontTitle === 'anton' ? 'font-anton' : 'font-montserrat';
 
@@ -83,7 +82,7 @@ const cardsContainerClass =
   data-widget="save-the-date"
   data-variant="v5.7"
   data-mode={mode}
-  class:list={[baseClasses.section, sectionBg]}
+  class:list={[baseClasses.section, tokens.section]}
 >
   <div class={baseClasses.container}>
     <div class="relative z-10 text-center">

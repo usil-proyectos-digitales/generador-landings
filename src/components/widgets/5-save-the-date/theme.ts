@@ -5,50 +5,59 @@
  * Editá solo este archivo para ajustar colores.
  *
  * ESTRATEGIA DE COLORES:
- *   - Solo existen 5 variables CSS por BU en `global.css`. Esas
- *     variables NO cambian con `data-mode`. La elección de cuál de
- *     los 5 roles usar (primary, secondary, accent, surface, neutral)
+ *   - Solo existen 5 variables CSS por BU en `global.css`:
+ *       --bu-color-brand-primary / -secondary / -accent-primary
+ *       --bu-color-surface-light / -neutral
+ *   - Esas 5 variables NO cambian con `data-mode`. La elección de cuál
+ *     de los 5 roles usar (primary, secondary, accent, surface, neutral)
  *     depende del MODO y se hace ACÁ, vía clases Tailwind.
- *   - El fondo gris claro (`#F0F0F0`) de la sección en modo light
- *     es independiente de los tokens del BU — está hardcoded porque
- *     en light no queremos teñir el section con la paleta del BU.
- *     En dark sí queremos teñirlo → usamos `bg-bu-surface`.
+ *   - Resultado: este archivo controla 100% cómo se ve el widget
+ *     en light/dark. El CSS nunca necesita overrides por modo.
  *
  * Estructura:
- *   - theme[variant][mode] → clases Tailwind por variante × modo
- *   - baseClasses          → clases compartidas (layout, tipografía)
- *   - backgrounds          → enum de fondos alternativos (override via prop)
+ *   - theme[variant][mode]  → clases Tailwind por variante × modo
+ *   - baseClasses           → clases compartidas (layout, tipografía)
  *
- * Los SVG usan `currentColor` → heredan color del texto padre.
+ * Cambian en runtime cuando Astro re-renderiza con el prop `mode`.
  */
 export type Mode = 'light' | 'dark';
 export type Variant = 'v5.7';
 
 export interface VariantTheme {
+  /** Clases para el contenedor raíz `<section>`. */
   section: string;
+  /** Clases para el `<h2>` del título. */
   title: string;
+  /** Clases para las cards. */
   card: string;
+  /** Clases para el texto de bajada. */
   bajada: string;
 }
 
+/**
+ * Tokens por variante × modo. La elección de qué clase Tailwind usar
+ * (bg-bu-primary vs bg-bu-surface, etc.) se decide ACÁ.
+ *
+ * - `light`: roles "naturales" del BU (primary=CTA, surface=fondo claro).
+ * - `dark`:  los roles se invierten para que el widget se vea oscuro
+ *            sin cambiar los 5 tokens del CSS.
+ */
 export const theme: Record<Variant, Record<Mode, VariantTheme>> = {
   // ── v5.7 — Título + Cards + Bajada ────────────────────────
   'v5.7': {
     light: {
-      // Light: sección gris claro neutro, título primary, cards en accent.
-      section: 'bg-[#F0F0F0]',
-      title: 'text-bu-primary',
+      // Light: sección primary (azul del BU), texto en surface.
+      section: 'bg-bu-surface text-bu-primary',
+      title: '',
       card: 'bg-bu-accent text-bu-surface',
       bajada: 'text-bu-primary',
     },
     dark: {
-      // Dark: la sección toma el surface oscuro del BU (teñido por el BU),
-      // el título pasa a accent (resalta sobre el surface oscuro),
-      // las cards mantienen accent (contraste alto), la bajada va a surface.
-      section: 'bg-bu-surface',
-      title: 'text-bu-accent',
+      // Dark: invertimos — fondo surface oscuro del BU + texto claro.
+      section: 'bg-bu-primary text-bu-neutral',
+      title: 'text-bu-neutral',
       card: 'bg-bu-accent text-bu-surface',
-      bajada: 'text-bu-surface',
+      bajada: 'text-bu-neutral',
     },
   },
 };
@@ -73,10 +82,3 @@ export const baseClasses = {
   bajada:
     'text-base font-extrabold hk-std-texto-bajada hk-desc md:text-2xl',
 };
-
-/** Fondos alternativos para la sección (override via prop `background`). */
-export const backgrounds = {
-  gray: 'bg-[#F0F0F0]',
-  white: 'bg-bu-surface',
-  transparent: 'bg-transparent',
-} as const;
