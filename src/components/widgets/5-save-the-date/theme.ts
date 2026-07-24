@@ -56,7 +56,7 @@ export const theme: Record<Variant, Record<Mode, VariantTheme>> = {
       // Dark: invertimos — fondo surface oscuro del BU + texto claro.
       section: 'bg-bu-primary text-bu-neutral',
       title: 'text-bu-neutral',
-      card: 'bg-bu-accent text-bu-surface',
+      card: 'bg-bu-neutral text-bu-primary',
       bajada: 'text-bu-neutral',
     },
   },

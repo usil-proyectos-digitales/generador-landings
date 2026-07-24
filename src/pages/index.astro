@@ -822,7 +822,7 @@ const busList = Object.entries(buColors.bus).map(([id, palette]) => ({
     const root = document.documentElement;
 
     // ── 1. Switcher de Unidad de Negocio ────────────────────────
-function applyBu(bu) {
+    function applyBu(bu) {
       root.setAttribute('data-bu', bu);
       document
         .querySelectorAll('[data-bu-target]')
@@ -1069,6 +1069,8 @@ function applyBu(bu) {
     const STORAGE_WIDGET = 'visor:widget';
 
     function showWidget(widgetId) {
+      if (!widgetId) return;
+      
       // Ocultar todos los panels y mostrar solo el seleccionado
       document.querySelectorAll('[data-widget-panel]').forEach((panel) => {
         const isActive = panel.dataset.widgetPanel === widgetId;
@@ -1094,7 +1096,10 @@ function applyBu(bu) {
       });
 
       // Scroll al top del main
-      document.querySelector<HTMLElement>('.visor__main')?.scrollTo({ top: 0, behavior: 'smooth' });
+      const mainEl = document.querySelector('.visor__main');
+      if (mainEl) {
+        mainEl.scrollTo({ top: 0, behavior: 'smooth' });
+      }
     }
 
     document.querySelectorAll('[data-widget-nav]').forEach((a) => {
@@ -1102,18 +1107,65 @@ function applyBu(bu) {
         const widgetId = a.dataset.widgetNav;
         if (!widgetId) return;
         e.preventDefault();
+        console.log('Click en widget:', widgetId);
         showWidget(widgetId);
         localStorage.setItem(STORAGE_WIDGET, widgetId);
-        // Actualizar el hash sin scroll nativo
+        console.log('Guardado en localStorage:', widgetId);
+        console.log('Valor actual en localStorage:', localStorage.getItem(STORAGE_WIDGET));
         history.replaceState(null, '', `#${widgetId}`);
       });
     });
 
-    // Restaurar widget seleccionado (o abrir el primero)
-    const initialWidget =
-      location.hash.replace('#', '') ||
-      localStorage.getItem(STORAGE_WIDGET) ||
-      document.querySelector<HTMLElement>('[data-widget-panel]')?.dataset.widgetPanel;
-    if (initialWidget) showWidget(initialWidget);
+    // Restaurar widget seleccionado al cargar: prioridad = localStorage > hash > primer widget
+    (function initWidget() {
+      const storedWidget = localStorage.getItem(STORAGE_WIDGET);
+      const hashWidget = location.hash.replace('#', '');
+      
+      // Buscar todos los widgets disponibles
+      const allPanels = document.querySelectorAll('[data-widget-panel]');
+      const firstWidget = allPanels[0]?.dataset.widgetPanel;
+      
+      console.log('=== INIT WIDGET ===');
+      console.log('storedWidget:', storedWidget);
+      console.log('hashWidget:', hashWidget);
+      console.log('firstWidget:', firstWidget);
+      console.log('allPanels:', Array.from(allPanels).map(p => p.dataset.widgetPanel));
+      
+      // Determinar qué widget mostrar
+      let targetWidget = null;
+      
+      // 1. Primero intentar con localStorage
+      if (storedWidget) {
+        const existsInDom = Array.from(allPanels).some(p => p.dataset.widgetPanel === storedWidget);
+        console.log('Checking storedWidget:', storedWidget, 'existsInDom:', existsInDom);
+        if (existsInDom) {
+          targetWidget = storedWidget;
+        }
+      }
+      
+      // 2. Si no hay localStorage, usar hash
+      if (!targetWidget && hashWidget) {
+        const existsInDom = Array.from(allPanels).some(p => p.dataset.widgetPanel === hashWidget);
+        console.log('Checking hashWidget:', hashWidget, 'existsInDom:', existsInDom);
+        if (existsInDom) {
+          targetWidget = hashWidget;
+        }
+      }
+      
+      // 3. Si no hay nada, usar el primer widget
+      if (!targetWidget && firstWidget) {
+        targetWidget = firstWidget;
+      }
+      
+      console.log('targetWidget seleccionado:', targetWidget);
+      
+      if (targetWidget) {
+        showWidget(targetWidget);
+        // Actualizar URL solo si es necesario
+        if (location.hash.replace('#', '') !== targetWidget) {
+          history.replaceState(null, '', `#${targetWidget}`);
+        }
+      }
+    })();
   </script>
 </BaseLayout>

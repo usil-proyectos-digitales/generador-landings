@@ -20,7 +20,7 @@
 import type { AstroComponentFactory } from 'astro/runtime/server/index.js';
 import BloqueIntro from './2-bloque-intro/BloqueIntro.astro';
 import SaveTheDate from './5-save-the-date/SaveTheDate.astro';
-import type { CardItem } from './5-save-the-date/SaveTheDate.astro';
+import CardsItems from './6-cards-items/CardsItems.astro';
 import type { Mode } from './2-bloque-intro/theme.ts';
 
 /** Definición de una variante visual de un widget. */
@@ -34,6 +34,7 @@ export interface WidgetDefaults {
   title: string;
   description: string;
   mode?: Mode;
+  titleSupport?: string;
 }
 
 /** Adapter que traduce las props canónicas a las props reales del componente. */
@@ -43,8 +44,11 @@ export type PropsAdapter = (input: {
   variant: string;
   id: string;
   mode: Mode;
-  cards?: CardItem[];
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  cards?: any[];
 }) => Record<string, unknown>;
+
+
 
 /** Definición completa de un widget registrado en el visor. */
 export interface WidgetRegistration {
@@ -54,7 +58,8 @@ export interface WidgetRegistration {
   variants: WidgetVariant[];
   defaultVariant: string;
   /** Props por defecto. Incluye `mode` para alternar claro/oscuro. */
-  defaults: WidgetDefaults & { cards?: CardItem[] };
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  defaults: WidgetDefaults & { cards?: any[]; titleSupport?: string } & Record<string, any>;
   /** Componente Astro factory. */
   component: AstroComponentFactory;
   /**
@@ -67,7 +72,7 @@ export interface WidgetRegistration {
 export const widgetRegistry: WidgetRegistration[] = [
   {
     id: '2-bloque-intro',
-    name: 'Bloque Intro Texto',
+    name: '2. Bloque Intro Texto',
     description:
       'Bloque introductorio de texto con dos variantes: centrado (v2.1) o dividido en dos columnas (v2.2). Soporta modo claro y oscuro por instancia.',
     variants: [
@@ -85,11 +90,11 @@ export const widgetRegistry: WidgetRegistration[] = [
   },
   {
     id: '5-save-the-date',
-    name: 'Save the Date',
+    name: '5. Save the Date',
     description:
       'Bloque informativo de evento con título, hasta 6 cards (icono SVG + etiqueta + valor) y texto de bajada. Soporta modo claro y oscuro por instancia.',
     variants: [
-      { id: 'v5.7', label: '5.7 — Título + Cards + Bajada' },
+      { id: 'v5.7', label: '5.7 — Cards + Bajada' },
     ],
     defaultVariant: 'v5.7',
     defaults: {
@@ -111,5 +116,59 @@ export const widgetRegistry: WidgetRegistration[] = [
       mode,
       ...(cards ? { cards } : {}),
     }),
+  },
+  {
+    id: '6-cards-items',
+    name: '6. Cards Items',
+    description:
+      'Widget de cards versátil con 6 variantes: cards centradas (v6.3), icono izq (v6.6), verticales con imagen (v6.8), dos cards grandes (v6.10), cards venta+CTA (v6.11) y cards con fecha (v6.12). Soporta modo claro y oscuro.',
+    variants: [
+      { id: 'v6.3', label: '6.3 — Cards Centradas' },
+      { id: 'v6.6', label: '6.6 — Cards Icono Izq' },
+      { id: 'v6.8', label: '6.8 — Cards Verticales' },
+      { id: 'v6.10', label: '6.10 — Dos Cards Grandes' },
+      { id: 'v6.11', label: '6.11 — Cards Venta + CTA' },
+      { id: 'v6.12', label: '6.12 — Cards con Fecha' },
+    ],
+    defaultVariant: 'v6.3',
+    defaults: {
+      title: 'Título principal de la sección',
+      titleSupport: 'resaltar beneficios',
+      description: 'Descripción introductoria de la sección.',
+      mode: 'light',
+      cards: [
+        {
+          title: 'Lorem ipsum dolor sit',
+          text: 'Consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.',
+          ctaText: 'Inscríbete',
+          ctaHref: '#',
+        },
+        {
+          title: 'Sed do eiusmod tempor',
+          text: 'Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip.',
+          ctaText: 'Inscríbete',
+          ctaHref: '#',
+        },
+        {
+          title: 'Dolor sit amet consectetur',
+          text: 'Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia.',
+          ctaText: 'Inscríbete',
+          ctaHref: '#',
+        },
+      ],
+    },
+    component: CardsItems,
+    propsAdapter: ({ title, description, id, mode, cards, ...rest }) => {
+      // titleSupport puede venir en rest si el visor lo soporta.
+      const titleSupport = (rest as Record<string, unknown>).titleSupport as string | undefined;
+      return {
+        title,
+        titleSupport: titleSupport ?? 'resaltar beneficios',
+        description,
+        id,
+        mode,
+        ...(cards ? { cards } : {}),
+      };
+    },
   },
 ];

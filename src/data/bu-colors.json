@@ -38,17 +38,17 @@
       "surface": "#EDEDED",
       "neutral": "#ffffff"
     },
-    "siu": {
-      "primary": "#002663",
-      "secondary": "#1172E3",
-      "accent": "#00BBBA",
-      "surface": "#EDEDED",
-      "neutral": "#ffffff"
-    },
     "coloring-dreams": {
       "primary": "#002663",
       "secondary": "#5967D2",
       "accent": "#A8BD54",
+      "surface": "#EDEDED",
+      "neutral": "#ffffff"
+    },
+    "siu": {
+      "primary": "#002663",
+      "secondary": "#1172E3",
+      "accent": "#00BBBA",
       "surface": "#EDEDED",
       "neutral": "#ffffff"
     },

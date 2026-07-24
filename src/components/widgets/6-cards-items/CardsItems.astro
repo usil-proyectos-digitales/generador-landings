@@ -1,0 +1,382 @@
+---
+/**
+ * CardsItems — Widget "Cards Items" (id: `6-cards-items`).
+ * --------------------------------------------------------------
+ * Migración a Astro del widget legacy en `src/migrar/6-cards-items/`.
+ * Lógica de layout JS → resuelta con CSS Grid responsive (sin Swiper).
+ *
+ * Sistema de color:
+ *   Tokens centralizados en `./theme.ts` por variante × modo.
+ *   El widget consume las 5 variables semánticas del Design System V2.
+ *
+ * ACF (WordPress):
+ *   - `title`          ← ACF `text`     "Título Principal"
+ *   - `titleSupport`   ← ACF `text`     "Texto Soporte Título"
+ *   - `description`    ← ACF `wysiwyg`  "Descripción" (v6.6, v6.8, v6.10)
+ *   - `cards[]`        ← ACF `repeater` "Cards"
+ *     Cada card: title, text, image, ctaText, ctaHref,
+ *                category (v6.11), price (v6.11), dateText (v6.12)
+ *   - `mode`           ← toggle        ('light' | 'dark')
+ *
+ * Comportamiento:
+ *   - Cards con título vacío NO se renderizan.
+ *   - Responsive grid: 1 col (mobile) → 2 cols (md) → 3 cols (lg).
+ *   - v6.10: siempre 2 cards grandes.
+ *   - v6.8: cards con imagen top + hover overlay "Ver más".
+ *   - v6.6: cards horizontales (ícono circular izq + texto).
+ */
+import { theme, baseClasses, type Mode, type Variant } from './theme.ts';
+
+/** Ítem de card compatible con todas las variantes. */
+export interface CardItem {
+  title: string;
+  text: string;
+  /** URL de imagen (v6.3, v6.8, v6.10). */
+  image?: string;
+  imageAlt?: string;
+  ctaText?: string;
+  ctaHref?: string;
+  /** Categoría del producto (v6.11). */
+  category?: string;
+  /** Precio (v6.11). */
+  price?: string;
+  /** Texto de fecha/período (v6.12). */
+  dateText?: string;
+}
+
+interface Props {
+  /** Título principal. */
+  title?: string;
+  /** Texto dentro de la caja de soporte del título. */
+  titleSupport?: string;
+  /** Descripción / bajada (v6.6, v6.8, v6.10). */
+  description?: string;
+  /** Cards a renderizar. */
+  cards?: CardItem[];
+  /** Variante visual. */
+  variant?: Variant;
+  /** Modo claro u oscuro. Default: 'light'. */
+  mode?: Mode;
+  /** ID del <section>. */
+  id?: string;
+}
+
+const {
+  title = 'Título principal de la sección',
+  titleSupport = 'resaltar beneficios',
+  description = 'Descripción introductoria de la sección. Puedes editarla desde los campos de WordPress.',
+  cards = [],
+  variant = 'v6.3',
+  mode = 'light',
+  id = 'cards-items',
+} = Astro.props;
+
+// ── Resolución de tokens desde theme.ts ─────────────────────
+const tokens = theme[variant][mode];
+
+// Cards filtradas: las que tienen título se renderizan.
+const validCards = (cards ?? []).filter((c) => c.title?.trim());
+---
+
+<!-- ═══════════════════════════════════════════════════════════════
+     VARIANTE v6.3 — Cards Centradas (título centrado + caja soporte)
+     ═══════════════════════════════════════════════════════════════ -->
+{variant === 'v6.3' && (
+  <section
+    id={id}
+    data-widget="6-cards-items"
+    data-variant="v6.3"
+    data-mode={mode}
+    class:list={[baseClasses.section, tokens.section]}
+  >
+    <div class={baseClasses.container}>
+      {/* Title Section */}
+      <div class="mb-16 text-center">
+        <h2 class:list={['flex flex-col items-center mb-12 text-4xl hk-title font-anton text-anton-block-title-mobile md:text-anton-block-title', tokens.title]} data-hk="title">
+          {title}
+          <div class:list={['inline-block px-6 py-2 mt-2 rounded-xl hk-caja-titulo', tokens.titleBox]}>
+            <span class:list={['block text-4xl hk-title-soporte font-anton text-anton-block-title-mobile md:text-anton-block-title', tokens.titleSupport]} set:html={titleSupport} />
+          </div>
+        </h2>
+      </div>
+
+      {/* Cards Grid */}
+      <div class="flex flex-wrap gap-8 justify-center mx-auto hk-cards-container">
+        {validCards.map((card) => (
+          <div class:list={[
+            'hk-card flex flex-col justify-start items-start px-11 py-12 space-y-4 rounded-[2rem] min-h-[330px]',
+            'w-full',
+            'md:w-[calc(50%-2rem)]',
+            tokens.card,
+            'lg:flex-1 lg:max-w-[calc(33.333%-2rem)]'
+          ]}>
+            <div class="flex gap-4 justify-center items-center">
+            {card.image && (
+              <img
+                src={card.image}
+                alt={card.imageAlt ?? card.title}
+                class:list={['hk-card-imagen w-[75px]', tokens.cardImage]}
+              />
+            )}
+            <h3 class:list={['font-montserrat text-mont-card-title-mobile md:text-mont-card-title hk-card-title', tokens.cardTitle]} set:html={card.title} />
+            </div>
+            <p class:list={['text-left font-montserrat text-mont-card-content-mobile md:text-mont-card-content hk-card-text text-pretty', tokens.cardText]} set:html={card.text} />
+            {card.ctaText && (
+              <a href={card.ctaHref ?? '#'} class:list={['hk-card-cta inline-flex items-center gap-2 !mt-8 px-6 py-2 border rounded-[2rem] font-montserrat text-mont-form-cta no-underline transition-all duration-300 self-start', tokens.cardCta]}>
+                {card.ctaText}
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"></path></svg>
+              </a>
+            )}
+          </div>
+        ))}
+      </div>
+    </div>
+  </section>
+)}
+
+<!-- ═══════════════════════════════════════════════════════════════
+     VARIANTE v6.6 — Cards Icono Izq (ícono circular + texto horizontal)
+     ═══════════════════════════════════════════════════════════════ -->
+{variant === 'v6.6' && (
+  <section
+    id={id}
+    data-widget="6-cards-items"
+    data-variant="v6.6"
+    data-mode={mode}
+    class:list={[baseClasses.section, tokens.section]}
+  >
+    <div class={baseClasses.container}>
+      {/* Title Section */}
+      <div class="mb-16 text-left">
+        <h2 class:list={['flex flex-col items-start mb-8 text-4xl hk-title font-anton text-anton-block-title-mobile md:text-anton-block-title', tokens.title]}>
+          {title}
+          <div class:list={['inline-block px-6 py-2 mt-2 rounded-xl hk-caja-titulo', tokens.titleBox]}>
+            <span class:list={['block text-4xl hk-title-soporte font-anton text-anton-block-title-mobile md:text-anton-block-title', tokens.titleSupport]} set:html={titleSupport} />
+          </div>
+        </h2>
+        <p class:list={['font-montserrat text-mont-block-p-mobile md:text-mont-block-p text-pretty w-full md:w-[90%] hk-desc', tokens.desc]} set:html={description} />
+      </div>
+
+      {/* Cards */}
+      <div class="flex flex-wrap gap-x-8 gap-y-16 justify-center mx-auto w-full hk-cards-container">
+        {validCards.map((card) => (
+          <div class="hk-card-6-6 flex gap-3 justify-center items-center w-full lg:flex-1 lg:max-w-[calc(50%-1rem)] md:flex-1 md:max-w-[calc(50%-1rem)]">
+            <div class:list={['hk-box-imagen flex shrink-0 justify-center items-center w-[75px] h-[75px] rounded-full', tokens.cardImage]}>
+              {card.image && (
+                <img src={card.image} alt={card.imageAlt ?? card.title} class="hk-card-imagen w-[45px]" />
+              )}
+            </div>
+            <div class="box-texto">
+              <h3 class:list={['font-montserrat text-mont-card-title-mobile md:text-mont-card-title hk-card-title', tokens.cardTitle]} set:html={card.title} />
+              <p class:list={['font-montserrat text-mont-item-content-mobile md:text-mont-item-content hk-card-text', tokens.cardText]} set:html={card.text} />
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  </section>
+)}
+
+<!-- ═══════════════════════════════════════════════════════════════
+     VARIANTE v6.8 — Cards Verticales (imagen top + hover overlay)
+     ═══════════════════════════════════════════════════════════════ -->
+{variant === 'v6.8' && (
+  <section
+    id={id}
+    data-widget="6-cards-items"
+    data-variant="v6.8"
+    data-mode={mode}
+    class:list={[baseClasses.section, tokens.section]}
+  >
+    <div class={baseClasses.container}>
+      {/* Title Section */}
+      <div class="mb-16 text-left hk-header-container-6-8">
+        <h2 class:list={['flex flex-col items-start text-4xl hk-title-6-8 font-anton text-anton-block-title-mobile md:text-anton-block-title', tokens.title]}>
+          {title}
+        </h2>
+        <div class:list={['my-6 mr-auto w-40 h-1 rounded-full hk-header-bar-6-8', tokens.headerBar]}></div>
+        <p class:list={['w-full text-left font-montserrat text-mont-block-p-mobile md:text-mont-block-p text-pretty hk-paragraph-6-8 hk-desc', tokens.desc]} set:html={description} />
+      </div>
+
+      {/* Cards Grid */}
+      <div class:list={['flex flex-wrap gap-4 justify-center mx-auto hk-cards-container', tokens.cardsContainer]}>
+        {validCards.map((card, i) => (
+          <div class:list={['hk-card-6-8 w-full max-w-[270px] mx-auto group', 'lg:flex-1 lg:max-w-[calc(25%-1rem)]', 'md:flex-1 md:max-w-[calc(50%-1rem)]']}>
+            <div class="overflow-hidden relative rounded-t-2xl">
+              <img
+                src={card.image ?? `https://placehold.co/270x184/012085/ffffff/?text=Card+${i + 1}`}
+                alt={card.imageAlt ?? card.title}
+                class:list={['w-full max-w-[270px] mx-auto h-[184px] object-cover transition-transform duration-500 hk-card-imagen-6-8 lg:group-hover:scale-110', tokens.cardImage]}
+              />
+              {/* Overlay hover */}
+              <a
+                href={card.ctaHref ?? '#'}
+                class:list={['hidden absolute inset-0 flex-col justify-center items-center opacity-0 transition-all duration-500 translate-y-full lg:flex', tokens.cardImage]}
+              >
+                <svg class="mb-2" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+                <span class:list={['text-sm font-medium tracking-wider hk-vermas-texto', tokens.vermasText]}>Ver más</span>
+              </a>
+            </div>
+            <div class:list={['p-4 rounded-b-2xl hk-box-texto', i % 2 === 1 ? 'bg-[#E5E5E5]' : 'bg-bu-surface', tokens.cardBoxText]}>
+              <h3 class:list={['font-anton text-anton-card-title-mobile md:text-anton-card-title hk-card-title', tokens.cardTitle]} set:html={card.title} />
+              <div class:list={['my-3 w-14 h-1 rounded-full', tokens.divider]}></div>
+              <a href={card.ctaHref ?? '#'} class:list={['inline-block mt-2 text-sm font-bold no-underline uppercase hk-card-cta', tokens.cardCta]}>
+                {card.ctaText ?? 'Ver más'}
+              </a>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  </section>
+)}
+
+<!-- ═══════════════════════════════════════════════════════════════
+     VARIANTE v6.10 — Dos Cards Grandes
+     ═══════════════════════════════════════════════════════════════ -->
+{variant === 'v6.10' && (
+  <section
+    id={id}
+    data-widget="6-cards-items"
+    data-variant="v6.10"
+    data-mode={mode}
+    class:list={[baseClasses.section, tokens.section]}
+  >
+    <div class={baseClasses.container}>
+      {/* Title Section */}
+      <div class="mb-16 text-left">
+        <h2 class:list={['flex flex-col items-start mb-8 text-4xl hk-title font-anton text-anton-block-title', tokens.title]}>
+          {title}
+          <div class:list={['inline-block px-6 py-2 mt-2 rounded-xl hk-caja-titulo', tokens.titleBox]}>
+            <span class:list={['block text-4xl hk-title-soporte font-anton text-anton-block-title', tokens.titleSupport]} set:html={titleSupport} />
+          </div>
+        </h2>
+        <p class:list={['font-montserrat hk-text-paragraph text-mont-block-p-mobile md:text-mont-block-p text-pretty w-full md:w-[90%] hk-desc', tokens.desc]} set:html={description} />
+      </div>
+
+      {/* Cards */}
+      <div class="flex flex-wrap gap-8 justify-center mx-auto hk-cards-container">
+        {validCards.slice(0, 2).map((card, i) => (
+          <div class:list={['hk-card w-full', 'md:w-[calc(50%-2rem)]', 'lg:flex-1 lg:max-w-[calc(50%-2rem)]', 'group']}>
+            <div class="overflow-hidden relative rounded-t-[2rem]">
+              <img
+                src={card.image ?? `https://placehold.co/530x242/012085/ffffff/?text=Card+${i + 1}`}
+                alt={card.imageAlt ?? card.title}
+                class:list={['w-full transition-transform duration-500 hk-card-imagen lg:group-hover:scale-110']}
+              />
+            </div>
+            <div class:list={['p-10 rounded-b-[2rem] hk-box-texto space-y-4', tokens.cardBody]}>
+              <h3 class:list={['font-montserrat text-mont-card-title hk-card-title', tokens.cardTitle]} set:html={card.title} />
+              <p class:list={['font-montserrat text-mont-card-content hk-card-text text-pretty', tokens.cardText]} set:html={card.text} />
+              {card.ctaText && (
+                <a href={card.ctaHref ?? '#'} class:list={['hk-card-cta inline-flex items-center gap-2 mt-4 px-6 py-2 border rounded-[2rem] font-montserrat text-mont-form-cta no-underline transition-all duration-300', tokens.cardCta]}>
+                  {card.ctaText}
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"></path></svg>
+                </a>
+              )}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  </section>
+)}
+
+<!-- ═══════════════════════════════════════════════════════════════
+     VARIANTE v6.11 — Cards Venta + CTA (categoría + producto + precio)
+     ═══════════════════════════════════════════════════════════════ -->
+{variant === 'v6.11' && (
+  <section
+    id={id}
+    data-widget="6-cards-items"
+    data-variant="v6.11"
+    data-mode={mode}
+    class:list={[baseClasses.section, tokens.section]}
+  >
+    <div class={baseClasses.container}>
+      {/* Title Section */}
+      <div class="mb-16 text-center">
+        <h2 class:list={['flex flex-col items-center mb-12 text-4xl hk-title font-anton text-anton-block-title', tokens.title]}>
+          {title}
+          <div class:list={['inline-block px-6 py-2 mt-2 rounded-xl hk-caja-titulo', tokens.titleBox]}>
+            <span class:list={['block text-4xl text-white hk-title-soporte font-anton text-anton-block-title', tokens.titleSupport]} set:html={titleSupport} />
+          </div>
+        </h2>
+      </div>
+
+      {/* Cards */}
+      <div class="flex flex-wrap gap-8 justify-center mx-auto hk-cards-container">
+        {validCards.map((card) => (
+          <div class:list={['hk-card flex flex-col justify-between items-start px-6 py-12 rounded-[2rem] min-h-[400px]', 'w-full max-w-[400px]', 'lg:flex-1 lg:max-w-[calc(33.333%-2rem)]']}>
+            <div class="w-full">
+              <span class:list={['text-left font-montserrat text-mont-card-title hk-card-title-categoria', tokens.cardCategory]} set:html={card.category ?? 'Categoría'} />
+              <div class:list={['w-full h-[1px] my-2', tokens.divider]}></div>
+            </div>
+            <h3 class:list={['text-left font-montserrat text-mont-card-content hk-card-title', tokens.cardTitle]} set:html={card.title} />
+            <div class:list={['w-full h-[1px] my-4', tokens.divider]}></div>
+            <p class:list={['m-0 text-left font-montserrat text-mont-card-content-mobile md:text-mont-card-content hk-card-text text-balance leading-[1.2]', tokens.cardText]}>
+              <span class="hk-precio-texto">Precio:</span><br />
+              <span class="hk-precio-monto">{card.price ?? 'S/ xxx.xx'}</span>
+            </p>
+            {card.ctaText && (
+              <a href={card.ctaHref ?? '#'} class:list={['hk-card-cta inline-flex items-center gap-2 mt-4 px-6 py-2 border rounded-[2rem] font-montserrat text-mont-form-cta no-underline transition-all duration-300', tokens.cardCta]}>
+                {card.ctaText}
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"></path></svg>
+              </a>
+            )}
+          </div>
+        ))}
+      </div>
+    </div>
+  </section>
+)}
+
+<!-- ═══════════════════════════════════════════════════════════════
+     VARIANTE v6.12 — Cards con Fecha (badge calendario)
+     ═══════════════════════════════════════════════════════════════ -->
+{variant === 'v6.12' && (
+  <section
+    id={id}
+    data-widget="6-cards-items"
+    data-variant="v6.12"
+    data-mode={mode}
+    class:list={[baseClasses.section, tokens.section]}
+  >
+    <div class={baseClasses.container}>
+      {/* Title Section */}
+      <div class="mb-16 text-center">
+        <h2 class:list={['flex flex-col items-center mb-12 text-4xl hk-title font-anton text-anton-block-title', tokens.title]}>
+          {title}
+          <div class:list={['inline-block px-6 py-2 mt-2 rounded-xl hk-caja-titulo', tokens.titleBox]}>
+            <span class:list={['block text-4xl hk-title-soporte font-anton text-anton-block-title', tokens.titleSupport]} set:html={titleSupport} />
+          </div>
+        </h2>
+      </div>
+
+      {/* Cards */}
+      <div class="flex flex-wrap gap-8 justify-center mx-auto hk-cards-container">
+        {validCards.map((card) => (
+          <div class:list={['hk-card flex flex-col justify-center items-start px-10 py-12 rounded-[2rem]', 'w-full max-w-[350px]', 'lg:flex-1 lg:max-w-[calc(33.333%-2rem)]', 'space-y-4', tokens.card]}>
+            <div class:list={['flex gap-3 items-center px-4 py-1 rounded-lg hk-date-badge', tokens.dateBadge]}>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="shrink-0">
+                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                <line x1="16" y1="2" x2="16" y2="6"/>
+                <line x1="8" y1="2" x2="8" y2="6"/>
+                <line x1="3" y1="10" x2="21" y2="10"/>
+              </svg>
+              <p class:list={['font-montserrat font-bold text-[1.12rem] hk-card-periodo hk-date-text', tokens.dateText]} set:html={card.dateText ?? 'Del xx/xx al xx/xx'} />
+            </div>
+            <h3 class:list={['font-montserrat text-mont-card-title hk-card-title !font-bold', tokens.cardTitle]} set:html={card.title} />
+            <p class:list={['font-montserrat text-mont-card-text hk-card-text text-pretty', tokens.cardText]} set:html={card.text} />
+            {card.ctaText && (
+              <a href={card.ctaHref ?? '#'} class:list={['hk-card-cta inline-flex items-center gap-2 mt-4 px-6 py-2 border rounded-[2rem] font-montserrat text-mont-form-cta no-underline transition-all duration-300', tokens.cardCta]}>
+                {card.ctaText}
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"></path></svg>
+              </a>
+            )}
+          </div>
+        ))}
+      </div>
+    </div>
+  </section>
+)}
