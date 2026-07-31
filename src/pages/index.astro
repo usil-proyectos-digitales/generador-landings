@@ -177,9 +177,10 @@ const busList = Object.entries(buColors.bus).map(([id, palette]) => ({
       background: #1e293b;
       border: 1px solid #334155;
       border-radius: 1rem;
-      overflow: hidden;
+      overflow-y: auto;
       display: flex;
       flex-direction: column;
+      max-height: calc(100vh - 3rem);
     }
     .visor__widget-section.is-hidden,
     .visor__widget-section[hidden] {
@@ -297,9 +298,10 @@ const busList = Object.entries(buColors.bus).map(([id, palette]) => ({
       width: 100%;
       background: #ffffff;
       border-radius: 0.5rem;
-      overflow: hidden;
+      overflow-y: auto;
       box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.6);
       transition: max-width 0.3s ease, width 0.3s ease;
+      max-height: calc(100vh - 200px);
     }
     /* Tamaños de viewport (como el switcher del visor V1) */
     .visor__preview-frame[data-viewport="desktop"] { max-width: 100%; }
@@ -635,6 +637,7 @@ const busList = Object.entries(buColors.bus).map(([id, palette]) => ({
                         variant: v.id,
                         id: previewId,
                         mode: mode,
+                        ...(w.defaults.titleSupport ? { titleSupport: w.defaults.titleSupport } : {}),
                         ...(w.defaults.cards ? { cards: w.defaults.cards } : {}),
                       };
 
@@ -744,56 +747,112 @@ const busList = Object.entries(buColors.bus).map(([id, palette]) => ({
                 />
               </div>
 
+              {/* Título de soporte (caja resaltada) */}
+              {w.defaults.titleSupport !== undefined && (
+                <div class="visor__control">
+                  <label for={`titlesupport-${w.id}`}>Título de soporte (caja resaltada)</label>
+                  <input
+                    id={`titlesupport-${w.id}`}
+                    type="text"
+                    data-control="titleSupport"
+                    data-widget={w.id}
+                    value={w.defaults.titleSupport}
+                  />
+                </div>
+              )}
+
               {/* Editor de cards (solo si el widget las expone en defaults) */}
               {w.defaults.cards && (
                 <div class="visor__control">
                   <label>
                     Cards
                     <span class="visor__control-hint-inline">
-                      (vacías no se renderizan — comportamiento ACF)
+                      {w.id === '5-save-the-date'
+                        ? '(vacías no se renderizan — comportamiento ACF)'
+                        : '(estructura unificada: title, text, ctaText, image, icon, categoria, precio, periodo)'}
                     </span>
                   </label>
-                  <div class="visor__cards-list" data-cards-editor={w.id}>
-                    {w.defaults.cards.map((card, i) => (
-                      <div class="visor__card-row" data-card-row={i}>
-                        <select
-                          class="visor__card-icon"
-                          data-card-field={`iconSlug-${w.id}-${i}`}
-                          aria-label="Icono"
-                        >
-                          <option value="fecha" selected={card.iconSlug === 'fecha'}>📅 Fecha</option>
-                          <option value="hora" selected={card.iconSlug === 'hora'}>🕐 Hora</option>
-                          <option value="presencial" selected={card.iconSlug === 'presencial'}>👥 Presencial</option>
-                          <option value="virtual" selected={card.iconSlug === 'virtual'}>📶 Virtual</option>
-                          <option value="hibrida" selected={card.iconSlug === 'hibrida'}>💻 Híbrida</option>
-                        </select>
-                        <input
-                          type="text"
-                          placeholder="Etiqueta (ej. Fecha:)"
-                          value={card.label}
-                          data-card-field={`label-${w.id}-${i}`}
-                          aria-label="Etiqueta"
-                        />
-                        <input
-                          type="text"
-                          placeholder="Valor (ej. 25 y 26 abril)"
-                          value={card.value}
-                          data-card-field={`value-${w.id}-${i}`}
-                          aria-label="Valor"
-                        />
-                        <button
-                          type="button"
-                          class="visor__card-remove"
-                          data-card-remove={i}
-                          aria-label="Eliminar card"
-                        >✕</button>
-                      </div>
-                    ))}
+                  <div
+                    class="visor__cards-list"
+                    data-cards-editor={w.id}
+                    data-cards-kind={w.id === '6-cards-items' ? 'cards6' : 'std'}
+                  >
+                    {w.defaults.cards.map((card: any, i: number) => {
+                      if (w.id === '6-cards-items') {
+                        return (
+                          <div class="visor__card-row" data-card-row={i}>
+                            <input
+                              type="text"
+                              placeholder="Título"
+                              value={card.title ?? ''}
+                              data-card-field={`title-${w.id}-${i}`}
+                              aria-label="Título"
+                            />
+                            <input
+                              type="text"
+                              placeholder="Texto"
+                              value={card.text ?? ''}
+                              data-card-field={`text-${w.id}-${i}`}
+                              aria-label="Texto"
+                            />
+                            <input
+                              type="text"
+                              placeholder="CTA"
+                              value={card.ctaText ?? ''}
+                              data-card-field={`ctaText-${w.id}-${i}`}
+                              aria-label="CTA"
+                            />
+                            <button
+                              type="button"
+                              class="visor__card-remove"
+                              data-card-remove={i}
+                              aria-label="Eliminar card"
+                            >✕</button>
+                          </div>
+                        );
+                      }
+                      return (
+                        <div class="visor__card-row" data-card-row={i}>
+                          <select
+                            class="visor__card-icon"
+                            data-card-field={`iconSlug-${w.id}-${i}`}
+                            aria-label="Icono"
+                          >
+                            <option value="fecha" selected={card.iconSlug === 'fecha'}>📅 Fecha</option>
+                            <option value="hora" selected={card.iconSlug === 'hora'}>🕐 Hora</option>
+                            <option value="presencial" selected={card.iconSlug === 'presencial'}>👥 Presencial</option>
+                            <option value="virtual" selected={card.iconSlug === 'virtual'}>📶 Virtual</option>
+                            <option value="hibrida" selected={card.iconSlug === 'hibrida'}>💻 Híbrida</option>
+                          </select>
+                          <input
+                            type="text"
+                            placeholder="Etiqueta (ej. Fecha:)"
+                            value={card.label}
+                            data-card-field={`label-${w.id}-${i}`}
+                            aria-label="Etiqueta"
+                          />
+                          <input
+                            type="text"
+                            placeholder="Valor (ej. 25 y 26 abril)"
+                            value={card.value}
+                            data-card-field={`value-${w.id}-${i}`}
+                            aria-label="Valor"
+                          />
+                          <button
+                            type="button"
+                            class="visor__card-remove"
+                            data-card-remove={i}
+                            aria-label="Eliminar card"
+                          >✕</button>
+                        </div>
+                      );
+                    })}
                   </div>
                   <button
                     type="button"
                     class="visor__card-add"
                     data-card-add={w.id}
+                    data-card-template={w.id === '6-cards-items' ? 'cards6' : 'std'}
                   >
                     + Agregar card
                   </button>
@@ -890,10 +949,18 @@ const busList = Object.entries(buColors.bus).map(([id, palette]) => ({
 
     function getCards(widgetId) {
       // Lee el estado actual del editor de cards desde el DOM.
-      const rows = document.querySelectorAll(
-        `[data-cards-editor="${widgetId}"] [data-card-row]`
-      );
+      const editor = document.querySelector(`[data-cards-editor="${widgetId}"]`);
+      if (!editor) return [];
+      const kind = editor.dataset.cardsKind ?? 'std';
+      const rows = editor.querySelectorAll('[data-card-row]');
       return Array.from(rows).map((row) => {
+        if (kind === 'cards6') {
+          return {
+            title: row.querySelector('input[aria-label="Título"]')?.value ?? '',
+            text: row.querySelector('input[aria-label="Texto"]')?.value ?? '',
+            ctaText: row.querySelector('input[aria-label="CTA"]')?.value ?? '',
+          };
+        }
         const icon = row.querySelector('.visor__card-icon')?.value ?? 'fecha';
         const label = row.querySelector('input[aria-label="Etiqueta"]')?.value ?? '';
         const value = row.querySelector('input[aria-label="Valor"]')?.value ?? '';
@@ -903,27 +970,70 @@ const busList = Object.entries(buColors.bus).map(([id, palette]) => ({
 
     function renderCards(widgetId) {
       const cards = getCards(widgetId);
+      const editor = document.querySelector(`[data-cards-editor="${widgetId}"]`);
+      const kind = editor?.dataset.cardsKind ?? 'std';
+
       const instances = document.querySelectorAll(`[data-preview-instance="${widgetId}"]`);
       instances.forEach((inst) => {
-        const container = inst.querySelector('.hk-std-cards-container');
-        if (!container) return;
-        // Cards válidas (no vacías) — comportamiento ACF.
-        const valid = cards.filter((c) => c.label.trim() && c.value.trim()).slice(0, 6);
-        container.innerHTML = valid
-          .map((c) => {
-            const path = ICONS_SVG[c.iconSlug] ?? ICONS_SVG.fecha;
-            const iconSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="80" height="80" viewBox="0 0 640 640" fill="currentColor" aria-hidden="true" class="hk-card-icon"><path d="${path}"/></svg>`;
-            return `
-              <div class="hk-std-card px-8 py-6 bg-bu-accent text-bu-surface rounded-lg flex items-center justify-center gap-4 lg:w-[300px] lg:min-w-[300px] md:w-[300px] md:min-w-[300px] w-[280px] min-w-[280px] flex-none" data-card-icon="${c.iconSlug}">
-                <div class="flex justify-center items-center shrink-0">${iconSvg}</div>
-                <div class="box-contenido w-[120px] md:w-fit text-left">
-                  <h3 class="hk-card-label font-montserrat text-mont-card-content-mobile md:text-mont-card-content font-normal">${c.label}</h3>
-                  <p class="hk-card-value font-montserrat text-mont-card-title-mobile md:text-mont-card-title font-extrabold">${c.value}</p>
+        // ── Save the Date ─────────────────────────────────
+        if (kind === 'std') {
+          const container = inst.querySelector('.hk-std-cards-container');
+          if (!container) return;
+          const valid = cards.filter((c) => c.label?.trim() && c.value?.trim()).slice(0, 6);
+          container.innerHTML = valid
+            .map((c) => {
+              const path = ICONS_SVG[c.iconSlug] ?? ICONS_SVG.fecha;
+              const iconSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="80" height="80" viewBox="0 0 640 640" fill="currentColor" aria-hidden="true" class="hk-card-icon"><path d="${path}"/></svg>`;
+              return `
+                <div class="hk-std-card px-8 py-6 bg-bu-accent text-bu-surface rounded-lg flex items-center justify-center gap-4 lg:w-[300px] lg:min-w-[300px] md:w-[300px] md:min-w-[300px] w-[280px] min-w-[280px] flex-none" data-card-icon="${c.iconSlug}">
+                  <div class="flex justify-center items-center shrink-0">${iconSvg}</div>
+                  <div class="box-contenido w-[120px] md:w-fit text-left">
+                    <h3 class="hk-card-label font-montserrat text-mont-card-content-mobile md:text-mont-card-content font-normal">${c.label}</h3>
+                    <p class="hk-card-value font-montserrat text-mont-card-title-mobile md:text-mont-card-title font-extrabold">${c.value}</p>
+                  </div>
                 </div>
-              </div>
-            `;
-          })
-          .join('');
+              `;
+            })
+            .join('');
+          return;
+        }
+
+        // ── CardsItems (6) — busca cards DENTRO del data-variant-content activo ──
+        // Cada instance tiene varios [data-variant-content=v6.X] (uno por variante).
+        // Solo la activa matchea `inst.dataset.previewVariant`.
+        const variantContent = inst.querySelector(
+          `[data-variant-content="${inst.dataset.previewVariant}"]`
+        );
+        if (!variantContent) return;
+
+        // Selector unificado por variante (incluye variantes sin prefijo "hk-card-6-").
+        const cardEls = variantContent.querySelectorAll(
+          '.hk-card-6-3, .hk-card-6-6, .hk-card-6-8, .hk-card'
+        );
+
+        cardEls.forEach((cardEl, i) => {
+          const c = cards[i];
+          if (!c) return;
+          const titleEl = cardEl.querySelector('.hk-card-title');
+          const textEl = cardEl.querySelector('.hk-card-text');
+          if (titleEl && c.title !== undefined) titleEl.textContent = c.title;
+          if (textEl && c.text !== undefined) textEl.textContent = c.text;
+          const ctaEl = cardEl.querySelector('.hk-card-cta');
+          if (ctaEl && c.ctaText !== undefined) {
+            // Reemplazar texto del CTA preservando el SVG arrow al final.
+            // Estrategia: eliminar todos los text nodes, dejar el último SVG.
+            const svg = ctaEl.querySelector('svg');
+            ctaEl.innerHTML = '';
+            // Reconstruir como wrapper span para que el texto herede font-family/weight del CSS.
+            const textSpan = document.createElement('span');
+            textSpan.textContent = c.ctaText || '';
+            ctaEl.appendChild(textSpan);
+            if (svg) ctaEl.appendChild(svg);
+            // Si no hay CTA, ocultar el <a>
+            if (!c.ctaText) ctaEl.style.display = 'none';
+            else ctaEl.style.display = '';
+          }
+        });
       });
     }
 
@@ -953,6 +1063,12 @@ const busList = Object.entries(buColors.bus).map(([id, palette]) => ({
                 inst.dataset.previewMode === currentMode;
               inst.hidden = !match;
             });
+            // Notificar al widget para re-aplicar layouts y Swiper.
+            document.dispatchEvent(
+              new CustomEvent('visor:cards-changed', {
+                detail: { widgetId, reason: 'variant-change' },
+              })
+            );
             return;
           }
 
@@ -963,6 +1079,9 @@ const busList = Object.entries(buColors.bus).map(([id, palette]) => ({
             } else if (control === 'description') {
               const d = inst.querySelector('.hk-desc');
               if (d) d.innerHTML = ctrl.value;
+            } else if (control === 'titleSupport') {
+              const s = inst.querySelector('.hk-title-soporte');
+              if (s) s.textContent = ctrl.value;
             }
           });
         };
@@ -976,9 +1095,17 @@ const busList = Object.entries(buColors.bus).map(([id, palette]) => ({
       const widgetId = editor.dataset.cardsEditor;
       if (!widgetId) return;
 
-      // Live edit en cualquier campo de card → re-render
-      editor.addEventListener('input', () => renderCards(widgetId));
-      editor.addEventListener('change', () => renderCards(widgetId));
+      // Live edit en cualquier campo de card → re-render + notificar al widget
+      const notifyChange = () => {
+        renderCards(widgetId);
+        document.dispatchEvent(
+          new CustomEvent('visor:cards-changed', {
+            detail: { widgetId, count: editor.querySelectorAll('[data-card-row]').length },
+          })
+        );
+      };
+      editor.addEventListener('input', notifyChange);
+      editor.addEventListener('change', notifyChange);
 
       // Eliminar card
       editor.addEventListener('click', (e) => {
@@ -992,7 +1119,7 @@ const busList = Object.entries(buColors.bus).map(([id, palette]) => ({
           r.setAttribute('data-card-row', String(i));
           r.querySelector('[data-card-remove]')?.setAttribute('data-card-remove', String(i));
         });
-        renderCards(widgetId);
+        notifyChange();
       });
     });
 
@@ -1003,28 +1130,43 @@ const busList = Object.entries(buColors.bus).map(([id, palette]) => ({
         if (!widgetId) return;
         const editor = document.querySelector(`[data-cards-editor="${widgetId}"]`);
         if (!editor) return;
+        const template = btn.dataset.cardTemplate ?? 'std';
         const nextIdx = editor.querySelectorAll('[data-card-row]').length;
         const row = document.createElement('div');
         row.className = 'visor__card-row';
         row.setAttribute('data-card-row', String(nextIdx));
-        row.innerHTML = `
-          <select class="visor__card-icon" aria-label="Icono">
-            <option value="fecha" selected>📅 Fecha</option>
-            <option value="hora">🕐 Hora</option>
-            <option value="presencial">👥 Presencial</option>
-            <option value="virtual">📶 Virtual</option>
-            <option value="hibrida">💻 Híbrida</option>
-          </select>
-          <input type="text" placeholder="Etiqueta (ej. Fecha:)" aria-label="Etiqueta" />
-          <input type="text" placeholder="Valor (ej. 25 y 26 abril)" aria-label="Valor" />
-          <button type="button" class="visor__card-remove" data-card-remove="${nextIdx}" aria-label="Eliminar card">✕</button>
-        `;
+        if (template === 'cards6') {
+          row.innerHTML = `
+            <input type="text" placeholder="Título" aria-label="Título" />
+            <input type="text" placeholder="Texto" aria-label="Texto" />
+            <input type="text" placeholder="CTA" aria-label="CTA" />
+            <button type="button" class="visor__card-remove" data-card-remove="${nextIdx}" aria-label="Eliminar card">✕</button>
+          `;
+        } else {
+          row.innerHTML = `
+            <select class="visor__card-icon" aria-label="Icono">
+              <option value="fecha" selected>📅 Fecha</option>
+              <option value="hora">🕐 Hora</option>
+              <option value="presencial">👥 Presencial</option>
+              <option value="virtual">📶 Virtual</option>
+              <option value="hibrida">💻 Híbrida</option>
+            </select>
+            <input type="text" placeholder="Etiqueta (ej. Fecha:)" aria-label="Etiqueta" />
+            <input type="text" placeholder="Valor (ej. 25 y 26 abril)" aria-label="Valor" />
+            <button type="button" class="visor__card-remove" data-card-remove="${nextIdx}" aria-label="Eliminar card">✕</button>
+          `;
+        }
         editor.appendChild(row);
         // Re-index anteriores por seguridad
         editor.querySelectorAll('[data-card-row]').forEach((r, i) => {
           r.setAttribute('data-card-row', String(i));
         });
         renderCards(widgetId);
+        document.dispatchEvent(
+          new CustomEvent('visor:cards-changed', {
+            detail: { widgetId, count: editor.querySelectorAll('[data-card-row]').length },
+          })
+        );
       });
     });
 
@@ -1062,6 +1204,13 @@ const busList = Object.entries(buColors.bus).map(([id, palette]) => ({
               b.classList.toggle('is-active', isActive);
               b.setAttribute('aria-checked', String(isActive));
             });
+
+          // 4. Notificar al widget para re-aplicar layouts y Swiper.
+          document.dispatchEvent(
+            new CustomEvent('visor:cards-changed', {
+              detail: { widgetId, reason: 'mode-change' },
+            })
+          );
         });
       });
 

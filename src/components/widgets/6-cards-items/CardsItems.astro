@@ -3,55 +3,50 @@
  * CardsItems — Widget "Cards Items" (id: `6-cards-items`).
  * --------------------------------------------------------------
  * Migración a Astro del widget legacy en `src/migrar/6-cards-items/`.
- * Lógica de layout JS → resuelta con CSS Grid responsive (sin Swiper).
+ * Lógica preservada 1:1 desde `index.js`:
+ *   - Layouts dinámicos en v6.3 / v6.6 / v6.11 / v6.12 según cantidad de cards.
+ *   - Carrusel Swiper en v6.8 cuando hay más de 4 cards.
  *
  * Sistema de color:
  *   Tokens centralizados en `./theme.ts` por variante × modo.
  *   El widget consume las 5 variables semánticas del Design System V2.
  *
  * ACF (WordPress):
- *   - `title`          ← ACF `text`     "Título Principal"
- *   - `titleSupport`   ← ACF `text`     "Texto Soporte Título"
- *   - `description`    ← ACF `wysiwyg`  "Descripción" (v6.6, v6.8, v6.10)
- *   - `cards[]`        ← ACF `repeater` "Cards"
- *     Cada card: title, text, image, ctaText, ctaHref,
- *                category (v6.11), price (v6.11), dateText (v6.12)
- *   - `mode`           ← toggle        ('light' | 'dark')
+ *   - title       ← ACF `text`      "Título principal"
+ *   - titleSupport← ACF `text`      "Texto de soporte (caja resaltada)"
+ *   - description ← ACF `wysiwyg`   "Descripción / párrafo intro"
+ *   - cards[]     ← ACF `repeater`  "Cards" (ver CardItem abajo)
+ *   - variant     ← switch          ('v6.3' | 'v6.6' | 'v6.8' | 'v6.10' | 'v6.11' | 'v6.12')
+ *   - mode        ← toggle          ('light' | 'dark')
  *
  * Comportamiento:
- *   - Cards con título vacío NO se renderizan.
- *   - Responsive grid: 1 col (mobile) → 2 cols (md) → 3 cols (lg).
- *   - v6.10: siempre 2 cards grandes.
- *   - v6.8: cards con imagen top + hover overlay "Ver más".
- *   - v6.6: cards horizontales (ícono circular izq + texto).
+ *   - Cada variante ignora los campos de `card` que no necesita.
+ *   - El ancho de las cards se ajusta por cantidad (lógica legacy preservada).
+ *   - En v6.8, si hay >4 cards se inicializa Swiper como carrusel.
+ *   - Las imágenes por default apuntan a placehold.co (editables en el visor).
  */
 import { theme, baseClasses, type Mode, type Variant } from './theme.ts';
 
-/** Ítem de card compatible con todas las variantes. */
 export interface CardItem {
   title: string;
   text: string;
-  /** URL de imagen (v6.3, v6.8, v6.10). */
   image?: string;
-  imageAlt?: string;
+  icon?: string;
   ctaText?: string;
   ctaHref?: string;
-  /** Categoría del producto (v6.11). */
-  category?: string;
-  /** Precio (v6.11). */
-  price?: string;
-  /** Texto de fecha/período (v6.12). */
-  dateText?: string;
+  categoria?: string;
+  precio?: string;
+  periodo?: string;
 }
 
 interface Props {
   /** Título principal. */
-  title?: string;
-  /** Texto dentro de la caja de soporte del título. */
+  title: string;
+  /** Texto dentro de la caja de soporte (resaltado). */
   titleSupport?: string;
-  /** Descripción / bajada (v6.6, v6.8, v6.10). */
+  /** Descripción / párrafo intro (v6.6, v6.8, v6.10). */
   description?: string;
-  /** Cards a renderizar. */
+  /** Cards (repeater de ACF). */
   cards?: CardItem[];
   /** Variante visual. */
   variant?: Variant;
@@ -62,321 +57,660 @@ interface Props {
 }
 
 const {
-  title = 'Título principal de la sección',
-  titleSupport = 'resaltar beneficios',
-  description = 'Descripción introductoria de la sección. Puedes editarla desde los campos de WordPress.',
+  title,
+  titleSupport = '',
+  description = '',
   cards = [],
   variant = 'v6.3',
   mode = 'light',
   id = 'cards-items',
 } = Astro.props;
 
-// ── Resolución de tokens desde theme.ts ─────────────────────
 const tokens = theme[variant][mode];
 
-// Cards filtradas: las que tienen título se renderizan.
-const validCards = (cards ?? []).filter((c) => c.title?.trim());
+// ── Helpers de layout dinámico (preservan lógica legacy) ─────
+// v6.3: 2 cols en md, lg según cantidad (3 = 30%, 4 = 50%, otros = 50%)
+const cardWidthV63 = (count: number) => {
+  if (count === 4) return 'lg:w-[calc(50%-1rem)]';
+  if (count % 3 === 0) return 'lg:w-[30%]';
+  return 'lg:w-[calc(50%-2rem)]';
+};
+
+// v6.6: 1 col mobile, 2 cols md, lg según count (2/4 = 2 cols, resto = 3 cols)
+const cardWidthV66 = (count: number) => {
+  if (count === 4 || count === 2) return 'lg:w-[calc(50%-1rem)]';
+  return 'lg:w-[calc((100%-4rem)/3)]';
+};
+
+// v6.11: similar a v6.3 pero con max-w-[400px]
+const cardWidthV611 = (count: number) => {
+  if (count === 4) return 'lg:w-[calc(50%-1rem)]';
+  return 'lg:w-[calc((100%-4rem)/3)]';
+};
+
+// v6.12: similar a v6.11 pero con max-w-[350px]
+const cardWidthV612 = (count: number) => {
+  if (count === 4) return 'lg:w-[calc(50%-1rem)]';
+  return 'lg:w-[calc((100%-4rem)/3)]';
+};
+
+const cardCount = cards?.length ?? 0;
+
+// Helpers para decidir si aplicar carrusel (v6.8 con >4 cards)
+const useCarouselV68 = variant === 'v6.8' && cardCount > 4;
+
+// Defaults de placeholders para imágenes (placehold.co legacy)
+const placeholderImg = (label: string) =>
+  `https://placehold.co/270x184/012085/ffffff/?text=${encodeURIComponent(label)}`;
+const placeholderImgLarge = (label: string) =>
+  `https://placehold.co/530x242/012085/ffffff/?text=${encodeURIComponent(label)}`;
+
+// Assets estáticos del widget (logos/iconos de plantilla).
+// Las imágenes editables por card son `card.image` (placehold.co por default).
+const WIDGET_ASSETS = '/widgets/6-cards-items';
+
+// SVG arrow (CTA) — heredado del legacy, currentColor para que tome el color del BU
+const svgArrow = `<svg class="svg-arrow" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7"></path></svg>`;
 ---
 
-<!-- ═══════════════════════════════════════════════════════════════
-     VARIANTE v6.3 — Cards Centradas (título centrado + caja soporte)
-     ═══════════════════════════════════════════════════════════════ -->
-{variant === 'v6.3' && (
-  <section
-    id={id}
-    data-widget="6-cards-items"
-    data-variant="v6.3"
-    data-mode={mode}
-    class:list={[baseClasses.section, tokens.section]}
-  >
-    <div class={baseClasses.container}>
-      {/* Title Section */}
-      <div class="mb-16 text-center">
-        <h2 class:list={['flex flex-col items-center mb-12 text-4xl hk-title font-anton text-anton-block-title-mobile md:text-anton-block-title', tokens.title]} data-hk="title">
-          {title}
-          <div class:list={['inline-block px-6 py-2 mt-2 rounded-xl hk-caja-titulo', tokens.titleBox]}>
-            <span class:list={['block text-4xl hk-title-soporte font-anton text-anton-block-title-mobile md:text-anton-block-title', tokens.titleSupport]} set:html={titleSupport} />
-          </div>
-        </h2>
-      </div>
+<section
+  id={id}
+  data-widget="cards-items"
+  data-variant={variant}
+  data-mode={mode}
+  class:list={[baseClasses.section, tokens.section]}
+>
+  <div class={baseClasses.container}>
 
-      {/* Cards Grid */}
-      <div class="flex flex-wrap gap-8 justify-center mx-auto hk-cards-container">
-        {validCards.map((card) => (
-          <div class:list={[
-            'hk-card flex flex-col justify-start items-start px-11 py-12 space-y-4 rounded-[2rem] min-h-[330px]',
-            'w-full',
-            'md:w-[calc(50%-2rem)]',
-            tokens.card,
-            'lg:flex-1 lg:max-w-[calc(33.333%-2rem)]'
+    {/* ═══════════════════════════════════════════════════════════
+        VARIANTE 6.3 — Título centrado + 3 cards verticales con CTA
+        ═══════════════════════════════════════════════════════════ */}
+    {variant === 'v6.3' && (
+      <div data-variant-content="v6.3">
+        <div class="mb-16 text-center">
+          <h2 class:list={[
+            'flex flex-col items-center mb-12 hk-title',
+            baseClasses.titleFont,
+            tokens.title,
           ]}>
-            <div class="flex gap-4 justify-center items-center">
-            {card.image && (
-              <img
-                src={card.image}
-                alt={card.imageAlt ?? card.title}
-                class:list={['hk-card-imagen w-[75px]', tokens.cardImage]}
-              />
+            {title}
+            {titleSupport && (
+              <div class:list={[
+                'inline-block px-6 py-2 mt-2 rounded-xl hk-caja-titulo',
+                tokens.titleSupportBox,
+              ]}>
+                <span class:list={[
+                  'block hk-title-soporte',
+                  baseClasses.titleSupportFont,
+                  tokens.titleSupport,
+                ]}>{titleSupport}</span>
+              </div>
             )}
-            <h3 class:list={['font-montserrat text-mont-card-title-mobile md:text-mont-card-title hk-card-title', tokens.cardTitle]} set:html={card.title} />
-            </div>
-            <p class:list={['text-left font-montserrat text-mont-card-content-mobile md:text-mont-card-content hk-card-text text-pretty', tokens.cardText]} set:html={card.text} />
-            {card.ctaText && (
-              <a href={card.ctaHref ?? '#'} class:list={['hk-card-cta inline-flex items-center gap-2 !mt-8 px-6 py-2 border rounded-[2rem] font-montserrat text-mont-form-cta no-underline transition-all duration-300 self-start', tokens.cardCta]}>
-                {card.ctaText}
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"></path></svg>
-              </a>
-            )}
-          </div>
-        ))}
-      </div>
-    </div>
-  </section>
-)}
-
-<!-- ═══════════════════════════════════════════════════════════════
-     VARIANTE v6.6 — Cards Icono Izq (ícono circular + texto horizontal)
-     ═══════════════════════════════════════════════════════════════ -->
-{variant === 'v6.6' && (
-  <section
-    id={id}
-    data-widget="6-cards-items"
-    data-variant="v6.6"
-    data-mode={mode}
-    class:list={[baseClasses.section, tokens.section]}
-  >
-    <div class={baseClasses.container}>
-      {/* Title Section */}
-      <div class="mb-16 text-left">
-        <h2 class:list={['flex flex-col items-start mb-8 text-4xl hk-title font-anton text-anton-block-title-mobile md:text-anton-block-title', tokens.title]}>
-          {title}
-          <div class:list={['inline-block px-6 py-2 mt-2 rounded-xl hk-caja-titulo', tokens.titleBox]}>
-            <span class:list={['block text-4xl hk-title-soporte font-anton text-anton-block-title-mobile md:text-anton-block-title', tokens.titleSupport]} set:html={titleSupport} />
-          </div>
-        </h2>
-        <p class:list={['font-montserrat text-mont-block-p-mobile md:text-mont-block-p text-pretty w-full md:w-[90%] hk-desc', tokens.desc]} set:html={description} />
-      </div>
-
-      {/* Cards */}
-      <div class="flex flex-wrap gap-x-8 gap-y-16 justify-center mx-auto w-full hk-cards-container">
-        {validCards.map((card) => (
-          <div class="hk-card-6-6 flex gap-3 justify-center items-center w-full lg:flex-1 lg:max-w-[calc(50%-1rem)] md:flex-1 md:max-w-[calc(50%-1rem)]">
-            <div class:list={['hk-box-imagen flex shrink-0 justify-center items-center w-[75px] h-[75px] rounded-full', tokens.cardImage]}>
-              {card.image && (
-                <img src={card.image} alt={card.imageAlt ?? card.title} class="hk-card-imagen w-[45px]" />
-              )}
-            </div>
-            <div class="box-texto">
-              <h3 class:list={['font-montserrat text-mont-card-title-mobile md:text-mont-card-title hk-card-title', tokens.cardTitle]} set:html={card.title} />
-              <p class:list={['font-montserrat text-mont-item-content-mobile md:text-mont-item-content hk-card-text', tokens.cardText]} set:html={card.text} />
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
-  </section>
-)}
-
-<!-- ═══════════════════════════════════════════════════════════════
-     VARIANTE v6.8 — Cards Verticales (imagen top + hover overlay)
-     ═══════════════════════════════════════════════════════════════ -->
-{variant === 'v6.8' && (
-  <section
-    id={id}
-    data-widget="6-cards-items"
-    data-variant="v6.8"
-    data-mode={mode}
-    class:list={[baseClasses.section, tokens.section]}
-  >
-    <div class={baseClasses.container}>
-      {/* Title Section */}
-      <div class="mb-16 text-left hk-header-container-6-8">
-        <h2 class:list={['flex flex-col items-start text-4xl hk-title-6-8 font-anton text-anton-block-title-mobile md:text-anton-block-title', tokens.title]}>
-          {title}
-        </h2>
-        <div class:list={['my-6 mr-auto w-40 h-1 rounded-full hk-header-bar-6-8', tokens.headerBar]}></div>
-        <p class:list={['w-full text-left font-montserrat text-mont-block-p-mobile md:text-mont-block-p text-pretty hk-paragraph-6-8 hk-desc', tokens.desc]} set:html={description} />
-      </div>
-
-      {/* Cards Grid */}
-      <div class:list={['flex flex-wrap gap-4 justify-center mx-auto hk-cards-container', tokens.cardsContainer]}>
-        {validCards.map((card, i) => (
-          <div class:list={['hk-card-6-8 w-full max-w-[270px] mx-auto group', 'lg:flex-1 lg:max-w-[calc(25%-1rem)]', 'md:flex-1 md:max-w-[calc(50%-1rem)]']}>
-            <div class="overflow-hidden relative rounded-t-2xl">
-              <img
-                src={card.image ?? `https://placehold.co/270x184/012085/ffffff/?text=Card+${i + 1}`}
-                alt={card.imageAlt ?? card.title}
-                class:list={['w-full max-w-[270px] mx-auto h-[184px] object-cover transition-transform duration-500 hk-card-imagen-6-8 lg:group-hover:scale-110', tokens.cardImage]}
-              />
-              {/* Overlay hover */}
-              <a
-                href={card.ctaHref ?? '#'}
-                class:list={['hidden absolute inset-0 flex-col justify-center items-center opacity-0 transition-all duration-500 translate-y-full lg:flex', tokens.cardImage]}
-              >
-                <svg class="mb-2" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-                <span class:list={['text-sm font-medium tracking-wider hk-vermas-texto', tokens.vermasText]}>Ver más</span>
-              </a>
-            </div>
-            <div class:list={['p-4 rounded-b-2xl hk-box-texto', i % 2 === 1 ? 'bg-[#E5E5E5]' : 'bg-bu-surface', tokens.cardBoxText]}>
-              <h3 class:list={['font-anton text-anton-card-title-mobile md:text-anton-card-title hk-card-title', tokens.cardTitle]} set:html={card.title} />
-              <div class:list={['my-3 w-14 h-1 rounded-full', tokens.divider]}></div>
-              <a href={card.ctaHref ?? '#'} class:list={['inline-block mt-2 text-sm font-bold no-underline uppercase hk-card-cta', tokens.cardCta]}>
-                {card.ctaText ?? 'Ver más'}
-              </a>
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
-  </section>
-)}
-
-<!-- ═══════════════════════════════════════════════════════════════
-     VARIANTE v6.10 — Dos Cards Grandes
-     ═══════════════════════════════════════════════════════════════ -->
-{variant === 'v6.10' && (
-  <section
-    id={id}
-    data-widget="6-cards-items"
-    data-variant="v6.10"
-    data-mode={mode}
-    class:list={[baseClasses.section, tokens.section]}
-  >
-    <div class={baseClasses.container}>
-      {/* Title Section */}
-      <div class="mb-16 text-left">
-        <h2 class:list={['flex flex-col items-start mb-8 text-4xl hk-title font-anton text-anton-block-title', tokens.title]}>
-          {title}
-          <div class:list={['inline-block px-6 py-2 mt-2 rounded-xl hk-caja-titulo', tokens.titleBox]}>
-            <span class:list={['block text-4xl hk-title-soporte font-anton text-anton-block-title', tokens.titleSupport]} set:html={titleSupport} />
-          </div>
-        </h2>
-        <p class:list={['font-montserrat hk-text-paragraph text-mont-block-p-mobile md:text-mont-block-p text-pretty w-full md:w-[90%] hk-desc', tokens.desc]} set:html={description} />
-      </div>
-
-      {/* Cards */}
-      <div class="flex flex-wrap gap-8 justify-center mx-auto hk-cards-container">
-        {validCards.slice(0, 2).map((card, i) => (
-          <div class:list={['hk-card w-full', 'md:w-[calc(50%-2rem)]', 'lg:flex-1 lg:max-w-[calc(50%-2rem)]', 'group']}>
-            <div class="overflow-hidden relative rounded-t-[2rem]">
-              <img
-                src={card.image ?? `https://placehold.co/530x242/012085/ffffff/?text=Card+${i + 1}`}
-                alt={card.imageAlt ?? card.title}
-                class:list={['w-full transition-transform duration-500 hk-card-imagen lg:group-hover:scale-110']}
-              />
-            </div>
-            <div class:list={['p-10 rounded-b-[2rem] hk-box-texto space-y-4', tokens.cardBody]}>
-              <h3 class:list={['font-montserrat text-mont-card-title hk-card-title', tokens.cardTitle]} set:html={card.title} />
-              <p class:list={['font-montserrat text-mont-card-content hk-card-text text-pretty', tokens.cardText]} set:html={card.text} />
+          </h2>
+        </div>
+        <div class="flex flex-wrap gap-8 justify-center mx-auto">
+          {cards.map((card) => (
+            <div class:list={[
+              baseClasses.cardBase,
+              baseClasses.cardBaseMd,
+              tokens.card,
+              cardWidthV63(cardCount),
+            ]}>
+              <div class="flex gap-4 justify-center items-center">
+                <img src={card.icon ?? `${WIDGET_ASSETS}/card_imagen.webp`} class="hk-card-imagen w-[75px]" alt="Imagen del Card" />
+                <h3 class:list={[
+                  'hk-card-title',
+                  baseClasses.cardTitleFont,
+                  tokens.cardTitle,
+                ]}>{card.title}</h3>
+              </div>
+              <p class:list={[
+                'text-left text-pretty hk-card-text',
+                baseClasses.cardTextFont,
+                tokens.cardText,
+              ]}>{card.text}</p>
               {card.ctaText && (
-                <a href={card.ctaHref ?? '#'} class:list={['hk-card-cta inline-flex items-center gap-2 mt-4 px-6 py-2 border rounded-[2rem] font-montserrat text-mont-form-cta no-underline transition-all duration-300', tokens.cardCta]}>
+                <a href={card.ctaHref ?? '#'} class:list={[
+                  'btn-animacion hk-card-cta inline-flex items-center gap-2 !mt-8 px-6 py-2 border rounded-[2rem] no-underline transition-all duration-300 self-start',
+                  baseClasses.cardCtaFont,
+                  tokens.cardCta,
+                ]}>
                   {card.ctaText}
-                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"></path></svg>
+                  <Fragment set:html={svgArrow} />
                 </a>
               )}
             </div>
-          </div>
-        ))}
+          ))}
+        </div>
       </div>
-    </div>
-  </section>
-)}
+    )}
 
-<!-- ═══════════════════════════════════════════════════════════════
-     VARIANTE v6.11 — Cards Venta + CTA (categoría + producto + precio)
-     ═══════════════════════════════════════════════════════════════ -->
-{variant === 'v6.11' && (
-  <section
-    id={id}
-    data-widget="6-cards-items"
-    data-variant="v6.11"
-    data-mode={mode}
-    class:list={[baseClasses.section, tokens.section]}
-  >
-    <div class={baseClasses.container}>
-      {/* Title Section */}
-      <div class="mb-16 text-center">
-        <h2 class:list={['flex flex-col items-center mb-12 text-4xl hk-title font-anton text-anton-block-title', tokens.title]}>
-          {title}
-          <div class:list={['inline-block px-6 py-2 mt-2 rounded-xl hk-caja-titulo', tokens.titleBox]}>
-            <span class:list={['block text-4xl text-white hk-title-soporte font-anton text-anton-block-title', tokens.titleSupport]} set:html={titleSupport} />
-          </div>
-        </h2>
-      </div>
-
-      {/* Cards */}
-      <div class="flex flex-wrap gap-8 justify-center mx-auto hk-cards-container">
-        {validCards.map((card) => (
-          <div class:list={['hk-card flex flex-col justify-between items-start px-6 py-12 rounded-[2rem] min-h-[400px]', 'w-full max-w-[400px]', 'lg:flex-1 lg:max-w-[calc(33.333%-2rem)]']}>
-            <div class="w-full">
-              <span class:list={['text-left font-montserrat text-mont-card-title hk-card-title-categoria', tokens.cardCategory]} set:html={card.category ?? 'Categoría'} />
-              <div class:list={['w-full h-[1px] my-2', tokens.divider]}></div>
-            </div>
-            <h3 class:list={['text-left font-montserrat text-mont-card-content hk-card-title', tokens.cardTitle]} set:html={card.title} />
-            <div class:list={['w-full h-[1px] my-4', tokens.divider]}></div>
-            <p class:list={['m-0 text-left font-montserrat text-mont-card-content-mobile md:text-mont-card-content hk-card-text text-balance leading-[1.2]', tokens.cardText]}>
-              <span class="hk-precio-texto">Precio:</span><br />
-              <span class="hk-precio-monto">{card.price ?? 'S/ xxx.xx'}</span>
-            </p>
-            {card.ctaText && (
-              <a href={card.ctaHref ?? '#'} class:list={['hk-card-cta inline-flex items-center gap-2 mt-4 px-6 py-2 border rounded-[2rem] font-montserrat text-mont-form-cta no-underline transition-all duration-300', tokens.cardCta]}>
-                {card.ctaText}
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"></path></svg>
-              </a>
+    {/* ═══════════════════════════════════════════════════════════
+        VARIANTE 6.6 — Título izq + cards horizontales (icono+texto)
+        ═══════════════════════════════════════════════════════════ */}
+    {variant === 'v6.6' && (
+      <div data-variant-content="v6.6">
+        <div class="mb-16 text-left">
+          <h2 class:list={[
+            'flex flex-col items-start mb-8 hk-title',
+            baseClasses.titleFont,
+            tokens.title,
+          ]}>
+            {title}
+            {titleSupport && (
+              <div class:list={[
+                'inline-block px-6 py-2 mt-2 rounded-xl',
+                tokens.titleSupportBox,
+              ]}>
+                <span class:list={[
+                  'block hk-title-soporte',
+                  baseClasses.titleSupportFont,
+                  tokens.titleSupport,
+                ]}>{titleSupport}</span>
+              </div>
             )}
-          </div>
-        ))}
-      </div>
-    </div>
-  </section>
-)}
-
-<!-- ═══════════════════════════════════════════════════════════════
-     VARIANTE v6.12 — Cards con Fecha (badge calendario)
-     ═══════════════════════════════════════════════════════════════ -->
-{variant === 'v6.12' && (
-  <section
-    id={id}
-    data-widget="6-cards-items"
-    data-variant="v6.12"
-    data-mode={mode}
-    class:list={[baseClasses.section, tokens.section]}
-  >
-    <div class={baseClasses.container}>
-      {/* Title Section */}
-      <div class="mb-16 text-center">
-        <h2 class:list={['flex flex-col items-center mb-12 text-4xl hk-title font-anton text-anton-block-title', tokens.title]}>
-          {title}
-          <div class:list={['inline-block px-6 py-2 mt-2 rounded-xl hk-caja-titulo', tokens.titleBox]}>
-            <span class:list={['block text-4xl hk-title-soporte font-anton text-anton-block-title', tokens.titleSupport]} set:html={titleSupport} />
-          </div>
-        </h2>
-      </div>
-
-      {/* Cards */}
-      <div class="flex flex-wrap gap-8 justify-center mx-auto hk-cards-container">
-        {validCards.map((card) => (
-          <div class:list={['hk-card flex flex-col justify-center items-start px-10 py-12 rounded-[2rem]', 'w-full max-w-[350px]', 'lg:flex-1 lg:max-w-[calc(33.333%-2rem)]', 'space-y-4', tokens.card]}>
-            <div class:list={['flex gap-3 items-center px-4 py-1 rounded-lg hk-date-badge', tokens.dateBadge]}>
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="shrink-0">
-                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
-                <line x1="16" y1="2" x2="16" y2="6"/>
-                <line x1="8" y1="2" x2="8" y2="6"/>
-                <line x1="3" y1="10" x2="21" y2="10"/>
-              </svg>
-              <p class:list={['font-montserrat font-bold text-[1.12rem] hk-card-periodo hk-date-text', tokens.dateText]} set:html={card.dateText ?? 'Del xx/xx al xx/xx'} />
+          </h2>
+          {description && (
+            <p class:list={[
+              'hk-desc w-full md:w-[90%] text-pretty',
+              baseClasses.bodyFont,
+              tokens.desc,
+              'text-mont-block-p-mobile md:text-mont-block-p',
+            ]}>{description}</p>
+          )}
+        </div>
+        <div class="hk-cards-container flex flex-wrap gap-x-8 gap-y-16 justify-center mx-auto w-full">
+          {cards.map((card) => (
+            <div class:list={[
+              'hk-card-6-6 flex gap-3 justify-center items-center w-full md:w-[calc(50%-1rem)]',
+              cardWidthV66(cardCount),
+            ]}>
+              <div class:list={[
+                'hk-box-imagen flex shrink-0 justify-center items-center w-[75px] h-[75px] rounded-full',
+                tokens.cardIconBox,
+              ]}>
+                <img src={card.icon ?? `${WIDGET_ASSETS}/card_imagen.webp`} class="hk-card-imagen w-[45px]" alt="Imagen del Card" />
+              </div>
+              <div class="box-texto">
+                <h3 class:list={[
+                  'hk-card-title',
+                  baseClasses.cardTitleFont,
+                  tokens.cardTitle,
+                ]}>{card.title}</h3>
+                <p class:list={[
+                  'hk-card-text',
+                  baseClasses.cardItemTextFont,
+                  tokens.cardText,
+                ]}>{card.text}</p>
+              </div>
             </div>
-            <h3 class:list={['font-montserrat text-mont-card-title hk-card-title !font-bold', tokens.cardTitle]} set:html={card.title} />
-            <p class:list={['font-montserrat text-mont-card-text hk-card-text text-pretty', tokens.cardText]} set:html={card.text} />
-            {card.ctaText && (
-              <a href={card.ctaHref ?? '#'} class:list={['hk-card-cta inline-flex items-center gap-2 mt-4 px-6 py-2 border rounded-[2rem] font-montserrat text-mont-form-cta no-underline transition-all duration-300', tokens.cardCta]}>
-                {card.ctaText}
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"></path></svg>
-              </a>
-            )}
-          </div>
-        ))}
+          ))}
+        </div>
       </div>
-    </div>
-  </section>
-)}
+    )}
+
+    {/* ═══════════════════════════════════════════════════════════
+        VARIANTE 6.8 — Título izq + cards verticales con imagen
+        (carrusel Swiper si >4 cards)
+        ═══════════════════════════════════════════════════════════ */}
+    {variant === 'v6.8' && (
+      <div data-variant-content="v6.8">
+        <div class="mb-16 text-left hk-header-container-6-8">
+          <h2 class:list={[
+            'flex flex-col items-start hk-title-6-8',
+            baseClasses.titleFont,
+            tokens.title,
+          ]}>{title}</h2>
+          <div class:list={[
+            'my-6 mr-auto w-40 h-1 rounded-full hk-header-bar-6-8',
+            tokens.bar,
+          ]}></div>
+          {description && (
+            <p class:list={[
+              'hk-paragraph-6-8 w-full text-left text-pretty',
+              baseClasses.bodyFont,
+              tokens.desc,
+              'text-mont-block-p-mobile md:text-mont-block-p',
+            ]}>{description}</p>
+          )}
+        </div>
+        <div
+          class:list={[
+            'hk-cards-grid-v6-8 mx-auto',
+            useCarouselV68 ? 'hk-cards-carousel swiper' : 'flex flex-wrap gap-4 justify-center max-w-[270px] md:max-w-[560px] lg:max-w-[850px] xl:max-w-[1140px]',
+          ]}
+          data-carousel-enabled={useCarouselV68 ? 'true' : 'false'}
+        >
+          {useCarouselV68 ? (
+            <div class="swiper-wrapper">
+              {cards.map((card) => (
+                <div class:list={[
+                  'swiper-slide hk-card-6-8 mx-auto group',
+                ]}>
+                  <div class="overflow-hidden relative rounded-t-2xl">
+                    <img src={card.image ?? placeholderImg(card.title || 'Card')} class="w-full max-w-[270px] mx-auto h-[184px] object-cover transition-transform duration-500 hk-card-imagen-6-8 lg:group-hover:scale-110" alt="Imagen del card" />
+                    <a href={card.ctaHref ?? '#'} class:list={[
+                      'hidden absolute inset-0 flex-col justify-center items-center opacity-0 transition-all duration-500 translate-y-full lg:flex group-hover:translate-y-0 group-hover:opacity-100',
+                      tokens.imageOverlay,
+                    ]}>
+<img src={`${WIDGET_ASSETS}/ver_mas.webp`} class="mb-2" alt="Ver más icon" />
+                      <span class="text-sm font-medium tracking-wider text-bu-surface hk-vermas-texto">Ver más</span>
+                    </a>
+                  </div>
+                  <div class:list={['p-4 rounded-b-2xl hk-box-texto', tokens.card]}>
+                    <h3 class:list={[
+                      'hk-card-title',
+                      baseClasses.cardTitleFontAnton,
+                      tokens.cardTitle,
+                    ]}>{card.title}</h3>
+                    <div class:list={['my-3 w-14 h-1 rounded-full', tokens.bar]}></div>
+                    <a href={card.ctaHref ?? '#'} class="inline-block mt-2 text-sm font-bold no-underline uppercase text-bu-primary lg:hidden">Ver más</a>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            cards.map((card) => (
+              <div class:list={[
+                'hk-card-6-8 lg:w-[calc((100%-3rem)/4)] md:w-[calc((100%-1rem)/2)] w-full max-w-[270px] mx-auto group',
+              ]}>
+                <div class="overflow-hidden relative rounded-t-2xl">
+                  <img src={card.image ?? placeholderImg(card.title || 'Card')} class="w-full max-w-[270px] mx-auto h-[184px] object-cover transition-transform duration-500 hk-card-imagen-6-8 lg:group-hover:scale-110" alt="Imagen del card" />
+                  <a href={card.ctaHref ?? '#'} class:list={[
+                    'hidden absolute inset-0 flex-col justify-center items-center opacity-0 transition-all duration-500 translate-y-full lg:flex group-hover:translate-y-0 group-hover:opacity-100',
+                    tokens.imageOverlay,
+                  ]}>
+                    <img src={`${WIDGET_ASSETS}/ver_mas.webp`} class="mb-2" alt="Ver más icon" />
+                    <span class="text-sm font-medium tracking-wider text-bu-surface hk-vermas-texto">Ver más</span>
+                  </a>
+                </div>
+                <div class:list={['p-4 rounded-b-2xl hk-box-texto', tokens.card]}>
+                  <h3 class:list={[
+                    'hk-card-title',
+                    baseClasses.cardTitleFontAnton,
+                    tokens.cardTitle,
+                  ]}>{card.title}</h3>
+                  <div class:list={['my-3 w-14 h-1 rounded-full', tokens.bar]}></div>
+                  <a href={card.ctaHref ?? '#'} class="inline-block mt-2 text-sm font-bold no-underline uppercase text-bu-primary lg:hidden">Ver más</a>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+      </div>
+    )}
+
+    {/* ═══════════════════════════════════════════════════════════
+        VARIANTE 6.10 — Título izq + 2 cards grandes con CTA
+        ═══════════════════════════════════════════════════════════ */}
+    {variant === 'v6.10' && (
+      <div data-variant-content="v6.10">
+        <div class="mb-16 text-left">
+          <h2 class:list={[
+            'flex flex-col items-start mb-8 hk-title',
+            baseClasses.titleFont,
+            tokens.title,
+          ]}>
+            {title}
+            {titleSupport && (
+              <div class:list={[
+                'inline-block px-6 py-2 mt-2 rounded-xl',
+                tokens.titleSupportBox,
+              ]}>
+                <span class:list={[
+                  'block hk-title-soporte',
+                  baseClasses.titleSupportFont,
+                  tokens.titleSupport,
+                ]}>{titleSupport}</span>
+              </div>
+            )}
+          </h2>
+          {description && (
+            <p class:list={[
+              'hk-text-paragraph w-full md:w-[90%] text-pretty',
+              baseClasses.bodyFont,
+              tokens.desc,
+              'text-mont-block-p-mobile md:text-mont-block-p',
+            ]}>{description}</p>
+          )}
+        </div>
+        <div class="flex flex-wrap gap-8 justify-center mx-auto">
+          {cards.map((card) => (
+            <div class={baseClasses.cardBaseV610}>
+              <div class="overflow-hidden relative rounded-t-[2rem]">
+                <img src={card.image ?? placeholderImgLarge(card.title || 'Card')} class="w-full transition-transform duration-500 hk-card-imagen lg:group-hover:scale-110" alt="Imagen del card" />
+              </div>
+              <div class={baseClasses.cardBoxV610}>
+                <h3 class:list={[
+                  'hk-card-title',
+                  baseClasses.cardTitleFont,
+                  tokens.cardTitle,
+                ]}>{card.title}</h3>
+                <p class:list={[
+                  'hk-card-text text-pretty',
+                  baseClasses.cardTextFont,
+                  tokens.cardText,
+                ]}>{card.text}</p>
+                {card.ctaText && (
+                  <a href={card.ctaHref ?? '#'} class:list={[
+                    'btn-animacion hk-card-cta inline-flex items-center gap-2 mt-4 px-6 py-2 border rounded-[2rem] no-underline transition-all duration-300',
+                    baseClasses.cardCtaFontAntonio,
+                    tokens.cardCta,
+                  ]}>
+                    {card.ctaText}
+                    <Fragment set:html={svgArrow} />
+                  </a>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    )}
+
+    {/* ═══════════════════════════════════════════════════════════
+        VARIANTE 6.11 — Título centrado + cards producto (cat/precio)
+        ═══════════════════════════════════════════════════════════ */}
+    {variant === 'v6.11' && (
+      <div data-variant-content="v6.11">
+        <div class="mb-16 text-center">
+          <h2 class:list={[
+            'flex flex-col items-center mb-12 hk-title',
+            baseClasses.titleFont,
+            tokens.title,
+          ]}>
+            {title}
+            {titleSupport && (
+              <div class:list={[
+                'inline-block px-6 py-2 mt-2 rounded-xl hk-caja-titulo',
+                tokens.titleSupportBox,
+              ]}>
+                <span class:list={[
+                  'block hk-title-soporte',
+                  baseClasses.titleSupportFont,
+                  tokens.titleSupport,
+                ]}>{titleSupport}</span>
+              </div>
+            )}
+          </h2>
+        </div>
+        <div class="flex flex-wrap gap-8 justify-center mx-auto">
+          {cards.map((card) => (
+            <div class:list={[
+              baseClasses.cardBaseV611,
+              baseClasses.cardBaseV611Lg,
+              cardWidthV611(cardCount),
+              tokens.card,
+            ]}>
+              <div class="w-full">
+                <span class:list={[
+                  'text-left hk-card-title-categoria',
+                  baseClasses.cardTitleFont,
+                  tokens.cardTitle,
+                ]}>{card.categoria ?? 'Categoria'}</span>
+                <div class="w-full h-[1px] bg-bu-surface my-2"></div>
+              </div>
+              <h3 class:list={[
+                'text-left hk-card-title',
+                baseClasses.cardTextFont,
+                tokens.cardTitle,
+              ]}>{card.title}</h3>
+              <div class="w-full h-[1px] bg-bu-surface my-4"></div>
+              <p class:list={[
+                'm-0 text-left hk-card-text text-balance leading-[1.2]',
+                baseClasses.cardTextFont,
+                tokens.cardText,
+              ]}>
+                <span class="hk-precio-texto">Precio:</span><br />
+                <span class="hk-precio-monto">{card.precio ?? 'S/ xxx.xx'}</span>
+              </p>
+              {card.ctaText && (
+                <a href={card.ctaHref ?? '#'} class:list={[
+                  'btn-animacion hk-card-cta inline-flex items-center gap-2 mt-4 px-6 py-2 border rounded-[2rem] no-underline transition-all duration-300',
+                  baseClasses.cardCtaFont,
+                  tokens.cardCta,
+                ]}>
+                  {card.ctaText}
+                  <Fragment set:html={svgArrow} />
+                </a>
+              )}
+            </div>
+          ))}
+        </div>
+      </div>
+    )}
+
+    {/* ═══════════════════════════════════════════════════════════
+        VARIANTE 6.12 — Título centrado + cards con badge de fecha
+        ═══════════════════════════════════════════════════════════ */}
+    {variant === 'v6.12' && (
+      <div data-variant-content="v6.12">
+        <div class="mb-16 text-center">
+          <h2 class:list={[
+            'flex flex-col items-center mb-12 hk-title',
+            baseClasses.titleFont,
+            tokens.title,
+          ]}>
+            {title}
+            {titleSupport && (
+              <div class:list={[
+                'inline-block px-6 py-2 mt-2 rounded-xl hk-caja-titulo',
+                tokens.titleSupportBox,
+              ]}>
+                <span class:list={[
+                  'block hk-title-soporte',
+                  baseClasses.titleSupportFont,
+                  tokens.titleSupport,
+                ]}>{titleSupport}</span>
+              </div>
+            )}
+          </h2>
+        </div>
+        <div class="flex flex-wrap gap-8 justify-center mx-auto">
+          {cards.map((card) => (
+            <div class:list={[
+              baseClasses.cardBaseV612,
+              baseClasses.cardBaseV612Lg,
+              cardWidthV612(cardCount),
+              tokens.card,
+            ]}>
+              <div class="flex gap-3 items-center px-4 py-1 bg-bu-surface rounded-lg hk-date-badge">
+                <img src={`${WIDGET_ASSETS}/mini_calendario.webp`} class="hk-date-icon" alt="Calendario" />
+                <p class:list={[
+                  'hk-card-periodo font-montserrat font-bold text-[1.12rem] hk-date-text',
+                  tokens.dateBadgeText,
+                ]}>{card.periodo ?? 'Del xx/xx al xx/xx'}</p>
+              </div>
+              <h3 class:list={[
+                '!font-bold hk-card-title',
+                baseClasses.cardTitleFont,
+                tokens.cardTitle,
+              ]}>{card.title}</h3>
+              <p class:list={[
+                'hk-card-text text-pretty',
+                'font-montserrat text-mont-card-text',
+                tokens.cardText,
+              ]}>{card.text}</p>
+              {card.ctaText && (
+                <a href={card.ctaHref ?? '#'} class:list={[
+                  'btn-animacion hk-card-cta inline-flex items-center gap-2 mt-4 px-6 py-2 border rounded-[2rem] no-underline transition-all duration-300',
+                  baseClasses.cardCtaFont,
+                  tokens.cardCta,
+                ]}>
+                  {card.ctaText}
+                  <Fragment set:html={svgArrow} />
+                </a>
+              )}
+            </div>
+          ))}
+        </div>
+      </div>
+    )}
+
+  </div>
+</section>
+
+{/* ============================================================
+    Script cliente — preserva la lógica legacy:
+      - v6.8 con >4 cards  → inicializa Swiper
+      - v6.3/6.6/6.11/6.12  → ajusta anchos según cantidad
+    ============================================================ */}
+<script>
+  // ── Swiper loader (lazy, desde CDN) ──────────────────────
+  // Se inyecta solo si la página tiene al menos un widget v6.8
+  // con >4 cards. Mantiene aislado el bundle principal.
+  const SWIPER_VERSION = '11.1.14';
+  const SWIPER_CSS = `https://cdn.jsdelivr.net/npm/swiper@${SWIPER_VERSION}/swiper-bundle.min.css`;
+  const SWIPER_JS = `https://cdn.jsdelivr.net/npm/swiper@${SWIPER_VERSION}/swiper-bundle.min.js`;
+
+  function loadSwiper(): Promise<void> {
+    return new Promise((resolve) => {
+      if ((window as any).Swiper) return resolve();
+      if (document.querySelector(`link[href="${SWIPER_CSS}"]`)) return resolve();
+      const link = document.createElement('link');
+      link.rel = 'stylesheet';
+      link.href = SWIPER_CSS;
+      document.head.appendChild(link);
+      const script = document.createElement('script');
+      script.src = SWIPER_JS;
+      script.onload = () => resolve();
+      document.body.appendChild(script);
+    });
+  }
+
+  // ── v6.8 — Carrusel si >4 cards ─────────────────────────
+  // Mapa para trackear instancias Swiper y poder destruirlas antes de re-inicializar.
+  const swiperInstances = new WeakMap<HTMLElement, any>();
+
+  async function initCarouselV68() {
+    const sections = document.querySelectorAll<HTMLElement>(
+      'section[data-widget="cards-items"][data-variant="v6.8"]'
+    );
+    for (const section of sections) {
+      const container = section.querySelector<HTMLElement>('.hk-cards-grid-v6-8');
+      if (!container) continue;
+      const cards = container.querySelectorAll('.hk-card-6-8');
+
+      // Si pasamos de >4 a ≤4, destruir Swiper y restaurar el grid CSS.
+      if (cards.length <= 4) {
+        const swiper = swiperInstances.get(container);
+        if (swiper && swiper.destroy) {
+          swiper.destroy(true, true);
+          swiperInstances.delete(container);
+        }
+        // Restaurar clases de grid CSS (por si estaban swiper-modified).
+        container.classList.remove('swiper', 'swiper-initialized');
+        continue;
+      }
+
+      // Si ya hay un Swiper, destruir antes de re-crear (evita duplicados).
+      const existing = swiperInstances.get(container);
+      if (existing && existing.destroy) {
+        existing.destroy(true, true);
+        swiperInstances.delete(container);
+      }
+
+      // Asegurar que el contenedor tiene las clases de Swiper.
+      container.classList.add('swiper');
+
+      await loadSwiper();
+      const swiper = new (window as any).Swiper(container, {
+        centeredSlides: false,
+        breakpoints: {
+          576: { slidesPerView: 2, centeredSlides: false, spaceBetween: 20 },
+          1000: { slidesPerView: 4, centeredSlides: false, spaceBetween: 32 },
+        },
+      });
+      swiperInstances.set(container, swiper);
+    }
+  }
+
+  // ── Layouts dinámicos por variante ───────────────────────
+  function setCardWidths(
+    selector: string,
+    containerSelector: string,
+    widthFor: (count: number) => string
+  ) {
+    const sections = document.querySelectorAll<HTMLElement>(selector);
+    sections.forEach((section) => {
+      const container =
+        section.querySelector<HTMLElement>(containerSelector) ||
+        section.querySelector<HTMLElement>('.flex.flex-wrap.gap-8');
+      if (!container) return;
+      const cards = Array.from(container.children).filter(
+        (el) => el.tagName === 'DIV'
+      ) as HTMLElement[];
+      const count = cards.length;
+      cards.forEach((card) => {
+        card.className = card.className
+          .split(' ')
+          .filter(
+            (c) =>
+              !c.startsWith('lg:w-') &&
+              !c.startsWith('md:w-') &&
+              !c.startsWith('w-full') &&
+              !c.startsWith('max-w-')
+          )
+          .join(' ');
+        card.classList.add('w-full', 'md:w-[calc(50%-1rem)]');
+        card.classList.add(widthFor(count));
+      });
+    });
+  }
+
+  function applyDynamicLayouts() {
+    setCardWidths(
+      'section[data-widget="cards-items"][data-variant="v6.3"]',
+      '.hk-cards-grid-v6-3, .flex.flex-wrap.gap-8',
+      (count) => {
+        if (count === 4) return 'lg:w-[calc(50%-1rem)]';
+        if (count % 3 === 0) return 'lg:w-[30%]';
+        return 'lg:w-[calc(50%-2rem)]';
+      }
+    );
+    setCardWidths(
+      'section[data-widget="cards-items"][data-variant="v6.6"]',
+      '.hk-cards-container',
+      (count) =>
+        count === 4 || count === 2
+          ? 'lg:w-[calc(50%-1rem)]'
+          : 'lg:w-[calc((100%-4rem)/3)]'
+    );
+    setCardWidths(
+      'section[data-widget="cards-items"][data-variant="v6.11"]',
+      '.hk-cards-container, .flex.flex-wrap.gap-8',
+      (count) =>
+        count === 4
+          ? 'lg:w-[calc(50%-1rem)]'
+          : 'lg:w-[calc((100%-4rem)/3)]'
+    );
+    setCardWidths(
+      'section[data-widget="cards-items"][data-variant="v6.12"]',
+      '.hk-cards-container, .flex.flex-wrap.gap-8',
+      (count) =>
+        count === 4
+          ? 'lg:w-[calc(50%-1rem)]'
+          : 'lg:w-[calc((100%-4rem)/3)]'
+    );
+  }
+
+  // Ejecutar al cargar (las cards ya vienen con anchos por defecto desde SSR,
+  // el script solo los recalcula según el conteo real).
+  applyDynamicLayouts();
+  initCarouselV68();
+
+  // Re-aplicar cuando cambia el viewport o se re-renderiza el visor.
+  document.addEventListener('astro:page-load', () => {
+    applyDynamicLayouts();
+    initCarouselV68();
+  });
+
+  // Listener del editor de cards del visor: cuando el usuario
+  // agrega/elimina/edita cards, re-aplicar layouts y Swiper.
+  document.addEventListener('visor:cards-changed', (e: Event) => {
+    const detail = (e as CustomEvent).detail;
+    if (detail?.widgetId !== '6-cards-items') return;
+    applyDynamicLayouts();
+    initCarouselV68();
+  });
+</script>

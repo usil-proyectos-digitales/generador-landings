@@ -4,18 +4,29 @@
  * Centraliza todas las clases de color que usa el widget.
  * Para ajustar un color del widget, editá solo este archivo.
  *
- * ESTRUCTURA:
- *   - theme[variant][mode] → clases Tailwind por variante × modo
- *   - baseClasses          → clases compartidas (layout, tipografía)
+ * ESTRATEGIA DE COLORES:
+ *   - Solo existen 5 variables CSS por BU en `global.css`:
+ *       --bu-color-brand-primary / -secondary / -accent-primary
+ *       --bu-color-surface-light / -neutral
+ *   - Esas 5 variables NO cambian con `data-mode`. La elección de cuál
+ *     de los 5 roles usar (primary, secondary, accent, surface, neutral)
+ *     depende del MODO y se hace ACÁ, vía clases Tailwind.
+ *   - Resultado: este archivo controla 100% cómo se ve el widget
+ *     en light/dark. El CSS nunca necesita overrides por modo.
  *
- * Modos:
- *   - light: roles "naturales" del BU
- *   - dark:  roles invertidos (sin cambiar las 5 variables del CSS)
+ * Variantes:
+ *   - v6.3  — Título centrado + 3 cards verticales con CTA
+ *   - v6.6  — Título izq + 6 cards horizontales (icono + texto)
+ *   - v6.8  — Título izq + cards verticales con imagen (carrusel si >4)
+ *   - v6.10 — Título izq + 2 cards grandes con imagen y CTA
+ *   - v6.11 — Título centrado + 3 cards de producto (categoría/título/precio/CTA)
+ *   - v6.12 — Título centrado + 3 cards con badge de fecha
  *
- * Colores neutrales del template legacy (no dependen de BU):
- *   bg-[#F0F0F0] → fondo neutro claro (section background light)
- *   bg-[#E5E5E5] → card alternada
- *   bg-[#DFDFDF]  → card body
+ * Estructura:
+ *   - theme[variant][mode]  → clases Tailwind por variante × modo
+ *   - baseClasses           → clases compartidas (layout, tipografía)
+ *
+ * Cambian en runtime cuando Astro re-renderiza con el prop `mode`.
  */
 export type Mode = 'light' | 'dark';
 export type Variant = 'v6.3' | 'v6.6' | 'v6.8' | 'v6.10' | 'v6.11' | 'v6.12';
@@ -23,360 +34,236 @@ export type Variant = 'v6.3' | 'v6.6' | 'v6.8' | 'v6.10' | 'v6.11' | 'v6.12';
 export interface VariantTheme {
   /** Clases para el contenedor raíz `<section>`. */
   section: string;
-  /** Clases para el título principal. */
+  /** Clases para el `<h2>` del título principal. */
   title: string;
-  /** Clases para la caja de soporte del título (cuando existe). */
-  titleBox: string;
-  /** Clases para el texto dentro de la caja de soporte. */
+  /** Clases para el span del título de soporte (caja resaltada). */
   titleSupport: string;
-  /** Clases para el párrafo de descripción. */
+  /** Clases para el contenedor del título de soporte. */
+  titleSupportBox: string;
+  /** Clases para el `<p>` de la descripción / bajada. */
   desc: string;
   /** Clases para cada card. */
   card: string;
+  /** Clases para el contenedor del icono redondo en v6.6. */
+  cardIconBox: string;
   /** Clases para el título de la card. */
   cardTitle: string;
   /** Clases para el texto de la card. */
   cardText: string;
-  /** Clases para el CTA de la card. */
+  /** Clases para el contenedor del CTA (botón). */
   cardCta: string;
-  /** Clases para el ícono/imagen de la card. */
-  cardImage: string;
-  /** Clases para el badge de fecha (v6.12). */
-  dateBadge: string;
-  /** Clases para el texto de fecha (v6.12). */
-  dateText: string;
-  /** Clases para el separador/divisor. */
-  divider: string;
-  /** Clases para el contenedor de cards. */
-  cardsContainer: string;
-  /** Clases para el header/container de título (v6.8). */
-  headerContainer: string;
-  /** Clases para la barra decorativa (v6.8). */
-  headerBar: string;
-  /** Clases para el texto de ver más overlay (v6.8). */
-  vermasText: string;
-  /** Clases para el contenido de card (caja texto inferior, v6.8). */
-  cardBoxText: string;
-  /** Clases para categoría (v6.11). */
-  cardCategory: string;
-  /** Clases para precio texto (v6.11). */
-  cardPriceText: string;
-  /** Clases para precio monto (v6.11). */
-  cardPriceAmount: string;
-  /** Clases para el body de la card (v6.10). */
-  cardBody: string;
+  /** Clases para el texto del badge de fecha en v6.12. */
+  dateBadgeText: string;
+  /** Clases para el overlay oscuro sobre la imagen en v6.8. */
+  imageOverlay: string;
+  /** Clases para la barra separadora (v6.8 header bar, v6.12 mini bar). */
+  bar: string;
 }
 
+/**
+ * Tokens por variante × modo.
+ *
+ * - `light`: fondo gris neutro (`#F0F0F0`) con cards en primary del BU.
+ * - `dark`:  se invierten roles — fondo primary del BU, cards en surface,
+ *            textos sobre primary usan neutral.
+ */
 export const theme: Record<Variant, Record<Mode, VariantTheme>> = {
-  // ── v6.3 — Cards Centradas (título centrado + caja soporte + cards) ─
+  // ── v6.3 — Título centrado + cards verticales ──────────────
   'v6.3': {
     light: {
-      section: 'bg-bu-surface text-bu-surface',
-      title: 'text-bu-secondary',
-      titleBox: 'bg-bu-accent',
+      section: 'bg-[#F0F0F0]',
+      title: 'text-bu-primary',
+      titleSupportBox: 'bg-bu-primary',
       titleSupport: 'text-bu-surface',
       desc: 'text-bu-primary',
       card: 'bg-bu-primary',
+      cardIconBox: 'bg-bu-primary',
       cardTitle: 'text-bu-surface',
       cardText: 'text-bu-surface',
-      cardCta: 'bg-bu-primary text-bu-surface border-bu-surface hover:bg-bu-surface hover:text-bu-primary hover:border-bu-primary',
-      cardImage: '',
-      dateBadge: '',
-      dateText: 'text-bu-primary',
-      divider: 'bg-bu-surface',
-      cardsContainer: '',
-      headerContainer: '',
-      headerBar: '',
-      vermasText: '',
-      cardBoxText: '',
-      cardCategory: 'text-bu-surface',
-      cardPriceText: 'text-bu-surface',
-      cardPriceAmount: 'text-bu-surface',
-      cardBody: '',
+      cardCta: 'bg-bu-primary text-bu-surface hover:bg-bu-surface hover:text-bu-primary border border-bu-neutral',
+      dateBadgeText: '',
+      imageOverlay: 'bg-bu-primary/80',
+      bar: '',
     },
     dark: {
-      section: 'bg-bu-primary text-bu-surface',
-      title: 'text-bu-surface',
-      titleBox: 'bg-bu-surface',
+      section: 'bg-bu-primary',
+      title: 'text-bu-neutral',
+      titleSupportBox: 'bg-bu-neutral',
       titleSupport: 'text-bu-primary',
-      desc: 'text-bu-surface',
-      card: 'bg-bu-surface text-bu-text',
+      desc: 'text-bu-neutral',
+      card: 'bg-bu-neutral',
+      cardIconBox: 'bg-bu-neutral',
       cardTitle: 'text-bu-primary',
-      cardText: 'text-bu-text',
-      cardCta: 'bg-bu-surface text-bu-primary border-bu-primary hover:bg-bu-primary hover:text-bu-surface hover:border-bu-surface',
-      cardImage: '',
-      dateBadge: '',
-      dateText: 'text-bu-primary',
-      divider: 'bg-bu-primary',
-      cardsContainer: '',
-      headerContainer: '',
-      headerBar: '',
-      vermasText: '',
-      cardBoxText: '',
-      cardCategory: 'text-bu-primary',
-      cardPriceText: 'text-bu-text',
-      cardPriceAmount: 'text-bu-text',
-      cardBody: '',
+      cardText: 'text-bu-primary',
+      cardCta: 'bg-bu-neutral text-bu-primary hover:bg-bu-surface hover:text-bu-primary border border-bu-primary',
+      dateBadgeText: '',
+      imageOverlay: 'bg-bu-neutral/80',
+      bar: '',
     },
   },
-
-  // ── v6.6 — Cards Icono Izq (horizontal: ícono circular + texto) ────
+  // ── v6.6 — Título izq + cards horizontales (icono + texto) ──
   'v6.6': {
     light: {
-      section: 'bg-[#F0F0F0] text-bu-surface',
+      section: 'bg-[#F0F0F0]',
       title: 'text-bu-primary',
-      titleBox: 'bg-bu-primary',
+      titleSupportBox: 'bg-bu-primary',
       titleSupport: 'text-bu-surface',
       desc: 'text-bu-primary',
       card: '',
+      cardIconBox: 'bg-bu-primary',
       cardTitle: 'text-bu-primary',
       cardText: 'text-bu-primary',
       cardCta: '',
-      cardImage: 'bg-bu-primary',
-      dateBadge: '',
-      dateText: 'text-bu-primary',
-      divider: 'bg-bu-surface',
-      cardsContainer: '',
-      headerContainer: '',
-      headerBar: '',
-      vermasText: '',
-      cardBoxText: '',
-      cardCategory: '',
-      cardPriceText: '',
-      cardPriceAmount: '',
-      cardBody: '',
+      dateBadgeText: '',
+      imageOverlay: '',
+      bar: '',
     },
     dark: {
-      section: 'bg-bu-primary text-bu-surface',
-      title: 'text-bu-surface',
-      titleBox: 'bg-bu-surface',
+      section: 'bg-bu-primary',
+      title: 'text-bu-neutral',
+      titleSupportBox: 'bg-bu-neutral',
       titleSupport: 'text-bu-primary',
-      desc: 'text-bu-surface',
+      desc: 'text-bu-neutral',
       card: '',
-      cardTitle: 'text-bu-surface',
-      cardText: 'text-bu-surface',
+      cardIconBox: 'bg-bu-neutral',
+      cardTitle: 'text-bu-neutral',
+      cardText: 'text-bu-neutral',
       cardCta: '',
-      cardImage: 'bg-bu-surface text-bu-primary',
-      dateBadge: '',
-      dateText: 'text-bu-surface',
-      divider: 'bg-bu-primary',
-      cardsContainer: '',
-      headerContainer: '',
-      headerBar: '',
-      vermasText: '',
-      cardBoxText: '',
-      cardCategory: '',
-      cardPriceText: '',
-      cardPriceAmount: '',
-      cardBody: '',
+      dateBadgeText: '',
+      imageOverlay: '',
+      bar: '',
     },
   },
-
-  // ── v6.8 — Cards Verticales (imagen top + hover overlay) ─────────
+  // ── v6.8 — Título izq + cards verticales con imagen ─────────
   'v6.8': {
     light: {
-      section: 'bg-[#F0F0F0] text-bu-surface',
+      section: 'bg-[#F0F0F0]',
       title: 'text-bu-primary',
-      titleBox: '',
+      titleSupportBox: '',
       titleSupport: '',
       desc: 'text-bu-primary',
-      card: '',
+      card: 'bg-bu-surface',
+      cardIconBox: '',
       cardTitle: 'text-bu-primary',
       cardText: '',
-      cardCta: 'text-bu-primary lg:hidden',
-      cardImage: 'bg-bu-primary/80',
-      dateBadge: '',
-      dateText: '',
-      divider: 'bg-bu-primary',
-      cardsContainer: 'max-w-[270px] md:max-w-[560px] lg:max-w-[850px] xl:max-w-[1140px]',
-      headerContainer: '',
-      headerBar: 'bg-bu-primary',
-      vermasText: 'text-bu-surface',
-      cardBoxText: 'bg-bu-surface',
-      cardCategory: '',
-      cardPriceText: '',
-      cardPriceAmount: '',
-      cardBody: '',
+      cardCta: '',
+      dateBadgeText: '',
+      imageOverlay: 'bg-bu-primary/80',
+      bar: 'bg-bu-primary',
     },
     dark: {
-      section: 'bg-bu-primary text-bu-surface',
-      title: 'text-bu-surface',
-      titleBox: '',
+      section: 'bg-bu-primary',
+      title: 'text-bu-neutral',
+      titleSupportBox: '',
       titleSupport: '',
-      desc: 'text-bu-surface',
-      card: '',
-      cardTitle: 'text-bu-surface',
+      desc: 'text-bu-neutral',
+      card: 'bg-bu-neutral',
+      cardIconBox: '',
+      cardTitle: 'text-bu-primary',
       cardText: '',
-      cardCta: 'text-bu-surface lg:hidden',
-      cardImage: 'bg-bu-surface/80 text-bu-primary',
-      dateBadge: '',
-      dateText: '',
-      divider: 'bg-bu-surface',
-      cardsContainer: 'max-w-[270px] md:max-w-[560px] lg:max-w-[850px] xl:max-w-[1140px]',
-      headerContainer: '',
-      headerBar: 'bg-bu-surface',
-      vermasText: 'text-bu-primary',
-      cardBoxText: 'bg-bu-text text-bu-surface',
-      cardCategory: '',
-      cardPriceText: '',
-      cardPriceAmount: '',
-      cardBody: '',
+      cardCta: '',
+      dateBadgeText: '',
+      imageOverlay: 'bg-bu-neutral/80',
+      bar: 'bg-bu-neutral',
     },
   },
-
-  // ── v6.10 — Dos Cards Grandes ──────────────────────────────────────
+  // ── v6.10 — Título izq + 2 cards grandes ────────────────────
   'v6.10': {
     light: {
-      section: 'bg-[#F0F0F0] text-bu-surface',
+      section: 'bg-[#F0F0F0]',
       title: 'text-bu-primary',
-      titleBox: 'bg-bu-primary',
+      titleSupportBox: 'bg-bu-primary',
       titleSupport: 'text-bu-surface',
       desc: 'text-bu-primary',
       card: '',
+      cardIconBox: '',
       cardTitle: 'text-bu-primary',
       cardText: 'text-bu-primary',
-      cardCta: 'bg-bu-primary text-bu-surface border-bu-surface hover:bg-bu-surface hover:text-bu-primary hover:border-bu-primary',
-      cardImage: '',
-      dateBadge: '',
-      dateText: '',
-      divider: '',
-      cardsContainer: '',
-      headerContainer: '',
-      headerBar: '',
-      vermasText: '',
-      cardBoxText: '',
-      cardCategory: '',
-      cardPriceText: '',
-      cardPriceAmount: '',
-      cardBody: 'bg-[#DFDFDF]',
+      cardCta: 'bg-bu-primary text-bu-surface hover:bg-bu-surface hover:text-bu-primary border border-bu-primary',
+      dateBadgeText: '',
+      imageOverlay: '',
+      bar: '',
     },
     dark: {
-      section: 'bg-bu-primary text-bu-surface',
-      title: 'text-bu-surface',
-      titleBox: 'bg-bu-surface',
+      section: 'bg-bu-primary',
+      title: 'text-bu-neutral',
+      titleSupportBox: 'bg-bu-neutral',
       titleSupport: 'text-bu-primary',
-      desc: 'text-bu-surface',
+      desc: 'text-bu-neutral',
       card: '',
-      cardTitle: 'text-bu-surface',
-      cardText: 'text-bu-surface',
-      cardCta: 'bg-bu-surface text-bu-primary border-bu-primary hover:bg-bu-primary hover:text-bu-surface hover:border-bu-surface',
-      cardImage: '',
-      dateBadge: '',
-      dateText: '',
-      divider: '',
-      cardsContainer: '',
-      headerContainer: '',
-      headerBar: '',
-      vermasText: '',
-      cardBoxText: '',
-      cardCategory: '',
-      cardPriceText: '',
-      cardPriceAmount: '',
-      cardBody: 'bg-bu-text',
+      cardIconBox: '',
+      cardTitle: 'text-bu-neutral',
+      cardText: 'text-bu-neutral',
+      cardCta: 'bg-bu-neutral text-bu-primary hover:bg-bu-surface hover:text-bu-neutral border border-bu-neutral',
+      dateBadgeText: '',
+      imageOverlay: '',
+      bar: '',
     },
   },
-
-  // ── v6.11 — Cards Venta + CTA (categoría + producto + precio) ─────
+  // ── v6.11 — Título centrado + cards producto ────────────────
   'v6.11': {
     light: {
-      section: 'bg-[#F0F0F0] text-bu-surface',
+      section: 'bg-[#F0F0F0]',
       title: 'text-bu-primary',
-      titleBox: 'bg-bu-primary',
+      titleSupportBox: 'bg-bu-primary',
       titleSupport: 'text-bu-surface',
       desc: '',
       card: 'bg-bu-primary',
+      cardIconBox: '',
       cardTitle: 'text-bu-surface',
       cardText: 'text-bu-surface',
-      cardCta: 'bg-bu-primary text-bu-surface border-bu-surface hover:bg-bu-surface hover:text-bu-primary hover:border-bu-primary',
-      cardImage: '',
-      dateBadge: '',
-      dateText: '',
-      divider: 'bg-bu-surface',
-      cardsContainer: '',
-      headerContainer: '',
-      headerBar: '',
-      vermasText: '',
-      cardBoxText: '',
-      cardCategory: 'text-bu-surface',
-      cardPriceText: 'text-bu-surface',
-      cardPriceAmount: 'text-bu-surface',
-      cardBody: '',
+      cardCta: 'bg-bu-primary text-bu-surface hover:bg-bu-surface hover:text-bu-primary border border-bu-neutral',
+      dateBadgeText: '',
+      imageOverlay: '',
+      bar: '',
     },
     dark: {
-      section: 'bg-bu-primary text-bu-surface',
-      title: 'text-bu-surface',
-      titleBox: 'bg-bu-surface',
+      section: 'bg-bu-primary',
+      title: 'text-bu-neutral',
+      titleSupportBox: 'bg-bu-neutral',
       titleSupport: 'text-bu-primary',
       desc: '',
-      card: 'bg-bu-surface text-bu-text',
+      card: 'bg-bu-neutral',
+      cardIconBox: '',
       cardTitle: 'text-bu-primary',
-      cardText: 'text-bu-text',
-      cardCta: 'bg-bu-surface text-bu-primary border-bu-primary hover:bg-bu-primary hover:text-bu-surface hover:border-bu-surface',
-      cardImage: '',
-      dateBadge: '',
-      dateText: '',
-      divider: 'bg-bu-primary',
-      cardsContainer: '',
-      headerContainer: '',
-      headerBar: '',
-      vermasText: '',
-      cardBoxText: '',
-      cardCategory: 'text-bu-primary',
-      cardPriceText: 'text-bu-text',
-      cardPriceAmount: 'text-bu-text',
-      cardBody: '',
+      cardText: 'text-bu-primary',
+      cardCta: 'bg-bu-neutral text-bu-primary hover:bg-bu-surface hover:text-bu-neutral border border-bu-neutral',
+      dateBadgeText: '',
+      imageOverlay: '',
+      bar: '',
     },
   },
-
-  // ── v6.12 — Cards con Fecha (badge calendario) ────────────────────
+  // ── v6.12 — Título centrado + cards con badge de fecha ──────
   'v6.12': {
     light: {
-      section: 'bg-[#F0F0F0] text-bu-surface',
+      section: 'bg-[#F0F0F0]',
       title: 'text-bu-primary',
-      titleBox: 'bg-bu-primary',
+      titleSupportBox: 'bg-bu-primary',
       titleSupport: 'text-bu-surface',
       desc: '',
       card: 'bg-bu-primary',
+      cardIconBox: '',
       cardTitle: 'text-bu-surface',
       cardText: 'text-bu-surface',
-      cardCta: 'bg-bu-primary text-bu-surface border-bu-surface hover:bg-bu-surface hover:text-bu-primary hover:border-bu-primary',
-      cardImage: '',
-      dateBadge: 'bg-bu-surface',
-      dateText: 'text-bu-primary',
-      divider: 'bg-bu-surface',
-      cardsContainer: '',
-      headerContainer: '',
-      headerBar: '',
-      vermasText: '',
-      cardBoxText: '',
-      cardCategory: '',
-      cardPriceText: '',
-      cardPriceAmount: '',
-      cardBody: '',
+      cardCta: 'bg-bu-primary text-bu-surface hover:bg-bu-surface hover:text-bu-primary border border-bu-neutral',
+      dateBadgeText: 'text-bu-primary',
+      imageOverlay: '',
+      bar: '',
     },
     dark: {
-      section: 'bg-bu-primary text-bu-surface',
-      title: 'text-bu-surface',
-      titleBox: 'bg-bu-surface',
+      section: 'bg-bu-primary',
+      title: 'text-bu-neutral',
+      titleSupportBox: 'bg-bu-neutral',
       titleSupport: 'text-bu-primary',
       desc: '',
-      card: 'bg-bu-surface text-bu-text',
-      cardTitle: 'text-bu-surface',
-      cardText: 'text-bu-text',
-      cardCta: 'bg-bu-surface text-bu-primary border-bu-primary hover:bg-bu-primary hover:text-bu-surface hover:border-bu-surface',
-      cardImage: '',
-      dateBadge: 'bg-bu-text',
-      dateText: 'text-bu-surface',
-      divider: 'bg-bu-primary',
-      cardsContainer: '',
-      headerContainer: '',
-      headerBar: '',
-      vermasText: '',
-      cardBoxText: '',
-      cardCategory: '',
-      cardPriceText: '',
-      cardPriceAmount: '',
-      cardBody: '',
+      card: 'bg-bu-neutral',
+      cardIconBox: '',
+      cardTitle: 'text-bu-primary',
+      cardText: 'text-bu-primary',
+      cardCta: 'bg-bu-neutral text-bu-primary hover:bg-bu-surface hover:text-bu-neutral border border-bu-neutral',
+      dateBadgeText: 'text-bu-primary',
+      imageOverlay: '',
+      bar: '',
     },
   },
 };
@@ -388,4 +275,35 @@ export const theme: Record<Variant, Record<Mode, VariantTheme>> = {
 export const baseClasses = {
   section: 'relative py-16 w-full transition-opacity duration-300 md:py-24 font-montserrat',
   container: 'container relative z-10 px-4 mx-auto md:px-6',
+
+  // Tipografía de títulos (Anton, alineado al sistema V1)
+  titleFont: 'font-anton text-anton-block-title-mobile md:text-anton-block-title',
+  titleSupportFont: 'font-anton text-anton-block-title-mobile md:text-anton-block-title',
+  bodyFont: 'font-montserrat',
+
+  // Card helpers
+  cardTitleFont: 'font-montserrat text-mont-card-title-mobile md:text-mont-card-title',
+  cardTextFont: 'font-montserrat text-mont-card-content-mobile md:text-mont-card-content',
+  cardItemTextFont: 'font-montserrat text-mont-item-content-mobile md:text-mont-item-content',
+  cardCtaFont: 'font-montserrat text-mont-form-cta',
+  cardCtaFontAntonio: 'font-antonio text-antonio-card-cta-mobile md:text-antonio-card-cta',
+  cardTitleFontAnton: 'font-anton text-anton-card-title-mobile md:text-anton-card-title',
+
+  // Layout helpers
+  cardBase: 'flex flex-col justify-start items-start px-11 py-12 space-y-4 rounded-[2rem] min-h-[330px] w-full',
+  cardBaseMd: 'md:w-[calc(50%-2rem)]',
+  cardBaseLg3: 'lg:w-[30%]',
+  cardBaseLg2: 'lg:w-[calc(50%-2rem)]',
+
+  // v6.11 (producto) usa otro padding/max-width
+  cardBaseV611: 'flex flex-col justify-between items-start px-6 py-12 rounded-[2rem] min-h-[400px] w-full max-w-[400px] lg:max-w-none',
+  cardBaseV611Lg: 'lg:w-[30%]',
+
+  // v6.12 (con fecha) usa otro padding/max-width
+  cardBaseV612: 'flex flex-col justify-start items-start px-10 py-12 rounded-[2rem] w-full max-w-[350px] lg:max-w-none space-y-4',
+  cardBaseV612Lg: 'lg:w-[30%]',
+
+  // v6.10 (2 cards grandes) usa otro ancho
+  cardBaseV610: 'hk-card md:w-[calc((100%-2rem)/2)] w-full group',
+  cardBoxV610: 'p-10 bg-[#DFDFDF] rounded-b-[2rem] hk-box-texto space-y-4',
 };

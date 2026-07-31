@@ -35,6 +35,8 @@ export interface WidgetDefaults {
   description: string;
   mode?: Mode;
   titleSupport?: string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  cards?: any[];
 }
 
 /** Adapter que traduce las props canónicas a las props reales del componente. */
@@ -44,6 +46,7 @@ export type PropsAdapter = (input: {
   variant: string;
   id: string;
   mode: Mode;
+  titleSupport?: string;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   cards?: any[];
 }) => Record<string, unknown>;
@@ -158,17 +161,14 @@ export const widgetRegistry: WidgetRegistration[] = [
       ],
     },
     component: CardsItems,
-    propsAdapter: ({ title, description, id, mode, cards, ...rest }) => {
-      // titleSupport puede venir en rest si el visor lo soporta.
-      const titleSupport = (rest as Record<string, unknown>).titleSupport as string | undefined;
-      return {
-        title,
-        titleSupport: titleSupport ?? 'resaltar beneficios',
-        description,
-        id,
-        mode,
-        ...(cards ? { cards } : {}),
-      };
-    },
+    propsAdapter: ({ title, description, variant, id, mode, cards, titleSupport }) => ({
+      title,
+      titleSupport: titleSupport ?? 'resaltar beneficios',
+      description,
+      variant: variant as 'v6.3' | 'v6.6' | 'v6.8' | 'v6.10' | 'v6.11' | 'v6.12',
+      id,
+      mode,
+      ...(cards ? { cards } : {}),
+    }),
   },
 ];
