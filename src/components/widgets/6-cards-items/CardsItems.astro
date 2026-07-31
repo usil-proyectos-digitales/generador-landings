@@ -96,9 +96,6 @@ const cardWidthV612 = (count: number) => {
 
 const cardCount = cards?.length ?? 0;
 
-// Helpers para decidir si aplicar carrusel (v6.8 con >4 cards)
-const useCarouselV68 = variant === 'v6.8' && cardCount > 4;
-
 // Defaults de placeholders para imágenes (placehold.co legacy)
 const placeholderImg = (label: string) =>
   `https://placehold.co/270x184/012085/ffffff/?text=${encodeURIComponent(label)}`;
@@ -294,77 +291,42 @@ const svgArrow = `<svg class="svg-arrow" width="24" height="24" viewBox="0 0 24 
             ]}>{description}</p>
           )}
         </div>
+        {/* Siempre se renderiza el grid plano — la conversión a carrusel
+            (si hay >4 cards) la hace `initDynamicCarousel` (src/lib/
+            carousel-manager.ts) 100% client-side. Antes había acá un
+            branch SSR aparte para el modo carrusel (swiper-wrapper +
+            swiper-slide), pero mantenerlo sincronizado con el JS del
+            Visor al agregar/quitar cards en vivo era una fuente de bugs
+            (ver historial) — con una sola estructura server-side, esa
+            clase de bug desaparece por diseño. */}
         <div
-          class:list={[
-            'hk-cards-grid-v6-8 mx-auto',
-            useCarouselV68 ? 'hk-cards-carousel swiper' : 'flex flex-wrap gap-4 justify-center max-w-[270px] md:max-w-[560px] lg:max-w-[850px] xl:max-w-[1140px]',
-          ]}
-          data-carousel-enabled={useCarouselV68 ? 'true' : 'false'}
+          class="hk-cards-grid-v6-8 mx-auto flex flex-wrap gap-4 justify-center max-w-[270px] md:max-w-[560px] lg:max-w-[850px] xl:max-w-[1140px]"
         >
-          {useCarouselV68 ? (
-            <Fragment>
-            <div class="swiper-wrapper">
-              {cards.map((card) => (
-                <div class:list={[
-                  'swiper-slide hk-card-6-8 mx-auto group',
+          {cards.map((card) => (
+            <div class:list={[
+              'hk-card-6-8 lg:w-[calc((100%-3rem)/4)] md:w-[calc((100%-1rem)/2)] w-full max-w-[270px] mx-auto group',
+            ]}>
+              <div class="overflow-hidden relative rounded-t-2xl">
+                <img src={card.image ?? placeholderImg(card.title || 'Card')} class="w-full max-w-[270px] mx-auto h-[184px] object-cover transition-transform duration-500 hk-card-imagen-6-8 lg:group-hover:scale-110" alt="Imagen del card" />
+                <a href={card.ctaHref ?? '#'} class:list={[
+                  'hidden absolute inset-0 flex-col justify-center items-center opacity-0 transition-all duration-500 translate-y-full lg:flex group-hover:translate-y-0 group-hover:opacity-100',
+                  tokens.imageOverlay,
                 ]}>
-                  <div class="overflow-hidden relative rounded-t-2xl">
-                    <img src={card.image ?? placeholderImg(card.title || 'Card')} class="w-full max-w-[270px] mx-auto h-[184px] object-cover transition-transform duration-500 hk-card-imagen-6-8 lg:group-hover:scale-110" alt="Imagen del card" />
-                    <a href={card.ctaHref ?? '#'} class:list={[
-                      'hidden absolute inset-0 flex-col justify-center items-center opacity-0 transition-all duration-500 translate-y-full lg:flex group-hover:translate-y-0 group-hover:opacity-100',
-                      tokens.imageOverlay,
-                    ]}>
-<img src={`${WIDGET_ASSETS}/ver_mas.webp`} class="mb-2" alt="Ver más icon" />
-                      <span class="text-sm font-medium tracking-wider text-bu-surface hk-vermas-texto">Ver más</span>
-                    </a>
-                  </div>
-                  <div class:list={['p-4 rounded-b-2xl hk-box-texto', tokens.card]}>
-                    <h3 class:list={[
-                      'hk-card-title',
-                      baseClasses.cardTitleFontAnton,
-                      tokens.cardTitle,
-                    ]}>{card.title}</h3>
-                    <div class:list={['my-3 w-14 h-1 rounded-full', tokens.bar]}></div>
-                    <a href={card.ctaHref ?? '#'} class="inline-block mt-2 text-sm font-bold no-underline uppercase text-bu-primary lg:hidden">Ver más</a>
-                  </div>
-                </div>
-              ))}
-            </div>
-            {/* Flechas + dots del carrusel — se muestran apenas Swiper se
-                inicializa (>4 cards). El CSS de Swiper (cargado por
-                initCarouselV68) ya los estiliza; solo pisamos el color
-                para que sigan la paleta de la BU en vez del azul default. */}
-            <div class="swiper-button-prev" aria-label="Anterior"></div>
-            <div class="swiper-button-next" aria-label="Siguiente"></div>
-            <div class="swiper-pagination"></div>
-            </Fragment>
-          ) : (
-            cards.map((card) => (
-              <div class:list={[
-                'hk-card-6-8 lg:w-[calc((100%-3rem)/4)] md:w-[calc((100%-1rem)/2)] w-full max-w-[270px] mx-auto group',
-              ]}>
-                <div class="overflow-hidden relative rounded-t-2xl">
-                  <img src={card.image ?? placeholderImg(card.title || 'Card')} class="w-full max-w-[270px] mx-auto h-[184px] object-cover transition-transform duration-500 hk-card-imagen-6-8 lg:group-hover:scale-110" alt="Imagen del card" />
-                  <a href={card.ctaHref ?? '#'} class:list={[
-                    'hidden absolute inset-0 flex-col justify-center items-center opacity-0 transition-all duration-500 translate-y-full lg:flex group-hover:translate-y-0 group-hover:opacity-100',
-                    tokens.imageOverlay,
-                  ]}>
-                    <img src={`${WIDGET_ASSETS}/ver_mas.webp`} class="mb-2" alt="Ver más icon" />
-                    <span class="text-sm font-medium tracking-wider text-bu-surface hk-vermas-texto">Ver más</span>
-                  </a>
-                </div>
-                <div class:list={['p-4 rounded-b-2xl hk-box-texto', tokens.card]}>
-                  <h3 class:list={[
-                    'hk-card-title',
-                    baseClasses.cardTitleFontAnton,
-                    tokens.cardTitle,
-                  ]}>{card.title}</h3>
-                  <div class:list={['my-3 w-14 h-1 rounded-full', tokens.bar]}></div>
-                  <a href={card.ctaHref ?? '#'} class="inline-block mt-2 text-sm font-bold no-underline uppercase text-bu-primary lg:hidden">Ver más</a>
-                </div>
+                  <img src={`${WIDGET_ASSETS}/ver_mas.webp`} class="mb-2" alt="Ver más icon" />
+                  <span class="text-sm font-medium tracking-wider text-bu-surface hk-vermas-texto">Ver más</span>
+                </a>
               </div>
-            ))
-          )}
+              <div class:list={['p-4 rounded-b-2xl hk-box-texto', tokens.card]}>
+                <h3 class:list={[
+                  'hk-card-title',
+                  baseClasses.cardTitleFontAnton,
+                  tokens.cardTitle,
+                ]}>{card.title}</h3>
+                <div class:list={['my-3 w-14 h-1 rounded-full', tokens.bar]}></div>
+                <a href={card.ctaHref ?? '#'} class="inline-block mt-2 text-sm font-bold no-underline uppercase text-bu-primary lg:hidden">Ver más</a>
+              </div>
+            </div>
+          ))}
         </div>
       </div>
     )}
@@ -612,165 +574,104 @@ const svgArrow = `<svg class="svg-arrow" width="24" height="24" viewBox="0 0 24 
       - v6.3/6.6/6.11/6.12  → ajusta anchos según cantidad
     ============================================================ */}
 <script>
-  // ── Swiper loader (lazy, desde CDN) ──────────────────────
-  // Se inyecta solo si la página tiene al menos un widget v6.8
-  // con >4 cards. Mantiene aislado el bundle principal.
-  const SWIPER_VERSION = '11.1.14';
-  const SWIPER_CSS = `https://cdn.jsdelivr.net/npm/swiper@${SWIPER_VERSION}/swiper-bundle.min.css`;
-  const SWIPER_JS = `https://cdn.jsdelivr.net/npm/swiper@${SWIPER_VERSION}/swiper-bundle.min.js`;
-
-  function loadSwiper(): Promise<void> {
-    return new Promise((resolve) => {
-      if ((window as any).Swiper) return resolve();
-      if (document.querySelector(`link[href="${SWIPER_CSS}"]`)) return resolve();
-      const link = document.createElement('link');
-      link.rel = 'stylesheet';
-      link.href = SWIPER_CSS;
-      document.head.appendChild(link);
-      const script = document.createElement('script');
-      script.src = SWIPER_JS;
-      script.onload = () => resolve();
-      document.body.appendChild(script);
-    });
-  }
+  import { initDynamicCarousel } from '@lib/carousel-manager.ts';
+  import type Swiper from 'swiper';
 
   // ── v6.8 — Carrusel si >4 cards ─────────────────────────
-  // Mapa para trackear instancias Swiper y poder destruirlas antes de re-inicializar.
-  const swiperInstances = new WeakMap<HTMLElement, any>();
-
-  // Clases exclusivas de cada modo — deben espejar el markup SSR de arriba
-  // (bloque `useCarouselV68 ? ... : ...`). Cuando la cantidad de cards
-  // cruza el umbral de 4 en runtime (ej. agregando/quitando cards desde el
-  // Visor), hay que alternar entre ambos modos SIMÉTRICAMENTE: no alcanza
-  // con agregar/quitar la clase `swiper` del contenedor, también hay que
-  // envolver/desenvolver las cards en `.swiper-wrapper` y actualizar las
-  // clases de ancho de cada card — si no, queda una mezcla rota (contenedor
-  // sin layout, o cards con `swiper-slide` fuera de un wrapper real).
-  const V68_GRID_FLEX_CLASSES = [
+  // `initDynamicCarousel` (src/lib/carousel-manager.ts) hace la conversión
+  // grid → carrusel — es la misma utilidad que usan/usarán otros widgets
+  // con carrusel. Es "solo ida": en producción (WordPress/ACF) la
+  // cantidad de cards no cambia después del render, así que no hace falta
+  // revertir. El Visor SÍ necesita revertir (live-editing de cards en
+  // vivo) — esa parte es específica de este widget/caso de uso, por eso
+  // vive acá y no en la utilidad compartida.
+  const V68_ITEM_SELECTOR = '.hk-card-6-8';
+  const V68_FLEX_CLASSES = [
     'flex', 'flex-wrap', 'gap-4', 'justify-center',
     'max-w-[270px]', 'md:max-w-[560px]', 'lg:max-w-[850px]', 'xl:max-w-[1140px]',
   ];
-  const V68_GRID_CAROUSEL_CLASSES = ['hk-cards-carousel', 'swiper'];
-  const V68_CARD_FLEX_CLASSES = [
-    'lg:w-[calc((100%-3rem)/4)]', 'md:w-[calc((100%-1rem)/2)]', 'w-full', 'max-w-[270px]',
-  ];
-  const V68_CARD_CAROUSEL_CLASS = 'swiper-slide';
 
-  // Reconcilia SIEMPRE la estructura/clases al modo pedido — idempotente,
-  // así una card recién clonada (que puede traer clases del modo viejo, si
-  // el template capturado por el Visor quedó desactualizado) también se
-  // corrige, no solo las que estaban presentes al cruzar el umbral.
-  function setV68Mode(container: HTMLElement, wantCarousel: boolean) {
-    const doc = container.ownerDocument;
-    const cards = Array.from(
-      container.querySelectorAll<HTMLElement>(
-        ':scope > .hk-card-6-8, :scope > .swiper-wrapper > .hk-card-6-8'
-      )
-    );
-
-    if (wantCarousel) {
-      let wrapper = container.querySelector<HTMLElement>(':scope > .swiper-wrapper');
-      if (!wrapper) {
-        wrapper = doc.createElement('div');
-        wrapper.className = 'swiper-wrapper';
-        container.appendChild(wrapper);
-      }
-      cards.forEach((card) => {
-        card.classList.remove(...V68_CARD_FLEX_CLASSES);
-        card.classList.add(V68_CARD_CAROUSEL_CLASS);
-        if (card.parentElement !== wrapper) wrapper!.appendChild(card);
-      });
-      container.classList.remove(...V68_GRID_FLEX_CLASSES);
-      container.classList.add(...V68_GRID_CAROUSEL_CLASSES);
-      container.dataset.carouselEnabled = 'true';
-
-      // Flechas + dots — el markup SSR ya los trae cuando la variante
-      // arranca en modo carrusel; si arrancó en modo flex y recién ahora
-      // cruza el umbral, hay que crearlos.
-      if (!container.querySelector(':scope > .swiper-button-prev')) {
-        const prevBtn = doc.createElement('div');
-        prevBtn.className = 'swiper-button-prev';
-        prevBtn.setAttribute('aria-label', 'Anterior');
-        container.appendChild(prevBtn);
-      }
-      if (!container.querySelector(':scope > .swiper-button-next')) {
-        const nextBtn = doc.createElement('div');
-        nextBtn.className = 'swiper-button-next';
-        nextBtn.setAttribute('aria-label', 'Siguiente');
-        container.appendChild(nextBtn);
-      }
-      if (!container.querySelector(':scope > .swiper-pagination')) {
-        const pagination = doc.createElement('div');
-        pagination.className = 'swiper-pagination';
-        container.appendChild(pagination);
-      }
-    } else {
-      cards.forEach((card) => {
-        card.classList.remove(V68_CARD_CAROUSEL_CLASS);
-        card.classList.add(...V68_CARD_FLEX_CLASSES);
-        if (card.parentElement !== container) container.appendChild(card);
-      });
-      container.querySelector(':scope > .swiper-wrapper')?.remove();
-      container.querySelector(':scope > .swiper-button-prev')?.remove();
-      container.querySelector(':scope > .swiper-button-next')?.remove();
-      container.querySelector(':scope > .swiper-pagination')?.remove();
-      container.classList.remove(...V68_GRID_CAROUSEL_CLASSES, 'swiper-initialized');
-      container.classList.add(...V68_GRID_FLEX_CLASSES);
-      container.dataset.carouselEnabled = 'false';
-    }
+  // Si el Visor clona una card nueva mientras el widget ya está en modo
+  // carrusel, puede llegar sin la clase `swiper-slide` (si el template que
+  // clonó el editor era de cuando el widget todavía estaba en modo grid)
+  // — Swiper no la trata como slide sin esa clase. La normalizamos antes
+  // de pedirle a Swiper que actualice.
+  function normalizeSwiperSlides(container: HTMLElement) {
+    const wrapper = container.querySelector<HTMLElement>(':scope > .swiper-wrapper');
+    if (!wrapper) return;
+    Array.from(wrapper.children).forEach((child) => {
+      if (!(child instanceof HTMLElement)) return;
+      if (!child.classList.contains('hk-card-6-8') || child.classList.contains('swiper-slide')) return;
+      child.classList.add('swiper-slide');
+      child.classList.remove(
+        'lg:w-[calc((100%-3rem)/4)]', 'md:w-[calc((100%-1rem)/2)]', 'w-full', 'max-w-[270px]'
+      );
+      child.style.width = 'auto';
+      child.style.height = 'auto';
+    });
   }
 
-  async function initCarouselV68() {
+  // Deshace lo que arma `initDynamicCarousel`: saca las cards del
+  // swiper-wrapper, desenvuelve el wrapper externo (`.hk-swiper-wrapper`)
+  // que la utilidad crea para las flechas/paginación, y devuelve el grid
+  // flex original.
+  function revertCarousel(container: HTMLElement) {
+    (container as HTMLElement & { swiper?: Swiper }).swiper?.destroy(true, true);
+
+    const wrapper = container.querySelector<HTMLElement>(':scope > .swiper-wrapper');
+    const items = wrapper
+      ? Array.from(wrapper.children).filter((el): el is HTMLElement => el instanceof HTMLElement)
+      : Array.from(container.querySelectorAll<HTMLElement>(V68_ITEM_SELECTOR));
+
+    items.forEach((item) => {
+      item.classList.remove('swiper-slide');
+      item.style.width = '';
+      item.style.height = '';
+    });
+
+    const outerWrapper =
+      container.parentElement?.classList.contains('hk-swiper-wrapper')
+        ? container.parentElement
+        : null;
+
+    // Sacar el grid del wrapper externo ANTES de descartarlo (si no, se
+    // llevaría el grid consigo).
+    if (outerWrapper) {
+      outerWrapper.parentElement?.insertBefore(container, outerWrapper);
+      outerWrapper.remove();
+    }
+
+    wrapper?.remove();
+    items.forEach((item) => container.appendChild(item));
+
+    container.classList.remove('swiper', 'swiper-initialized', 'pb-28', 'pb-8', 'hk-cards-carousel');
+    container.style.width = '';
+    container.style.overflow = '';
+    container.classList.add(...V68_FLEX_CLASSES);
+  }
+
+  function initCarouselV68() {
     const sections = document.querySelectorAll<HTMLElement>(
       'section[data-widget="cards-items"][data-variant="v6.8"]'
     );
-    for (const section of sections) {
-      const container = section.querySelector<HTMLElement>('.hk-cards-grid-v6-8');
-      if (!container) continue;
-      const cardCount = container.querySelectorAll('.hk-card-6-8').length;
+    sections.forEach((section) => {
+      // El grid puede estar envuelto en .hk-swiper-wrapper si ya se
+      // convirtió a carrusel en una pasada anterior.
+      const container =
+        section.querySelector<HTMLElement>('.hk-swiper-wrapper > .hk-cards-grid-v6-8') ??
+        section.querySelector<HTMLElement>('.hk-cards-grid-v6-8');
+      if (!container) return;
 
-      // Si pasamos a ≤4, destruir Swiper y volver al grid flex (estructura
-      // y clases incluidas, no solo la clase `swiper`).
-      if (cardCount <= 4) {
-        const swiper = swiperInstances.get(container);
-        if (swiper && swiper.destroy) {
-          swiper.destroy(true, true);
-          swiperInstances.delete(container);
-        }
-        setV68Mode(container, false);
-        continue;
+      const itemCount = container.querySelectorAll(V68_ITEM_SELECTOR).length;
+
+      if (itemCount <= 4) {
+        if (container.classList.contains('swiper-initialized')) revertCarousel(container);
+        return;
       }
 
-      // Si ya hay un Swiper, destruir antes de re-crear (evita duplicados).
-      const existing = swiperInstances.get(container);
-      if (existing && existing.destroy) {
-        existing.destroy(true, true);
-        swiperInstances.delete(container);
-      }
-
-      setV68Mode(container, true);
-
-      await loadSwiper();
-      // nextEl/prevEl/pagination.el apuntan a los elementos DE ESTA
-      // instancia puntual (no un selector global de clase) — así conviven
-      // varios v6.8 con carrusel en la misma página sin pisarse.
-      const swiper = new (window as any).Swiper(container, {
-        centeredSlides: false,
-        navigation: {
-          nextEl: container.querySelector<HTMLElement>(':scope > .swiper-button-next'),
-          prevEl: container.querySelector<HTMLElement>(':scope > .swiper-button-prev'),
-        },
-        pagination: {
-          el: container.querySelector<HTMLElement>(':scope > .swiper-pagination'),
-          clickable: true,
-        },
-        breakpoints: {
-          576: { slidesPerView: 2, centeredSlides: false, spaceBetween: 20 },
-          1000: { slidesPerView: 4, centeredSlides: false, spaceBetween: 32 },
-        },
-      });
-      swiperInstances.set(container, swiper);
-    }
+      normalizeSwiperSlides(container);
+      initDynamicCarousel({ container, itemSelector: V68_ITEM_SELECTOR });
+    });
   }
 
   // ── Layouts dinámicos por variante ───────────────────────
