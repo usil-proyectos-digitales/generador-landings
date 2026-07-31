@@ -33,7 +33,12 @@
  *   Ver `generador-landings/src/components/widgets/registry.ts` (registry central).
  */
 import BaseLayout from '@layouts/BaseLayout.astro';
-import { widgetRegistry } from '../components/widgets/registry.ts';
+import {
+  widgetRegistry,
+  DEFAULT_CARD6_FIELDS,
+  type WidgetRegistration,
+  type Card6FieldSpec,
+} from '../components/widgets/registry.ts';
 import { ICON_PATHS } from '../components/widgets/5-save-the-date/icons.ts';
 import buColors from '@data/bu-colors.json';
 
@@ -42,6 +47,33 @@ const busList = Object.entries(buColors.bus).map(([id, palette]) => ({
   id,
   ...(palette as { primary: string; secondary: string; accent: string; surface: string; neutral: string }),
 }));
+
+// Cards de la variante default de un widget — usa el override por-variante
+// si existe, si no cae al `defaults.cards` compartido (caso de widgets con
+// una sola variante, como 5-save-the-date).
+function defaultCardsFor(w: WidgetRegistration) {
+  return w.variants.find((v) => v.id === w.defaultVariant)?.cards ?? w.defaults.cards;
+}
+
+// Mapa variantId → cards, para hidratar el estado del editor en el cliente
+// cuando el usuario cambia de variante por primera vez.
+function cardsByVariant(w: WidgetRegistration) {
+  return Object.fromEntries(w.variants.map((v) => [v.id, v.cards ?? w.defaults.cards ?? []]));
+}
+
+// Schema de campos editables por card de una variante — cada variante puede
+// tener una estructura distinta (ver `WidgetVariant.cardFields`); si no
+// declara uno propio, usa el default de 3 campos (título/texto/CTA).
+function cardFieldsFor(w: WidgetRegistration, variantId: string): Card6FieldSpec[] {
+  return w.variants.find((v) => v.id === variantId)?.cardFields ?? DEFAULT_CARD6_FIELDS;
+}
+
+// Mapa variantId → schema de campos, para que el editor del cliente sepa
+// qué inputs mostrar al cambiar de variante (sin acceso a registry.ts, que
+// es server-only).
+function cardFieldsByVariant(w: WidgetRegistration) {
+  return Object.fromEntries(w.variants.map((v) => [v.id, v.cardFields ?? DEFAULT_CARD6_FIELDS]));
+}
 ---
 
 <BaseLayout
@@ -314,6 +346,14 @@ const busList = Object.entries(buColors.bus).map(([id, palette]) => ({
     .visor__preview-instance[hidden] {
       display: none;
     }
+    /* El iframe llena el ancho disponible (que el switcher de viewport ya
+       controla vía max-width en .visor__preview-frame); la altura la fija
+       el JS según el contenido real del iframe (attachAutoHeight). */
+    .visor__preview-instance iframe {
+      display: block;
+      width: 100%;
+      border: 0;
+    }
 
     /* ── CONTROLS DRAWER ─────────────────────────────────────── */
     .visor__controls {
@@ -395,8 +435,11 @@ const busList = Object.entries(buColors.bus).map(([id, palette]) => ({
       gap: 0.5rem;
     }
     .visor__card-row {
+      /* Cantidad de campos variable según el schema de la variante (ver
+         `cardFieldsFor` en el frontmatter) — auto-fit acomoda tanto la fila
+         de 3 campos default como la de 5 campos de v6.3, sin reglas por kind. */
       display: grid;
-      grid-template-columns: auto 1fr 1fr auto;
+      grid-template-columns: repeat(auto-fit, minmax(6.5rem, 1fr)) auto;
       gap: 0.375rem;
       align-items: center;
     }
@@ -621,6 +664,23 @@ const busList = Object.entries(buColors.bus).map(([id, palette]) => ({
             </div>
           </header>
 
+          {/* Defaults de cards por variante (si el widget las usa), para que
+              el editor del cliente pueda sembrar el estado de una variante
+              la primera vez que se visita — sin esto no habría forma de
+              conocer, en el navegador, cuántas/cuáles cards le tocan a cada
+              variante que todavía no se renderizó en el editor. */}
+          {w.variants.some((v) => v.cards) && (
+            <script is:inline type="application/json" data-cards-defaults={w.id} set:html={JSON.stringify(cardsByVariant(w))} />
+          )}
+
+          {/* Schema de campos por variante (título/texto/CTA por default,
+              o el custom que declare la variante — ver v6.3). Le dice al
+              editor del cliente qué inputs reconstruir al cambiar de
+              variante. */}
+          {w.variants.some((v) => v.cards) && (
+            <script is:inline type="application/json" data-cards-fields={w.id} set:html={JSON.stringify(cardFieldsByVariant(w))} />
+          )}
+
           <div class="visor__widget-body" data-widget-body={w.id}>
             {/* Preview — todas las variantes pre-renderizadas; JS muestra/oculta */}
             <div class="visor__preview-wrap">
@@ -628,29 +688,6 @@ const busList = Object.entries(buColors.bus).map(([id, palette]) => ({
                 <div data-preview-root={w.id}>
 {w.variants.flatMap((v) =>
                     (['light', 'dark'] as const).map((mode) => {
-                      // ID único por combinación variant × mode (sin espacios problemáticos).
-                      const previewId = `preview-${w.id}-${v.id}-${mode}`;
-                      
-                      const adapterInput = {
-                        title: w.defaults.title,
-                        description: w.defaults.description,
-                        variant: v.id,
-                        id: previewId,
-                        mode: mode,
-                        ...(w.defaults.titleSupport ? { titleSupport: w.defaults.titleSupport } : {}),
-                        ...(w.defaults.cards ? { cards: w.defaults.cards } : {}),
-                      };
-
-                      const componentProps = w.propsAdapter
-                        ? w.propsAdapter(adapterInput)
-                        : {
-                            title: w.defaults.title,
-                            description: w.defaults.description,
-                            variant: v.id as 'v2.1' | 'v2.2',
-                            id: previewId,
-                            mode: mode,
-                          };
-                      
                       // Por defecto solo se muestra la combinación variant × mode por defecto.
                       // Las demás quedan en el DOM (con [hidden]) para que el cambio de
                       // variante o modo sea instantáneo sin re-render del servidor.
@@ -659,6 +696,18 @@ const busList = Object.entries(buColors.bus).map(([id, palette]) => ({
                       const isDefaultMode = mode === (w.defaults.mode ?? 'light');
                       const isVisible = isDefaultVariant && isDefaultMode;
 
+                      // Cada instancia vive en su propio <iframe>, cargando una
+                      // página aislada (`widget-preview/[widget]/[variant]/[mode]`)
+                      // en vez de renderizarse inline en el documento del Visor.
+                      // Esto es INTENCIONAL: los breakpoints `md:`/`lg:` de Tailwind
+                      // evalúan el viewport real del documento — dentro de un
+                      // <iframe> ese viewport es el ancho real del iframe, así que
+                      // el switcher Desktop/Tablet/Mobile del Visor (que solo cambia
+                      // el max-width del contenedor) reproduce el breakpoint real
+                      // en vez de mostrar el layout desktop comprimido en una caja
+                      // angosta. El JS (abajo) sincroniza data-bu, título/desc/cards
+                      // y altura hacia adentro del iframe vía contentDocument
+                      // (mismo origen, sin necesidad de postMessage).
                       return (
                         <div
                           class="visor__preview-instance"
@@ -667,7 +716,10 @@ const busList = Object.entries(buColors.bus).map(([id, palette]) => ({
                           data-preview-mode={mode}
                           hidden={!isVisible}
                         >
-                          <w.component {...componentProps} />
+                          <iframe
+                            src={`/widget-preview/${w.id}/${v.id}/${mode}`}
+                            title={`${w.name} — ${v.label} (${mode})`}
+                          />
                         </div>
                       );
                     })
@@ -761,8 +813,10 @@ const busList = Object.entries(buColors.bus).map(([id, palette]) => ({
                 </div>
               )}
 
-              {/* Editor de cards (solo si el widget las expone en defaults) */}
-              {w.defaults.cards && (
+              {/* Editor de cards (solo si el widget las expone). Arranca con
+                  las cards de la variante DEFAULT — cada variante tiene su
+                  propia cantidad/contenido, no se comparte entre variantes. */}
+              {defaultCardsFor(w) && (
                 <div class="visor__control">
                   <label>
                     Cards
@@ -777,31 +831,23 @@ const busList = Object.entries(buColors.bus).map(([id, palette]) => ({
                     data-cards-editor={w.id}
                     data-cards-kind={w.id === '6-cards-items' ? 'cards6' : 'std'}
                   >
-                    {w.defaults.cards.map((card: any, i: number) => {
+                    {defaultCardsFor(w)!.map((card: any, i: number) => {
                       if (w.id === '6-cards-items') {
+                        // Campos dirigidos por schema — cada variante puede
+                        // declarar los suyos (ver `cardFieldsFor`); v6.3 por
+                        // ejemplo agrega Imagen y CTA URL además del default.
+                        const fields = cardFieldsFor(w, w.defaultVariant);
                         return (
                           <div class="visor__card-row" data-card-row={i}>
-                            <input
-                              type="text"
-                              placeholder="Título"
-                              value={card.title ?? ''}
-                              data-card-field={`title-${w.id}-${i}`}
-                              aria-label="Título"
-                            />
-                            <input
-                              type="text"
-                              placeholder="Texto"
-                              value={card.text ?? ''}
-                              data-card-field={`text-${w.id}-${i}`}
-                              aria-label="Texto"
-                            />
-                            <input
-                              type="text"
-                              placeholder="CTA"
-                              value={card.ctaText ?? ''}
-                              data-card-field={`ctaText-${w.id}-${i}`}
-                              aria-label="CTA"
-                            />
+                            {fields.map((field) => (
+                              <input
+                                type="text"
+                                placeholder={field.label}
+                                value={card[field.key] ?? ''}
+                                data-field-key={field.key}
+                                aria-label={field.label}
+                              />
+                            ))}
                             <button
                               type="button"
                               class="visor__card-remove"
@@ -880,6 +926,27 @@ const busList = Object.entries(buColors.bus).map(([id, palette]) => ({
     const STORAGE_BU = 'visor:bu';
     const root = document.documentElement;
 
+    // ── Helpers de iframe ────────────────────────────────────────
+    // Cada preview vive en su propio <iframe> (ver comentario en el markup
+    // de arriba). Como son mismo origen, accedemos a su documento directo
+    // vía contentDocument — sin postMessage.
+    function getInstDoc(inst) {
+      return inst?.querySelector('iframe')?.contentDocument ?? null;
+    }
+
+    // Mantiene la altura del iframe sincronizada con su contenido real
+    // (varía por variante, modo, viewport y ediciones en vivo).
+    function attachAutoHeight(iframe) {
+      const doc = iframe.contentDocument;
+      if (!doc || !doc.documentElement) return;
+      const resize = () => {
+        iframe.style.height = `${doc.documentElement.scrollHeight}px`;
+      };
+      resize();
+      const ro = new ResizeObserver(resize);
+      ro.observe(doc.documentElement);
+    }
+
     // ── 1. Switcher de Unidad de Negocio ────────────────────────
     function applyBu(bu) {
       root.setAttribute('data-bu', bu);
@@ -890,10 +957,35 @@ const busList = Object.entries(buColors.bus).map(([id, palette]) => ({
           btn.setAttribute('aria-checked', String(isActive));
           btn.classList.toggle('is-active', isActive);
         });
+      // Propagar al <html> de cada iframe ya cargado (no cascada solo
+      // porque están en documentos separados).
+      document.querySelectorAll('[data-preview-instance] iframe').forEach((iframe) => {
+        if (iframe.contentDocument?.documentElement) {
+          iframe.contentDocument.documentElement.setAttribute('data-bu', bu);
+        }
+      });
     }
 
     const savedBu = localStorage.getItem(STORAGE_BU) ?? 'pregrado';
     applyBu(savedBu);
+
+    // Cuando cada iframe termina de cargar: aplicar el BU actual, activar
+    // el auto-height, y (para 6-cards-items) capturar su template de card.
+    document.querySelectorAll('[data-preview-instance] iframe').forEach((iframe) => {
+      iframe.addEventListener('load', () => {
+        if (iframe.contentDocument?.documentElement) {
+          iframe.contentDocument.documentElement.setAttribute(
+            'data-bu',
+            root.getAttribute('data-bu') ?? savedBu
+          );
+        }
+        attachAutoHeight(iframe);
+        const inst = iframe.closest('[data-preview-instance]');
+        if (inst?.dataset.previewInstance === '6-cards-items') {
+          captureCard6TemplateFor(inst);
+        }
+      });
+    });
 
     document
       .querySelectorAll('[data-bu-target]')
@@ -947,20 +1039,149 @@ const busList = Object.entries(buColors.bus).map(([id, palette]) => ({
     // Si querés cambiar un icono, editá solo ese archivo.
     const ICONS_SVG = ICON_PATHS;
 
+    // ── CardsItems (6) — templates de card por variante × modo ─
+    // Selector explícito por variante (cada card wrapper tiene su propia
+    // clase `hk-card-6-N`, ver CardsItems.astro).
+    const CARD6_SELECTOR =
+      '.hk-card-6-3, .hk-card-6-6, .hk-card-6-8, .hk-card-6-10, .hk-card-6-11, .hk-card-6-12';
+
+    // Guarda un clon "pristino" del primer card renderizado por el servidor,
+    // por cada combinación variant×mode, para poder clonar cards nuevas aunque
+    // el usuario haya borrado todas las originales del DOM.
+    // Se captura por-instancia (no de una sola pasada) porque cada iframe
+    // carga de forma asíncrona e independiente — ver el listener 'load' más
+    // arriba, que llama a esta función apenas ese iframe puntual terminó.
+    const card6Templates = new Map();
+
+    function captureCard6TemplateFor(inst) {
+      const variant = inst.dataset.previewVariant;
+      const mode = inst.dataset.previewMode;
+      const doc = getInstDoc(inst);
+      const variantContent = doc?.querySelector(`[data-variant-content="${variant}"]`);
+      const firstCard = variantContent?.querySelector(CARD6_SELECTOR);
+      if (firstCard) {
+        card6Templates.set(`${variant}|${mode}`, firstCard.cloneNode(true));
+      }
+    }
+
+    // ── Estado de cards "cards6" por widget × variante ──────────
+    // Cada variante tiene su propia cantidad/contenido de cards, totalmente
+    // independiente de las demás (no se comparten props entre variantes).
+    // El editor del drawer SIEMPRE refleja la variante activa; cuando el
+    // usuario cambia de variante, el estado de la anterior se guarda acá y
+    // el de la nueva se restaura (o se siembra desde los defaults del
+    // servidor si es la primera vez que se visita esa variante).
+    const card6StateByVariant = new Map(); // key: `${widgetId}|${variant}` -> cards[]
+    const card6DefaultsCache = new Map(); // key: widgetId -> {variant: cards[]}
+
+    function readCard6Defaults(widgetId) {
+      if (card6DefaultsCache.has(widgetId)) return card6DefaultsCache.get(widgetId);
+      const script = document.querySelector(`script[data-cards-defaults="${widgetId}"]`);
+      let parsed = {};
+      if (script) {
+        try {
+          parsed = JSON.parse(script.textContent || '{}');
+        } catch {
+          parsed = {};
+        }
+      }
+      card6DefaultsCache.set(widgetId, parsed);
+      return parsed;
+    }
+
+    function getOrSeedCard6State(widgetId, variant) {
+      const key = `${widgetId}|${variant}`;
+      if (!card6StateByVariant.has(key)) {
+        const seed = readCard6Defaults(widgetId)[variant] ?? [];
+        card6StateByVariant.set(key, seed.map((c) => ({ ...c })));
+      }
+      return card6StateByVariant.get(key);
+    }
+
+    // ── Schema de campos por variante ───────────────────────────
+    // Cada variante puede declarar su propia lista de campos editables por
+    // card (ver `Card6FieldSpec`/`cardFields` en registry.ts — v6.3 agrega
+    // Imagen y CTA URL). Sin schema propio, cae al default de 3 campos.
+    const DEFAULT_FIELDS = [
+      { key: 'title', label: 'Título' },
+      { key: 'text', label: 'Texto' },
+      { key: 'ctaText', label: 'CTA' },
+    ];
+    const card6FieldsCache = new Map(); // key: widgetId -> {variant: fieldSpec[]}
+
+    function readCard6Fields(widgetId) {
+      if (card6FieldsCache.has(widgetId)) return card6FieldsCache.get(widgetId);
+      const script = document.querySelector(`script[data-cards-fields="${widgetId}"]`);
+      let parsed = {};
+      if (script) {
+        try {
+          parsed = JSON.parse(script.textContent || '{}');
+        } catch {
+          parsed = {};
+        }
+      }
+      card6FieldsCache.set(widgetId, parsed);
+      return parsed;
+    }
+
+    function getCard6Fields(widgetId, variant) {
+      return readCard6Fields(widgetId)[variant] ?? DEFAULT_FIELDS;
+    }
+
+    // Lee las filas del editor (DOM) tal como están ahora mismo — genérico
+    // sobre cualquier schema de campos (matchea por [data-field-key], no
+    // por título del label, así funciona igual para 3 o 5+ campos).
+    function snapshotCard6Rows(editor) {
+      const rows = editor.querySelectorAll('[data-card-row]');
+      return Array.from(rows).map((row) => {
+        const card = {};
+        row.querySelectorAll('[data-field-key]').forEach((input) => {
+          card[input.dataset.fieldKey] = input.value ?? '';
+        });
+        return card;
+      });
+    }
+
+    // Reconstruye las filas del editor a partir de un array de cards y el
+    // schema de campos de la variante activa (usado al cambiar de variante
+    // o al agregar una card nueva).
+    function renderCard6Rows(editor, cards, fields) {
+      editor.innerHTML = '';
+      cards.forEach((c, i) => {
+        const row = document.createElement('div');
+        row.className = 'visor__card-row';
+        row.setAttribute('data-card-row', String(i));
+
+        fields.forEach((field) => {
+          const input = document.createElement('input');
+          input.type = 'text';
+          input.placeholder = field.label;
+          input.setAttribute('aria-label', field.label);
+          input.setAttribute('data-field-key', field.key);
+          input.value = c[field.key] ?? '';
+          row.appendChild(input);
+        });
+
+        const removeBtn = document.createElement('button');
+        removeBtn.type = 'button';
+        removeBtn.className = 'visor__card-remove';
+        removeBtn.setAttribute('data-card-remove', String(i));
+        removeBtn.setAttribute('aria-label', 'Eliminar card');
+        removeBtn.textContent = '✕';
+        row.appendChild(removeBtn);
+
+        editor.appendChild(row);
+      });
+    }
+
     function getCards(widgetId) {
       // Lee el estado actual del editor de cards desde el DOM.
       const editor = document.querySelector(`[data-cards-editor="${widgetId}"]`);
       if (!editor) return [];
       const kind = editor.dataset.cardsKind ?? 'std';
+      if (kind === 'cards6') return snapshotCard6Rows(editor);
       const rows = editor.querySelectorAll('[data-card-row]');
       return Array.from(rows).map((row) => {
-        if (kind === 'cards6') {
-          return {
-            title: row.querySelector('input[aria-label="Título"]')?.value ?? '',
-            text: row.querySelector('input[aria-label="Texto"]')?.value ?? '',
-            ctaText: row.querySelector('input[aria-label="CTA"]')?.value ?? '',
-          };
-        }
         const icon = row.querySelector('.visor__card-icon')?.value ?? 'fecha';
         const label = row.querySelector('input[aria-label="Etiqueta"]')?.value ?? '';
         const value = row.querySelector('input[aria-label="Valor"]')?.value ?? '';
@@ -969,17 +1190,33 @@ const busList = Object.entries(buColors.bus).map(([id, palette]) => ({
     }
 
     function renderCards(widgetId) {
-      const cards = getCards(widgetId);
       const editor = document.querySelector(`[data-cards-editor="${widgetId}"]`);
       const kind = editor?.dataset.cardsKind ?? 'std';
 
+      // 'cards6': el editor siempre refleja la variante actualmente visible.
+      // Antes de renderizar nada, guardamos ese estado en vivo para esa
+      // variante puntual (las demás variantes mantienen el suyo, sin tocarse).
+      if (kind === 'cards6' && editor) {
+        const activeVariant = document
+          .querySelector(`[data-preview-instance="${widgetId}"]:not([hidden])`)
+          ?.dataset.previewVariant;
+        if (activeVariant) {
+          card6StateByVariant.set(`${widgetId}|${activeVariant}`, snapshotCard6Rows(editor));
+        }
+      }
+
+      const stdCards = kind === 'std' ? getCards(widgetId) : null;
+
       const instances = document.querySelectorAll(`[data-preview-instance="${widgetId}"]`);
       instances.forEach((inst) => {
+        const doc = getInstDoc(inst);
+        if (!doc) return; // el iframe todavía no cargó — se sincroniza en su 'load'
+
         // ── Save the Date ─────────────────────────────────
         if (kind === 'std') {
-          const container = inst.querySelector('.hk-std-cards-container');
+          const container = doc.querySelector('.hk-std-cards-container');
           if (!container) return;
-          const valid = cards.filter((c) => c.label?.trim() && c.value?.trim()).slice(0, 6);
+          const valid = stdCards.filter((c) => c.label?.trim() && c.value?.trim()).slice(0, 6);
           container.innerHTML = valid
             .map((c) => {
               const path = ICONS_SVG[c.iconSlug] ?? ICONS_SVG.fecha;
@@ -1001,15 +1238,29 @@ const busList = Object.entries(buColors.bus).map(([id, palette]) => ({
         // ── CardsItems (6) — busca cards DENTRO del data-variant-content activo ──
         // Cada instance tiene varios [data-variant-content=v6.X] (uno por variante).
         // Solo la activa matchea `inst.dataset.previewVariant`.
-        const variantContent = inst.querySelector(
-          `[data-variant-content="${inst.dataset.previewVariant}"]`
-        );
+        const variant = inst.dataset.previewVariant;
+        const mode = inst.dataset.previewMode;
+        // Cards propias de ESTA variante — independientes de las demás.
+        const cards = getOrSeedCard6State(widgetId, variant);
+        const variantContent = doc.querySelector(`[data-variant-content="${variant}"]`);
         if (!variantContent) return;
 
-        // Selector unificado por variante (incluye variantes sin prefijo "hk-card-6-").
-        const cardEls = variantContent.querySelectorAll(
-          '.hk-card-6-3, .hk-card-6-6, .hk-card-6-8, .hk-card'
-        );
+        let cardEls = Array.from(variantContent.querySelectorAll(CARD6_SELECTOR));
+        const container = cardEls[0]?.parentElement;
+        const template = card6Templates.get(`${variant}|${mode}`);
+
+        // Sincronizar cantidad de nodos DOM con la cantidad de cards de ESTA
+        // variante: clonar el template por cada card nueva, eliminar sobrantes.
+        if (container && template) {
+          while (cardEls.length < cards.length) {
+            const clone = template.cloneNode(true);
+            container.appendChild(clone);
+            cardEls.push(clone);
+          }
+          while (cardEls.length > cards.length) {
+            cardEls.pop()?.remove();
+          }
+        }
 
         cardEls.forEach((cardEl, i) => {
           const c = cards[i];
@@ -1025,15 +1276,36 @@ const busList = Object.entries(buColors.bus).map(([id, palette]) => ({
             const svg = ctaEl.querySelector('svg');
             ctaEl.innerHTML = '';
             // Reconstruir como wrapper span para que el texto herede font-family/weight del CSS.
-            const textSpan = document.createElement('span');
+            const textSpan = doc.createElement('span');
             textSpan.textContent = c.ctaText || '';
             ctaEl.appendChild(textSpan);
             if (svg) ctaEl.appendChild(svg);
             // Si no hay CTA, ocultar el <a>
             if (!c.ctaText) ctaEl.style.display = 'none';
             else ctaEl.style.display = '';
+            // Link del CTA (interno o externo) — solo lo tocan las
+            // variantes cuyo schema declara `ctaHref` (hoy, v6.3).
+            if (c.ctaHref !== undefined) ctaEl.setAttribute('href', c.ctaHref || '#');
+          }
+          // Imagen opcional del card (solo v6.3 hoy — ver `cardFields` en
+          // registry.ts). Sin valor, se oculta y el título ocupa el ancho
+          // completo (sin caer a ningún placeholder).
+          if (c.icon !== undefined) {
+            const imgEl = cardEl.querySelector('.hk-card-imagen');
+            if (imgEl) {
+              imgEl.hidden = !c.icon;
+              if (c.icon) imgEl.src = c.icon;
+            }
+            if (titleEl) titleEl.classList.toggle('w-full', !c.icon);
           }
         });
+
+        // El script propio del widget (Swiper, anchos dinámicos) vive DENTRO
+        // del iframe y escucha este evento en SU documento — hay que
+        // dispararlo ahí, no en el documento del Visor.
+        doc.dispatchEvent(
+          new CustomEvent('visor:cards-changed', { detail: { widgetId } })
+        );
       });
     }
 
@@ -1051,36 +1323,59 @@ const busList = Object.entries(buColors.bus).map(([id, palette]) => ({
           if (!instances.length) return;
 
           if (control === 'variant') {
-            const v = ctrl.value;
+            const newVariant = ctrl.value;
+            const visibleInst = document.querySelector(
+              `[data-preview-instance="${widgetId}"]:not([hidden])`
+            );
+            const oldVariant = visibleInst?.dataset.previewVariant;
             // Detectar el modo actual (de la instancia visible).
-            const currentMode =
-              document
-                .querySelector(`[data-preview-instance="${widgetId}"]:not([hidden])`)
-                ?.dataset.previewMode ?? 'light';
+            const currentMode = visibleInst?.dataset.previewMode ?? 'light';
+
+            // Cards (widgets tipo 'cards6'): cada variante tiene su propio
+            // estado independiente. Al cambiar, guardamos el de la variante
+            // que se abandona y cargamos el de la nueva en el editor.
+            const cardsEditor = document.querySelector(
+              `[data-cards-editor="${widgetId}"][data-cards-kind="cards6"]`
+            );
+            if (cardsEditor && oldVariant && oldVariant !== newVariant) {
+              card6StateByVariant.set(
+                `${widgetId}|${oldVariant}`,
+                snapshotCard6Rows(cardsEditor)
+              );
+              const nextCards = getOrSeedCard6State(widgetId, newVariant);
+              // El schema de campos (cantidad/orden de inputs por card)
+              // también es propio de cada variante — se reconstruye la
+              // fila entera, no solo los valores.
+              renderCard6Rows(cardsEditor, nextCards, getCard6Fields(widgetId, newVariant));
+            }
+
             instances.forEach((inst) => {
               const match =
-                inst.dataset.previewVariant === v &&
+                inst.dataset.previewVariant === newVariant &&
                 inst.dataset.previewMode === currentMode;
               inst.hidden = !match;
             });
-            // Notificar al widget para re-aplicar layouts y Swiper.
-            document.dispatchEvent(
-              new CustomEvent('visor:cards-changed', {
-                detail: { widgetId, reason: 'variant-change' },
-              })
-            );
+            // Sincroniza el preview con el estado recién cargado del editor
+            // y dispara 'visor:cards-changed' dentro del iframe recién
+            // mostrado (para que re-aplique layouts/Swiper si corresponde).
+            renderCards(widgetId);
             return;
           }
 
           instances.forEach((inst) => {
+            const doc = getInstDoc(inst);
+            if (!doc) return;
             if (control === 'title') {
-              const h = inst.querySelector('.hk-title');
+              const h = doc.querySelector('.hk-title');
               if (h) h.textContent = ctrl.value;
             } else if (control === 'description') {
-              const d = inst.querySelector('.hk-desc');
+              // v6.8/v6.10 usan clases propias para el mismo párrafo de
+              // Bajada en vez de `hk-desc` — cubrir las 3 para que el
+              // live-edit funcione en todas las variantes que la usan.
+              const d = doc.querySelector('.hk-desc, .hk-paragraph-6-8, .hk-text-paragraph');
               if (d) d.innerHTML = ctrl.value;
             } else if (control === 'titleSupport') {
-              const s = inst.querySelector('.hk-title-soporte');
+              const s = doc.querySelector('.hk-title-soporte');
               if (s) s.textContent = ctrl.value;
             }
           });
@@ -1095,14 +1390,10 @@ const busList = Object.entries(buColors.bus).map(([id, palette]) => ({
       const widgetId = editor.dataset.cardsEditor;
       if (!widgetId) return;
 
-      // Live edit en cualquier campo de card → re-render + notificar al widget
+      // Live edit en cualquier campo de card → re-render (renderCards ya
+      // notifica al widget dentro de cada iframe afectado).
       const notifyChange = () => {
         renderCards(widgetId);
-        document.dispatchEvent(
-          new CustomEvent('visor:cards-changed', {
-            detail: { widgetId, count: editor.querySelectorAll('[data-card-row]').length },
-          })
-        );
       };
       editor.addEventListener('input', notifyChange);
       editor.addEventListener('change', notifyChange);
@@ -1136,12 +1427,28 @@ const busList = Object.entries(buColors.bus).map(([id, palette]) => ({
         row.className = 'visor__card-row';
         row.setAttribute('data-card-row', String(nextIdx));
         if (template === 'cards6') {
-          row.innerHTML = `
-            <input type="text" placeholder="Título" aria-label="Título" />
-            <input type="text" placeholder="Texto" aria-label="Texto" />
-            <input type="text" placeholder="CTA" aria-label="CTA" />
-            <button type="button" class="visor__card-remove" data-card-remove="${nextIdx}" aria-label="Eliminar card">✕</button>
-          `;
+          // Campos según el schema de la variante ACTIVA (no un template
+          // fijo) — así una card nueva en v6.3 nace con sus 5 campos, y en
+          // el resto de las variantes con los 3 default.
+          const activeVariant = document
+            .querySelector(`[data-preview-instance="${widgetId}"]:not([hidden])`)
+            ?.dataset.previewVariant;
+          const fields = getCard6Fields(widgetId, activeVariant);
+          fields.forEach((field) => {
+            const input = document.createElement('input');
+            input.type = 'text';
+            input.placeholder = field.label;
+            input.setAttribute('aria-label', field.label);
+            input.setAttribute('data-field-key', field.key);
+            row.appendChild(input);
+          });
+          const removeBtn = document.createElement('button');
+          removeBtn.type = 'button';
+          removeBtn.className = 'visor__card-remove';
+          removeBtn.setAttribute('data-card-remove', String(nextIdx));
+          removeBtn.setAttribute('aria-label', 'Eliminar card');
+          removeBtn.textContent = '✕';
+          row.appendChild(removeBtn);
         } else {
           row.innerHTML = `
             <select class="visor__card-icon" aria-label="Icono">
@@ -1162,11 +1469,6 @@ const busList = Object.entries(buColors.bus).map(([id, palette]) => ({
           r.setAttribute('data-card-row', String(i));
         });
         renderCards(widgetId);
-        document.dispatchEvent(
-          new CustomEvent('visor:cards-changed', {
-            detail: { widgetId, count: editor.querySelectorAll('[data-card-row]').length },
-          })
-        );
       });
     });
 
@@ -1187,6 +1489,7 @@ const busList = Object.entries(buColors.bus).map(([id, palette]) => ({
 
           // 2. Mostrar/ocultar las instancias correctas: misma variante,
           //    nuevo mode. Las demás (otras variantes) quedan ocultas.
+          let newlyVisible = null;
           document
             .querySelectorAll(`[data-preview-instance="${widgetId}"]`)
             .forEach((inst) => {
@@ -1194,6 +1497,7 @@ const busList = Object.entries(buColors.bus).map(([id, palette]) => ({
                 inst.dataset.previewVariant === currentVariant &&
                 inst.dataset.previewMode === mode;
               inst.hidden = !matchesNew;
+              if (matchesNew) newlyVisible = inst;
             });
 
           // 3. Marcar botón activo en el switcher
@@ -1205,8 +1509,10 @@ const busList = Object.entries(buColors.bus).map(([id, palette]) => ({
               b.setAttribute('aria-checked', String(isActive));
             });
 
-          // 4. Notificar al widget para re-aplicar layouts y Swiper.
-          document.dispatchEvent(
+          // 4. Notificar al widget (dentro de su iframe) para re-aplicar
+          //    layouts y Swiper.
+          const doc = getInstDoc(newlyVisible);
+          doc?.dispatchEvent(
             new CustomEvent('visor:cards-changed', {
               detail: { widgetId, reason: 'mode-change' },
             })

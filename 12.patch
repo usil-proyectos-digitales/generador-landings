@@ -1,0 +1,128 @@
+diff --git a/src/components/widgets/6-cards-items/CardsItems.astro b/src/components/widgets/6-cards-items/CardsItems.astro
+index a5b2fb4..8123a20 100644
+--- a/src/components/widgets/6-cards-items/CardsItems.astro
++++ b/src/components/widgets/6-cards-items/CardsItems.astro
+@@ -149,7 +149,7 @@ const svgArrow = `<svg class="svg-arrow" width="24" height="24" viewBox="0 0 24
+           </h2>
+           {description && (
+             <p class:list={[
+-              'hk-desc w-full md:w-[90%] text-pretty',
++              'hk-desc w-full md:w-[90%] mx-auto text-pretty',
+               baseClasses.bodyFont,
+               tokens.desc,
+               'text-mont-block-p-mobile md:text-mont-block-p',
+@@ -302,6 +302,7 @@ const svgArrow = `<svg class="svg-arrow" width="24" height="24" viewBox="0 0 24
+           data-carousel-enabled={useCarouselV68 ? 'true' : 'false'}
+         >
+           {useCarouselV68 ? (
++            <Fragment>
+             <div class="swiper-wrapper">
+               {cards.map((card) => (
+                 <div class:list={[
+@@ -329,6 +330,14 @@ const svgArrow = `<svg class="svg-arrow" width="24" height="24" viewBox="0 0 24
+                 </div>
+               ))}
+             </div>
++            {/* Flechas + dots del carrusel — se muestran apenas Swiper se
++                inicializa (>4 cards). El CSS de Swiper (cargado por
++                initCarouselV68) ya los estiliza; solo pisamos el color
++                para que sigan la paleta de la BU en vez del azul default. */}
++            <div class="swiper-button-prev" aria-label="Anterior"></div>
++            <div class="swiper-button-next" aria-label="Siguiente"></div>
++            <div class="swiper-pagination"></div>
++            </Fragment>
+           ) : (
+             cards.map((card) => (
+               <div class:list={[
+@@ -455,7 +464,7 @@ const svgArrow = `<svg class="svg-arrow" width="24" height="24" viewBox="0 0 24
+           </h2>
+           {description && (
+             <p class:list={[
+-              'hk-desc w-full md:w-[90%] text-pretty',
++              'hk-desc w-full md:w-[90%] mx-auto text-pretty',
+               baseClasses.bodyFont,
+               tokens.desc,
+               'text-mont-block-p-mobile md:text-mont-block-p',
+@@ -536,7 +545,7 @@ const svgArrow = `<svg class="svg-arrow" width="24" height="24" viewBox="0 0 24
+           </h2>
+           {description && (
+             <p class:list={[
+-              'hk-desc w-full md:w-[90%] text-pretty',
++              'hk-desc w-full md:w-[90%] mx-auto text-pretty',
+               baseClasses.bodyFont,
+               tokens.desc,
+               'text-mont-block-p-mobile md:text-mont-block-p',
+@@ -588,6 +597,15 @@ const svgArrow = `<svg class="svg-arrow" width="24" height="24" viewBox="0 0 24
+   </div>
+ </section>
+ 
++<style>
++  /* Flechas + dots del carrusel v6.8 heredan la paleta de la BU en vez del
++     azul default de Swiper — Swiper resuelve ambos desde esta única
++     variable (ver swiper-bundle.min.css). */
++  .hk-cards-grid-v6-8 {
++    --swiper-theme-color: var(--bu-color-brand-primary);
++  }
++</style>
++
+ {/* ============================================================
+     Script cliente — preserva la lógica legacy:
+       - v6.8 con >4 cards  → inicializa Swiper
+@@ -665,6 +683,27 @@ const svgArrow = `<svg class="svg-arrow" width="24" height="24" viewBox="0 0 24
+       container.classList.remove(...V68_GRID_FLEX_CLASSES);
+       container.classList.add(...V68_GRID_CAROUSEL_CLASSES);
+       container.dataset.carouselEnabled = 'true';
++
++      // Flechas + dots — el markup SSR ya los trae cuando la variante
++      // arranca en modo carrusel; si arrancó en modo flex y recién ahora
++      // cruza el umbral, hay que crearlos.
++      if (!container.querySelector(':scope > .swiper-button-prev')) {
++        const prevBtn = doc.createElement('div');
++        prevBtn.className = 'swiper-button-prev';
++        prevBtn.setAttribute('aria-label', 'Anterior');
++        container.appendChild(prevBtn);
++      }
++      if (!container.querySelector(':scope > .swiper-button-next')) {
++        const nextBtn = doc.createElement('div');
++        nextBtn.className = 'swiper-button-next';
++        nextBtn.setAttribute('aria-label', 'Siguiente');
++        container.appendChild(nextBtn);
++      }
++      if (!container.querySelector(':scope > .swiper-pagination')) {
++        const pagination = doc.createElement('div');
++        pagination.className = 'swiper-pagination';
++        container.appendChild(pagination);
++      }
+     } else {
+       cards.forEach((card) => {
+         card.classList.remove(V68_CARD_CAROUSEL_CLASS);
+@@ -672,6 +711,9 @@ const svgArrow = `<svg class="svg-arrow" width="24" height="24" viewBox="0 0 24
+         if (card.parentElement !== container) container.appendChild(card);
+       });
+       container.querySelector(':scope > .swiper-wrapper')?.remove();
++      container.querySelector(':scope > .swiper-button-prev')?.remove();
++      container.querySelector(':scope > .swiper-button-next')?.remove();
++      container.querySelector(':scope > .swiper-pagination')?.remove();
+       container.classList.remove(...V68_GRID_CAROUSEL_CLASSES, 'swiper-initialized');
+       container.classList.add(...V68_GRID_FLEX_CLASSES);
+       container.dataset.carouselEnabled = 'false';
+@@ -709,8 +751,19 @@ const svgArrow = `<svg class="svg-arrow" width="24" height="24" viewBox="0 0 24
+       setV68Mode(container, true);
+ 
+       await loadSwiper();
++      // nextEl/prevEl/pagination.el apuntan a los elementos DE ESTA
++      // instancia puntual (no un selector global de clase) — así conviven
++      // varios v6.8 con carrusel en la misma página sin pisarse.
+       const swiper = new (window as any).Swiper(container, {
+         centeredSlides: false,
++        navigation: {
++          nextEl: container.querySelector<HTMLElement>(':scope > .swiper-button-next'),
++          prevEl: container.querySelector<HTMLElement>(':scope > .swiper-button-prev'),
++        },
++        pagination: {
++          el: container.querySelector<HTMLElement>(':scope > .swiper-pagination'),
++          clickable: true,
++        },
+         breakpoints: {
+           576: { slidesPerView: 2, centeredSlides: false, spaceBetween: 20 },
+           1000: { slidesPerView: 4, centeredSlides: false, spaceBetween: 32 },

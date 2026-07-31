@@ -34,7 +34,7 @@
     {
       "id": "cards",
       "name": "Cards estáticas",
-      "variants": ["v6-6", "v6-8", "v6-10", "v6-11", "v6-12"],
+      "variants": ["v6-3", "v6-6", "v6-8", "v6-10", "v6-11", "v6-12"],
       "description": "Grid de cards con título, contenido y opcional CTA",
       "props": {
         "section_title": { "type": "string" },

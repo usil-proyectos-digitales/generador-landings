@@ -1,0 +1,39 @@
+---
+/**
+ * Página de preview AISLADA de un widget (una sola instancia:
+ * widget × variante × modo). Existe solo para que el Visor
+ * (`src/pages/index.astro`) la cargue dentro de un `<iframe>` real por
+ * cada combinación — así el ancho de viewport que ve Tailwind adentro
+ * (`window.innerWidth` del iframe) es el ancho real del iframe, y los
+ * breakpoints `md:`/`lg:` del widget se activan igual que en producción.
+ *
+ * No es una ruta pensada para visitarse directamente ni queda linkeada
+ * desde ningún lado del sitio público — es infraestructura interna del
+ * Visor (herramienta de desarrollo).
+ */
+import BaseLayout from '@layouts/BaseLayout.astro';
+import { widgetRegistry, computeWidgetInstanceProps } from '@components/widgets/registry.ts';
+import type { Mode } from '@components/widgets/2-bloque-intro/theme.ts';
+
+export async function getStaticPaths() {
+  return widgetRegistry.flatMap((w) =>
+    w.variants.flatMap((v) =>
+      (['light', 'dark'] as const).map((mode) => ({
+        params: { widget: w.id, variant: v.id, mode },
+      }))
+    )
+  );
+}
+
+const { widget, variant, mode } = Astro.params;
+const w = widgetRegistry.find((x) => x.id === widget);
+if (!w) {
+  return Astro.redirect('/404');
+}
+
+const { componentProps } = computeWidgetInstanceProps(w, variant!, mode as Mode);
+---
+
+<BaseLayout title={`Preview — ${w.name}`} description="Preview interno del Visor, no indexar.">
+  <w.component {...componentProps} />
+</BaseLayout>

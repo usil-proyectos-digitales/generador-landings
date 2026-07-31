@@ -23,11 +23,41 @@ import SaveTheDate from './5-save-the-date/SaveTheDate.astro';
 import CardsItems from './6-cards-items/CardsItems.astro';
 import type { Mode } from './2-bloque-intro/theme.ts';
 
+/** Un campo editable por card en el editor del drawer (widgets "cards6"). */
+export interface Card6FieldSpec {
+  /** Clave del campo en el objeto card (title, text, icon, ctaText, ctaHref, ...). */
+  key: string;
+  /** Label visible en el editor del drawer. */
+  label: string;
+}
+
 /** Definición de una variante visual de un widget. */
 export interface WidgetVariant {
   id: string;
   label: string;
+  /**
+   * Cards por defecto específicas de esta variante (si el widget usa `cards`).
+   * Cuando se define, tiene prioridad sobre `defaults.cards` — así cada
+   * variante arranca con su propia cantidad/contenido, en vez de compartir
+   * un único set entre todas las variantes del widget.
+   */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  cards?: any[];
+  /**
+   * Schema de campos editables por card para ESTA variante (solo widgets
+   * "cards6", ver `data-cards-kind` en el Visor). Cada variante puede tener
+   * una estructura de card muy distinta — si se omite, el editor usa el
+   * default de 3 campos (`DEFAULT_CARD6_FIELDS`: título/texto/CTA texto).
+   */
+  cardFields?: Card6FieldSpec[];
 }
+
+/** Schema default del editor de cards cuando una variante no declara el suyo propio. */
+export const DEFAULT_CARD6_FIELDS: Card6FieldSpec[] = [
+  { key: 'title', label: 'Título' },
+  { key: 'text', label: 'Texto' },
+  { key: 'ctaText', label: 'CTA' },
+];
 
 /** Props canónicas que el visor sabe manejar (live editing). */
 export interface WidgetDefaults {
@@ -69,6 +99,67 @@ export interface WidgetRegistration {
    * Adapter opcional. Si se omite, el visor pasa title/description/variant/mode/id directo.
    */
   propsAdapter?: PropsAdapter;
+}
+
+/**
+ * Calcula las props reales de una instancia widget × variante × modo, tal
+ * como las necesita `<w.component>`. Centralizado acá para que la ruta de
+ * preview (`src/pages/widget-preview/[widget]/[variant]/[mode].astro`) use
+ * exactamente la misma lógica que antes vivía inline en el Visor.
+ */
+export function computeWidgetInstanceProps(
+  w: WidgetRegistration,
+  variantId: string,
+  mode: Mode
+): { previewId: string; componentProps: Record<string, unknown> } {
+  const v = w.variants.find((x) => x.id === variantId);
+  const variantCards = v?.cards ?? w.defaults.cards;
+  const previewId = `preview-${w.id}-${variantId}-${mode}`;
+
+  const adapterInput = {
+    title: w.defaults.title,
+    description: w.defaults.description,
+    variant: variantId,
+    id: previewId,
+    mode,
+    ...(w.defaults.titleSupport ? { titleSupport: w.defaults.titleSupport } : {}),
+    ...(variantCards ? { cards: variantCards } : {}),
+  };
+
+  const componentProps = w.propsAdapter
+    ? w.propsAdapter(adapterInput)
+    : {
+        title: w.defaults.title,
+        description: w.defaults.description,
+        variant: variantId,
+        id: previewId,
+        mode,
+      };
+
+  return { previewId, componentProps };
+}
+
+/**
+ * Genera N cards de relleno (Lorem Ipsum) para sembrar el default de una
+ * variante de `6-cards-items`. El contenido es irrelevante — lo único que
+ * importa acá es la CANTIDAD, que varía por variante (ver comentario en
+ * cada entrada de `variants` más abajo).
+ */
+function makeCards6(count: number) {
+  const titles = [
+    'Lorem ipsum dolor sit',
+    'Sed do eiusmod tempor',
+    'Dolor sit amet consectetur',
+    'Ut enim ad minim veniam',
+    'Excepteur sint occaecat',
+    'Duis aute irure dolor',
+  ];
+  return Array.from({ length: count }, (_, i) => ({
+    title: titles[i % titles.length],
+    text: 'Consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.',
+    ctaText: 'Inscríbete',
+    ctaHref: '',
+  }));
 }
 
 /** Catálogo de widgets. Ampliar aquí cuando se agreguen nuevos widgets. */
@@ -126,12 +217,29 @@ export const widgetRegistry: WidgetRegistration[] = [
     description:
       'Widget de cards versátil con 6 variantes: cards centradas (v6.3), icono izq (v6.6), verticales con imagen (v6.8), dos cards grandes (v6.10), cards venta+CTA (v6.11) y cards con fecha (v6.12). Soporta modo claro y oscuro.',
     variants: [
-      { id: 'v6.3', label: '6.3 — Cards Centradas' },
-      { id: 'v6.6', label: '6.6 — Cards Icono Izq' },
-      { id: 'v6.8', label: '6.8 — Cards Verticales' },
-      { id: 'v6.10', label: '6.10 — Dos Cards Grandes' },
-      { id: 'v6.11', label: '6.11 — Cards Venta + CTA' },
-      { id: 'v6.12', label: '6.12 — Cards con Fecha' },
+      // Cantidad inicial de cards acordada por variante — cada una arranca
+      // independiente de las demás (no comparten props ni conteo).
+      {
+        id: 'v6.3',
+        label: '6.3 — Cards Centradas',
+        cards: makeCards6(3),
+        // v6.3 permite reemplazar el ícono default por una imagen propia
+        // (75×75px, opcional — sin imagen el título ocupa todo el ancho) y
+        // un link de CTA propio. Ninguna otra variante necesita estos
+        // campos hoy, por eso el schema es específico de v6.3.
+        cardFields: [
+          { key: 'title', label: 'Título' },
+          { key: 'text', label: 'Texto' },
+          { key: 'icon', label: 'Imagen (URL, 75×75px — opcional)' },
+          { key: 'ctaText', label: 'CTA' },
+          { key: 'ctaHref', label: 'CTA URL' },
+        ],
+      },
+      { id: 'v6.6', label: '6.6 — Cards Icono Izq', cards: makeCards6(6) },
+      { id: 'v6.8', label: '6.8 — Cards Verticales', cards: makeCards6(5) },
+      { id: 'v6.10', label: '6.10 — Dos Cards Grandes', cards: makeCards6(2) },
+      { id: 'v6.11', label: '6.11 — Cards Venta + CTA', cards: makeCards6(3) },
+      { id: 'v6.12', label: '6.12 — Cards con Fecha', cards: makeCards6(3) },
     ],
     defaultVariant: 'v6.3',
     defaults: {
@@ -139,26 +247,9 @@ export const widgetRegistry: WidgetRegistration[] = [
       titleSupport: 'resaltar beneficios',
       description: 'Descripción introductoria de la sección.',
       mode: 'light',
-      cards: [
-        {
-          title: 'Lorem ipsum dolor sit',
-          text: 'Consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.',
-          ctaText: 'Inscríbete',
-          ctaHref: '#',
-        },
-        {
-          title: 'Sed do eiusmod tempor',
-          text: 'Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip.',
-          ctaText: 'Inscríbete',
-          ctaHref: '#',
-        },
-        {
-          title: 'Dolor sit amet consectetur',
-          text: 'Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia.',
-          ctaText: 'Inscríbete',
-          ctaHref: '#',
-        },
-      ],
+      // Fallback genérico (variantes sin `cards` propio caerían acá).
+      // La cantidad real por variante vive en `variants[].cards` arriba.
+      cards: makeCards6(3),
     },
     component: CardsItems,
     propsAdapter: ({ title, description, variant, id, mode, cards, titleSupport }) => ({
