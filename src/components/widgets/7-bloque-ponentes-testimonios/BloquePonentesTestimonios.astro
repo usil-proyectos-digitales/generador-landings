@@ -1,0 +1,198 @@
+---
+/**
+ * BloquePonentesTestimonios — Widget "Bloque Ponentes / Testimonios"
+ * (id: `7-bloque-ponentes-testimonios`).
+ * --------------------------------------------------------------
+ * Migración a Astro del widget legacy en
+ * `src/migrar/7-bloque-ponentes-testimonios/`. Lógica preservada 1:1 desde
+ * `index.js`:
+ *   - Carrusel Swiper en v7.4 / v7.5 cuando hay más de 4 ponentes.
+ *
+ * Sistema de color:
+ *   Tokens centralizados en `./theme.ts` por variante × modo.
+ *   El widget consume las 5 variables semánticas del Design System V2.
+ *
+ * ACF (WordPress):
+ *   - title         ← ACF `text`      "Título principal"
+ *   - titleSupport  ← ACF `text`      "Texto de soporte (caja resaltada)"
+ *   - description   ← ACF `wysiwyg`   "Descripción / párrafo intro" (v7.2, v7.5)
+ *   - ponentes[]    ← ACF `repeater`  "Ponentes" (ver PonenteItem abajo)
+ *   - variant       ← switch          ('v7.2' | 'v7.4' | 'v7.5')
+ *   - mode          ← toggle          ('light' | 'dark')
+ *
+ * Comportamiento:
+ *   - v7.2 renderiza un único ponente grande (ponentes[0]) dentro de una
+ *     card destacada; el título completo vive dentro de la caja resaltada
+ *     (no hay texto de título separado, igual que el legacy).
+ *   - v7.4 renderiza un grid de ponentes cuadrados con bandera; si hay >4
+ *     se activa el carrusel Swiper (ver <script> al final).
+ *   - v7.5 renderiza un grid de ponentes con foto grande y overlay al hover
+ *     (desktop) / contenido siempre visible (mobile); si hay >4 se activa
+ *     el carrusel Swiper.
+ *   - Sin editor de cards en el Visor (decisión de alcance): los defaults
+ *     de `ponentes` viven hardcodeados en este componente, no en
+ *     `registry.ts` — mismo patrón que `SaveTheDate.astro`.
+ */
+import { theme, baseClasses, type Mode, type Variant } from './theme.ts';
+
+export interface PonenteItem {
+  nombre: string;
+  cargo?: string;
+  descripcion?: string;
+  foto?: string;
+  bandera?: string;
+  subtitulo?: string;
+  overlayTitle?: string;
+  overlayDesc?: string;
+  href?: string;
+}
+
+interface Props {
+  /** Título principal. Se usa como prefijo de texto en v7.4 / v7.5 (v7.2 no lo usa: todo el texto visible vive en `titleSupport`). */
+  title: string;
+  /** Texto dentro de la caja resaltada. Default `'resaltar beneficios'` para que la caja siempre se vea en las rutas de preview (no hay `propsAdapter` que lo propague desde el registry). */
+  titleSupport?: string;
+  /** Descripción / párrafo intro (v7.2, v7.5 — v7.4 no tiene párrafo en el legacy). */
+  description?: string;
+  /** Ponentes a renderizar (repeater de ACF). Si se omite, usa el default hardcodeado por variante. */
+  ponentes?: PonenteItem[];
+  /** Variante visual. */
+  variant?: Variant;
+  /** Modo claro u oscuro. Default: 'light'. */
+  mode?: Mode;
+  /** ID del `<section>`. */
+  id?: string;
+}
+
+/**
+ * Defaults de `ponentes` por variante — cantidades fijadas por spec:
+ * 1 para v7.2, 5 para v7.4 (supera el threshold de 4 → dispara el
+ * carrusel), 4 para v7.5 (justo en el threshold → se queda como grid).
+ */
+function defaultPonentes(variant: Variant): PonenteItem[] {
+  if (variant === 'v7.2') {
+    return [
+      {
+        nombre: 'Nombre del Ponente',
+        cargo: 'Cargo del Ponente',
+        descripcion:
+          'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.',
+        foto: 'https://placehold.co/200x200/?text=Ponente+Image',
+        href: '#',
+      },
+    ];
+  }
+
+  if (variant === 'v7.4') {
+    return Array.from({ length: 5 }, (_, i) => ({
+      nombre: 'Lorem ipsum dolor sit',
+      subtitulo: 'Lorem ipsum dolor:',
+      descripcion: 'consectetur adipiscing elit, sed do eiusmod tempor ut labore et dolore magna',
+      foto: `https://placehold.co/160x160?text=Ponente+${i + 1}`,
+      bandera: 'https://placehold.co/57x57/012085/ffffff/?text=PE',
+      href: '#',
+    }));
+  }
+
+  // v7.5
+  return Array.from({ length: 4 }, (_, i) => ({
+    nombre: 'Lorem ipsum dolor sit',
+    overlayTitle: 'Duis aute irure dolor',
+    overlayDesc:
+      'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud.',
+    foto: `https://placehold.co/375x429?text=Ponente+${i + 1}`,
+    href: '#',
+  }));
+}
+
+const {
+  title,
+  titleSupport = 'resaltar beneficios',
+  description = 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.',
+  ponentes,
+  variant = 'v7.2',
+  mode = 'light',
+  id = 'bloque-ponentes-testimonios',
+} = Astro.props;
+
+const tokens = theme[variant][mode];
+const items = ponentes ?? defaultPonentes(variant);
+// `noUncheckedIndexedAccess` está activo — el índice devuelve `PonenteItem | undefined`.
+const ponente0 = items[0];
+---
+
+<section
+  id={id}
+  data-widget="ponentes-testimonios"
+  data-variant={variant}
+  data-mode={mode}
+  class:list={[baseClasses.section, tokens.section]}
+>
+  <div class={baseClasses.container}>
+
+    {/* ═══════════════════════════════════════════════════════════
+        VARIANTE 7.2 — Título + párrafo + 1 card grande de ponente
+        ═══════════════════════════════════════════════════════════ */}
+    {variant === 'v7.2' && (
+      <div data-variant-content="v7.2">
+        <div class="mb-16 text-center">
+          <h2 class:list={[
+            'flex flex-col items-center mb-12',
+            baseClasses.titleFont,
+          ]}>
+            <div class:list={[
+              'inline-block px-6 py-2 mt-2 rounded-xl hk-caja-titulo',
+              tokens.titleSupportBox,
+            ]}>
+              <span class:list={[
+                'block hk-title',
+                baseClasses.titleSupportFont,
+                tokens.titleSupport,
+              ]}>{titleSupport}</span>
+            </div>
+          </h2>
+          {description && (
+            <p class:list={[
+              'hk-card-text hk-desc text-center text-pretty',
+              baseClasses.bodyFont,
+              tokens.desc,
+              'text-mont-block-p-mobile md:text-mont-block-p',
+            ]}>{description}</p>
+          )}
+        </div>
+
+        {ponente0 && (
+          <div class:list={[baseClasses.cardBaseV72, tokens.card]}>
+            <img
+              src={ponente0.foto ?? 'https://placehold.co/200x200/?text=Ponente+Image'}
+              class="rounded-full hk-ponente-foto"
+              alt={ponente0.nombre}
+            />
+            <div class="hk-box-contenido">
+              <h3 class:list={[
+                'hk-ponente-nombre',
+                baseClasses.cardTitleFont,
+                tokens.cardTitle,
+              ]}>{ponente0.nombre}</h3>
+              {ponente0.cargo && (
+                <h4 class:list={[
+                  'hk-ponente-cargo',
+                  baseClasses.cardItemTextFont,
+                  tokens.cardText,
+                ]}>{ponente0.cargo}</h4>
+              )}
+              {ponente0.descripcion && (
+                <p class:list={[
+                  'mt-4 hk-ponente-descripcion',
+                  baseClasses.cardTextFont,
+                  tokens.cardText,
+                ]}>{ponente0.descripcion}</p>
+              )}
+            </div>
+          </div>
+        )}
+      </div>
+    )}
+
+  </div>
+</section>

@@ -21,6 +21,7 @@ import type { AstroComponentFactory } from 'astro/runtime/server/index.js';
 import BloqueIntro from './2-bloque-intro/BloqueIntro.astro';
 import SaveTheDate from './5-save-the-date/SaveTheDate.astro';
 import CardsItems from './6-cards-items/CardsItems.astro';
+import BloquePonentesTestimonios from './7-bloque-ponentes-testimonios/BloquePonentesTestimonios.astro';
 import type { Mode } from './2-bloque-intro/theme.ts';
 
 /** Un campo editable por card en el editor del drawer (widgets "cards6"). */
@@ -261,5 +262,25 @@ export const widgetRegistry: WidgetRegistration[] = [
       mode,
       ...(cards ? { cards } : {}),
     }),
+  },
+  {
+    id: '7-bloque-ponentes-testimonios',
+    name: '7. Bloque Ponentes / Testimonios',
+    description:
+      'Bloque de ponentes o testimonios con 3 variantes: ponente único (v7.2), grid con bandera de país (v7.4) y grid con hover de foto grande (v7.5).',
+    variants: [
+      { id: 'v7.2', label: '7.2 — Ponente único' },
+      { id: 'v7.4', label: '7.4 — Grid con bandera' },
+      { id: 'v7.5', label: '7.5 — Grid con hover' },
+    ],
+    defaultVariant: 'v7.2',
+    defaults: {
+      title: 'Poner título aquí',
+      titleSupport: 'resaltar beneficios',
+      description:
+        'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.',
+      mode: 'light',
+    },
+    component: BloquePonentesTestimonios,
   },
 ];
