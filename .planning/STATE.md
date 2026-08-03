@@ -23,7 +23,7 @@ See: .planning/PROJECT.md (updated 2026-08-03)
 Phase: 1 of 1 (Migración de widgets legacy)
 Plan: - of - in current phase
 Status: Ready to plan
-Last activity: 2026-08-03 — Scaffold GSD mínimo creado para trackear la migración del widget 7 como quick task
+Last activity: 2026-08-03 — Completado quick task 260803-mgb: migración del widget 7 (Bloque Ponentes/Testimonios) a Astro
 
 Progress: [░░░░░░░░░░] 0%
 
@@ -60,6 +60,12 @@ None yet.
 ### Blockers/Concerns
 
 None yet.
+
+### Quick Tasks Completed
+
+| # | Description | Date | Commit | Directory |
+|---|-------------|------|--------|-----------|
+| 260803-mgb | migrar widget 7 bloque ponentes testimonios a Astro | 2026-08-03 | 2132372 | [260803-mgb-migrar-widget-7-bloque-ponentes-testimon](./quick/260803-mgb-migrar-widget-7-bloque-ponentes-testimon/) |
 
 ## Deferred Items
 

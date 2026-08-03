@@ -20,11 +20,13 @@ Tailwind v4 se vea y funcione igual en todas las BUs y en los 2 modos
 
 - ✓ Widgets `2-bloque-intro`, `5-save-the-date`, `6-cards-items` migrados y
   registrados en el Visor (`src/components/widgets/registry.ts`)
+- ✓ Widget `7-bloque-ponentes-testimonios` (3 variantes: v7.2, v7.4, v7.5)
+  migrado y registrado en el Visor y en `widgets-catalog.json` — quick task
+  260803-mgb, aprobado visualmente por el usuario
 
 ### Active
 
-- [ ] Migrar widget `7-bloque-ponentes-testimonios` (3 variantes: v7.2, v7.4,
-      v7.5) al patrón Astro
+(Ninguno activo — próximo widget a migrar por definir)
 
 ### Out of Scope
 
@@ -54,7 +56,7 @@ Tailwind v4 se vea y funcione igual en todas las BUs y en los 2 modos
 | Decision | Rationale | Outcome |
 |----------|-----------|---------|
 | Scaffold GSD mínimo (sin onboarding completo) | Repo ya tiene CLAUDE.md + patrones establecidos; mapear todo el codebase para una sola quick task era desproporcionado | ✓ Good |
-| Widget 7 sin editor de cards en el Visor | Contenido real se edita vía ACF en WP, no en el Visor interno | — Pending |
+| Widget 7 sin editor de cards en el Visor | Contenido real se edita vía ACF en WP, no en el Visor interno | ✓ Good |
 
 ---
 *Last updated: 2026-08-03 after scaffold GSD mínimo*
