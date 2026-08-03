@@ -128,24 +128,167 @@ const ponente0 = items[0];
   data-mode={mode}
   class:list={[baseClasses.section, tokens.section]}
 >
-  <div class={baseClasses.container}>
 
-    {/* ═══════════════════════════════════════════════════════════
-        VARIANTE 7.2 — Título + párrafo + 1 card grande de ponente
-        ═══════════════════════════════════════════════════════════ */}
-    {variant === 'v7.2' && (
-      <div data-variant-content="v7.2">
-        <div class="mb-16 text-center">
-          <h2 class:list={[
-            'flex flex-col items-center mb-12',
-            baseClasses.titleFont,
+  {/* ═══════════════════════════════════════════════════════════
+      VARIANTE 7.2 — Título + párrafo + 1 card grande de ponente
+      ═══════════════════════════════════════════════════════════ */}
+  {variant === 'v7.2' && (
+    <div class={baseClasses.container} data-variant-content="v7.2">
+      <div class="mb-16 text-center">
+        <h2 class:list={[
+          'flex flex-col items-center mb-12',
+          baseClasses.titleFont,
+        ]}>
+          <div class:list={[
+            'inline-block px-6 py-2 mt-2 rounded-xl hk-caja-titulo',
+            tokens.titleSupportBox,
           ]}>
+            <span class:list={[
+              'block hk-title',
+              baseClasses.titleSupportFont,
+              tokens.titleSupport,
+            ]}>{titleSupport}</span>
+          </div>
+        </h2>
+        {description && (
+          <p class:list={[
+            'hk-card-text hk-desc text-center text-pretty',
+            baseClasses.bodyFont,
+            tokens.desc,
+            'text-mont-block-p-mobile md:text-mont-block-p',
+          ]}>{description}</p>
+        )}
+      </div>
+
+      {ponente0 && (
+        <div class:list={[baseClasses.cardBaseV72, tokens.card]}>
+          <img
+            src={ponente0.foto ?? 'https://placehold.co/200x200/?text=Ponente+Image'}
+            class="rounded-full hk-ponente-foto"
+            alt={ponente0.nombre}
+          />
+          <div class="hk-box-contenido">
+            <h3 class:list={[
+              'hk-ponente-nombre',
+              baseClasses.cardTitleFont,
+              tokens.cardTitle,
+            ]}>{ponente0.nombre}</h3>
+            {ponente0.cargo && (
+              <h4 class:list={[
+                'hk-ponente-cargo',
+                baseClasses.cardItemTextFont,
+                tokens.cardText,
+              ]}>{ponente0.cargo}</h4>
+            )}
+            {ponente0.descripcion && (
+              <p class:list={[
+                'mt-4 hk-ponente-descripcion',
+                baseClasses.cardTextFont,
+                tokens.cardText,
+              ]}>{ponente0.descripcion}</p>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  )}
+
+  {/* ═══════════════════════════════════════════════════════════
+      VARIANTE 7.4 — Título + grid de ponentes con bandera
+      (carrusel Swiper si >4 ponentes)
+      ═══════════════════════════════════════════════════════════ */}
+  {variant === 'v7.4' && (
+    <div class={baseClasses.container} data-variant-content="v7.4">
+      <div class="mb-16 text-center">
+        <h2 class:list={[
+          'flex flex-col items-center mb-12 hk-title',
+          baseClasses.titleFont,
+          tokens.title,
+        ]}>
+          {title}
+          <div class:list={[
+            'inline-block px-6 py-2 mt-2 rounded-xl hk-caja-titulo',
+            tokens.titleSupportBox,
+          ]}>
+            <span class:list={[
+              'block hk-title-soporte',
+              baseClasses.titleSupportFont,
+              tokens.titleSupport,
+            ]}>{titleSupport}</span>
+          </div>
+        </h2>
+      </div>
+
+      <div class="flex flex-wrap gap-8 justify-center items-start mx-auto w-full ponentes-grid-v7-4">
+        {items.map((ponente) => (
+          <div class={baseClasses.cardBaseV74}>
+            <div class="relative w-[160px] h-[160px] mb-4">
+              <img
+                src={ponente.foto ?? 'https://placehold.co/160x160?text=Ponente'}
+                alt={ponente.nombre}
+                class:list={[
+                  'object-cover w-[160px] h-[160px] rounded-[1rem] border-2 hk-ponente-foto',
+                  tokens.bar,
+                ]}
+              />
+              {ponente.bandera && (
+                <div class="overflow-hidden absolute -top-3 -right-3 w-[57px] h-[57px] rounded-full shadow-md hk-bandera-icon">
+                  <img src={ponente.bandera} alt="Bandera" class="object-cover w-full h-full hk-ponente-bandera" />
+                </div>
+              )}
+            </div>
+            <div class="text-left">
+              <div class:list={[
+                'px-2 py-1 mb-4 rounded-3xl border hk-ponente-nombre',
+                tokens.bar,
+              ]}>
+                <h3 class:list={[
+                  'text-lg font-bold hk-ponente-nombre',
+                  baseClasses.bodyFont,
+                  tokens.cardTitle,
+                ]}>{ponente.nombre}</h3>
+              </div>
+              {ponente.subtitulo && (
+                <h3 class:list={[
+                  'text-base font-semibold hk-ponente-subtitulo',
+                  baseClasses.bodyFont,
+                  tokens.cardTitle,
+                ]}>{ponente.subtitulo}</h3>
+              )}
+              {ponente.descripcion && (
+                <p class:list={[
+                  'mt-1 text-base hk-ponente-descripcion',
+                  baseClasses.bodyFont,
+                  tokens.cardText,
+                ]}>{ponente.descripcion}</p>
+              )}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  )}
+
+  {/* ═══════════════════════════════════════════════════════════
+      VARIANTE 7.5 — Título izq + intro + grid con foto grande y hover
+      (carrusel Swiper si >4 ponentes)
+      ═══════════════════════════════════════════════════════════ */}
+  {variant === 'v7.5' && (
+    <Fragment>
+      <div class={baseClasses.container} data-variant-content="v7.5">
+        <div class="mb-16 text-left">
+          <h2 class:list={[
+            'flex flex-col items-start mb-8 hk-title',
+            baseClasses.titleFont,
+            tokens.title,
+          ]}>
+            {title}
             <div class:list={[
               'inline-block px-6 py-2 mt-2 rounded-xl hk-caja-titulo',
               tokens.titleSupportBox,
             ]}>
               <span class:list={[
-                'block hk-title',
+                'block hk-title-soporte',
                 baseClasses.titleSupportFont,
                 tokens.titleSupport,
               ]}>{titleSupport}</span>
@@ -153,46 +296,111 @@ const ponente0 = items[0];
           </h2>
           {description && (
             <p class:list={[
-              'hk-card-text hk-desc text-center text-pretty',
+              'hk-desc-intro hk-desc w-full md:w-[90%] text-pretty',
               baseClasses.bodyFont,
               tokens.desc,
               'text-mont-block-p-mobile md:text-mont-block-p',
             ]}>{description}</p>
           )}
         </div>
+      </div>
 
-        {ponente0 && (
-          <div class:list={[baseClasses.cardBaseV72, tokens.card]}>
-            <img
-              src={ponente0.foto ?? 'https://placehold.co/200x200/?text=Ponente+Image'}
-              class="rounded-full hk-ponente-foto"
-              alt={ponente0.nombre}
-            />
-            <div class="hk-box-contenido">
-              <h3 class:list={[
-                'hk-ponente-nombre',
-                baseClasses.cardTitleFont,
-                tokens.cardTitle,
-              ]}>{ponente0.nombre}</h3>
-              {ponente0.cargo && (
-                <h4 class:list={[
-                  'hk-ponente-cargo',
-                  baseClasses.cardItemTextFont,
-                  tokens.cardText,
-                ]}>{ponente0.cargo}</h4>
+      <div class="2xl:w-[70%] xl:w-[90%] lg:w-[90%] w-[90%] mx-auto hk-ponentes grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-y-8 sm:gap-[2px]">
+        {items.map((ponente) => (
+          <div class={baseClasses.cardBaseV75}>
+            <div class="w-full aspect-[375/429]">
+              <img
+                src={ponente.foto ?? 'https://placehold.co/375x429?text=Ponente'}
+                alt={ponente.nombre}
+                class="block object-cover w-full h-full transition-transform duration-500 hk-ponente-foto lg:group-hover:scale-110"
+              />
+            </div>
+            <a
+              href={ponente.href ?? '#'}
+              class:list={[
+                'hidden absolute inset-0 z-10 flex-col justify-center items-center px-12 opacity-0 transition-all duration-500 translate-y-full pointer-events-none lg:flex hk-overlay-container group-hover:translate-y-0 group-hover:opacity-100',
+                tokens.overlay,
+              ]}
+            >
+              {ponente.overlayTitle && (
+                <span class="mb-2 text-base font-bold tracking-wider text-center text-bu-surface font-montserrat hk-overlay-title">{ponente.overlayTitle}</span>
               )}
-              {ponente0.descripcion && (
-                <p class:list={[
-                  'mt-4 hk-ponente-descripcion',
-                  baseClasses.cardTextFont,
-                  tokens.cardText,
-                ]}>{ponente0.descripcion}</p>
+              {ponente.overlayDesc && (
+                <p class="text-sm italic text-center text-bu-surface font-montserrat hk-overlay-desc">{ponente.overlayDesc}</p>
+              )}
+            </a>
+            <h3 class:list={[
+              'hidden absolute right-0 left-0 bottom-4 z-20 w-full text-xl font-bold text-center transition-colors duration-300 lg:block hk-ponente-nombre group-hover:hidden',
+              baseClasses.bodyFont,
+              tokens.cardTitle,
+            ]}>{ponente.nombre}</h3>
+            <div class="flex flex-col items-center p-6 text-center lg:hidden">
+              <h3 class="mb-2 text-xl font-bold text-bu-surface font-montserrat hk-mobile-name">{ponente.nombre}</h3>
+              {ponente.overlayTitle && (
+                <span class="mb-2 text-lg font-bold tracking-wider text-bu-surface/90 font-montserrat hk-mobile-highlight">{ponente.overlayTitle}</span>
+              )}
+              {ponente.overlayDesc && (
+                <p class="text-base italic text-bu-surface/80 font-montserrat hk-mobile-desc">{ponente.overlayDesc}</p>
               )}
             </div>
           </div>
-        )}
+        ))}
       </div>
-    )}
+    </Fragment>
+  )}
 
-  </div>
 </section>
+
+{/* ============================================================
+    Script cliente — preserva la lógica legacy (`initVariant74` /
+    `initVariant75` de `src/migrar/7-bloque-ponentes-testimonios/index.js`):
+      - v7.4 con >4 ponentes → inicializa Swiper
+      - v7.5 con >4 ponentes → inicializa Swiper
+    Sin lógica de revert ni live-edit de cards — este widget no expone
+    editor de cards en el drawer (decisión de alcance, ver header).
+    ============================================================ */}
+<script>
+  import { initDynamicCarousel } from '@lib/carousel-manager.ts';
+
+  function initCarousels() {
+    document
+      .querySelectorAll<HTMLElement>('section[data-widget="ponentes-testimonios"][data-variant="v7.4"]')
+      .forEach((section) => {
+        initDynamicCarousel({
+          container: section.querySelector<HTMLElement>('.ponentes-grid-v7-4'),
+          itemSelector: '.hk-card-7-4',
+          threshold: 4,
+          swiperConfig: {
+            spaceBetween: 20,
+            breakpoints: {
+              550: { slidesPerView: 2 },
+              850: { slidesPerView: 3 },
+              1000: { slidesPerView: 4 },
+            },
+          },
+        });
+      });
+
+    document
+      .querySelectorAll<HTMLElement>('section[data-widget="ponentes-testimonios"][data-variant="v7.5"]')
+      .forEach((section) => {
+        initDynamicCarousel({
+          container: section.querySelector<HTMLElement>('.hk-ponentes'),
+          itemSelector: '.hk-box-ponente',
+          threshold: 4,
+          removeClasses: ['grid', 'grid-cols-1', 'sm:grid-cols-2', 'lg:grid-cols-4', 'gap-y-8', 'sm:gap-[2px]'],
+          swiperConfig: {
+            spaceBetween: 2,
+            breakpoints: {
+              550: { slidesPerView: 2 },
+              850: { slidesPerView: 3 },
+              1000: { slidesPerView: 4 },
+            },
+          },
+        });
+      });
+  }
+
+  initCarousels();
+  document.addEventListener('astro:page-load', initCarousels);
+</script>
