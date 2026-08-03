@@ -1,6 +1,6 @@
 {
   "version": "2.0",
-  "last_updated": "2026-07-20",
+  "last_updated": "2026-08-03",
   "note": "Catálogo de widgets disponibles. Cada widget define las props que la IA puede generar.",
   "widgets": [
     {
@@ -47,6 +47,31 @@
             "image_url": "url",
             "cta_text": "string",
             "cta_url": "url"
+          }
+        }
+      }
+    },
+    {
+      "id": "ponentes-testimonios",
+      "name": "Ponentes / Testimonios",
+      "variants": ["v7-2", "v7-4", "v7-5"],
+      "description": "Bloque de ponentes o testimonios: ponente único (v7-2), grid con bandera de país (v7-4) o grid con foto grande y hover (v7-5)",
+      "props": {
+        "section_title": { "type": "string", "required": true, "maxLength": 80 },
+        "section_title_support": { "type": "string", "maxLength": 40 },
+        "section_body": { "type": "string", "maxLength": 300 },
+        "items": {
+          "type": "array",
+          "items": {
+            "nombre": { "type": "string", "required": true, "maxLength": 60 },
+            "cargo": { "type": "string", "maxLength": 80 },
+            "descripcion": { "type": "string", "maxLength": 300 },
+            "foto_url": { "type": "url" },
+            "bandera_url": { "type": "url" },
+            "subtitulo": { "type": "string", "maxLength": 80 },
+            "overlay_title": { "type": "string", "maxLength": 80 },
+            "overlay_desc": { "type": "string", "maxLength": 200 },
+            "cta_url": { "type": "url" }
           }
         }
       }
