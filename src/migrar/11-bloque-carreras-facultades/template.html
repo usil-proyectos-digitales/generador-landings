@@ -1,0 +1,143 @@
+<!-- VARIANTE 11.1: Bloque Carreras / Facultades con pestañas -->
+<section id="bloque-carreras-facultades-v11-1" class="py-24 bg-[#F0F0F0] font-montserrat" data-widget-variant="v11.1">
+    <div class="container mx-auto">
+        <div class="grid grid-cols-1 gap-12 items-center">
+            <div class="text-center hk-col-texto">
+                <h2 class="flex flex-col items-center mb-12 text-center hk-title font-anton text-anton-block-title-mobile md:text-anton-block-title text-brand-dark">
+                    <div class="inline-block px-6 py-2 mt-2 rounded-xl hk-caja-titulo bg-brand-dark">
+                        <span class="block text-white hk-title-soporte font-anton text-anton-block-title-mobile md:text-anton-block-title">
+                            Poner título aquí
+                        </span>
+                    </div>
+                </h2>
+                <p class="text-center font-montserrat text-brand-dark text-mont-block-p-mobile md:text-mont-block-p hk-card-text text-pretty">
+                    Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.
+                </p>
+            </div>
+        </div>
+
+        <div class="hk-tabs-facultades mt-12 grid grid-cols-1 gap-8 md:grid-cols-[300px_minmax(0,1fr)] items-start" data-tab-root data-tab-default="facultad-1">
+            <div class="flex flex-col gap-0 hk-tabs">
+                <button type="button" class="flex items-center gap-3 px-4 py-4 text-lg font-bold text-left bg-white text-[#54595F] transition-colors hover:bg-brand-light hover:text-white" data-tab-trigger="facultad-1">
+                    <span>Facultad 1</span>
+                    <i class="ml-auto text-xl fa-solid fa-chevron-right"></i>
+                </button>
+                <button type="button" class="flex items-center gap-3 px-4 py-4 text-lg font-bold text-left bg-white text-[#54595F] transition-colors hover:bg-brand-light hover:text-white" data-tab-trigger="facultad-2">
+                    <span>Facultad 2</span>
+                    <i class="ml-auto text-xl fa-solid fa-chevron-right"></i>
+                </button>
+                <button type="button" class="flex items-center gap-3 px-4 py-4 text-lg font-bold text-left bg-white text-[#54595F] transition-colors hover:bg-brand-light hover:text-white" data-tab-trigger="facultad-3">
+                    <span>Facultad 3</span>
+                    <i class="ml-auto text-xl fa-solid fa-chevron-right"></i>
+                </button>
+            </div>
+
+            <div class="px-8 py-12 bg-white rounded-3xl hk-contenido">
+                <div class="space-y-4" data-tab-panel="facultad-1">
+                    <div class="space-y-3 hk-acordeon-carreras" data-tab-root data-tab-style="accordion" data-tab-default="carrera-1">
+                        <div class="overflow-hidden">
+                            <button type="button" class="flex gap-3 items-center px-4 py-3 w-full text-left bg-transparent transition-colors text-mont-card-title-mobile md:text-mont-card-title text-brand-light hover:text-brand-light" data-tab-trigger="carrera-1">
+                                <span>Nombre de la Carrera 1</span>
+                                <i class="ml-auto text-3xl font-extrabold leading-none fa-solid fa-chevron-up"></i>
+                            </button>
+                            <div class="px-4 pt-3 pb-4 space-y-4" data-tab-panel="carrera-1">
+                                <img src="https://placehold.co/626x248/012085/ffffff/?text=Imagen" alt="Imagen Carrera 1" class="w-full rounded-[1rem] mx-auto hk-imagen">
+                                <p class="text-left font-montserrat text-brand-dark text-mont-item-content-mobile md:text-mont-item-content">
+                                    Texto descriptivo de ejemplo para la Carrera 1. Aquí se pueden listar enfoques, áreas de estudio y ventajas.
+                                </p>
+                                <a href="#" class="inline-flex justify-center items-center px-6 py-3 text-base font-semibold text-white rounded-full transition-colors btn-animacion bg-brand-dark hover:bg-brand-light">
+                                    Ver todas las carreras
+                                </a>
+                            </div>
+                        </div>
+                        <div class="overflow-hidden">
+                            <button type="button" class="flex gap-3 items-center px-4 py-3 w-full text-left text-black bg-transparent transition-colors text-mont-card-title-mobile md:text-mont-card-title hover:text-brand-light" data-tab-trigger="carrera-2">
+                                <span>Nombre de la Carrera 2</span>
+                                <i class="ml-auto text-3xl font-extrabold leading-none fa-solid fa-chevron-down"></i>
+                            </button>
+                            <div class="hidden px-4 pt-3 pb-4 space-y-4" data-tab-panel="carrera-2">
+                                <img src="https://placehold.co/626x248/012085/ffffff/?text=Imagen" alt="Imagen Carrera 1" class="w-full rounded-[1rem] mx-auto hk-imagen">
+                                <p class="text-left font-montserrat text-brand-dark text-mont-item-content-mobile md:text-mont-item-content">
+                                    Texto descriptivo de ejemplo para la Carrera 2. Aquí se pueden listar enfoques, áreas de estudio y ventajas.
+                                </p>
+                                <a href="#" class="inline-flex justify-center items-center px-6 py-3 text-base font-semibold text-white rounded-full transition-colors btn-animacion bg-brand-dark hover:bg-brand-light">
+                                    Ver todas las carreras
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="hidden space-y-4" data-tab-panel="facultad-2">
+                    <div class="space-y-3 hk-acordeon-carreras" data-tab-root data-tab-style="accordion" data-tab-default="carrera-1">
+                        <div class="overflow-hidden">
+                            <button type="button" class="flex gap-3 items-center px-4 py-3 w-full text-left bg-transparent transition-colors text-mont-card-title-mobile md:text-mont-card-title text-brand-light hover:text-brand-light" data-tab-trigger="carrera-1">
+                                <span>Nombre de la Carrera 1</span>
+                                <i class="ml-auto text-3xl font-extrabold leading-none fa-solid fa-chevron-up"></i>
+                            </button>
+                            <div class="px-4 pt-3 pb-4 space-y-4" data-tab-panel="carrera-1">
+                                <img src="https://placehold.co/626x248/012085/ffffff/?text=Imagen" alt="Imagen Carrera 1" class="w-full rounded-[1rem] mx-auto hk-imagen">
+                                <p class="text-left font-montserrat text-brand-dark text-mont-item-content-mobile md:text-mont-item-content">
+                                    Texto descriptivo de ejemplo para la Carrera 1. Aquí se pueden listar enfoques, áreas de estudio y ventajas.
+                                </p>
+                                <a href="#" class="inline-flex justify-center items-center px-6 py-3 text-base font-semibold text-white rounded-full transition-colors btn-animacion bg-brand-dark hover:bg-brand-light">
+                                    Ver todas las carreras
+                                </a>
+                            </div>
+                        </div>
+                        <div class="overflow-hidden">
+                            <button type="button" class="flex gap-3 items-center px-4 py-3 w-full text-left text-black bg-transparent transition-colors text-mont-card-title-mobile md:text-mont-card-title hover:text-brand-light" data-tab-trigger="carrera-2">
+                                <span>Nombre de la Carrera 2</span>
+                                <i class="ml-auto text-3xl font-extrabold leading-none fa-solid fa-chevron-down"></i>
+                            </button>
+                            <div class="hidden px-4 pt-3 pb-4 space-y-4" data-tab-panel="carrera-2">
+                                <img src="https://placehold.co/626x248/012085/ffffff/?text=Imagen" alt="Imagen Carrera 2" class="w-full rounded-[1rem] mx-auto hk-imagen">
+                                <p class="text-left font-montserrat text-brand-dark text-mont-item-content-mobile md:text-mont-item-content">
+                                    Texto descriptivo de ejemplo para la Carrera 2. Aquí se pueden listar enfoques, áreas de estudio y ventajas.
+                                </p>
+                                <a href="#" class="inline-flex justify-center items-center px-6 py-3 text-base font-semibold text-white rounded-full transition-colors btn-animacion bg-brand-dark hover:bg-brand-light">
+                                    Ver todas las carreras
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="hidden space-y-4" data-tab-panel="facultad-3">
+                    <div class="space-y-3 hk-acordeon-carreras" data-tab-root data-tab-style="accordion" data-tab-default="carrera-1">
+                        <div class="overflow-hidden">
+                            <button type="button" class="flex gap-3 items-center px-4 py-3 w-full text-left bg-transparent transition-colors text-mont-card-title-mobile md:text-mont-card-title text-brand-light hover:text-brand-light" data-tab-trigger="carrera-1">
+                                <span>Nombre de la Carrera 1</span>
+                                <i class="ml-auto text-3xl font-extrabold leading-none fa-solid fa-chevron-up"></i>
+                            </button>
+                            <div class="px-4 pt-3 pb-4 space-y-4" data-tab-panel="carrera-1">
+                                <img src="https://placehold.co/626x248/012085/ffffff/?text=Imagen" alt="Imagen Carrera 1" class="w-full rounded-[1rem] mx-auto hk-imagen">
+                                <p class="text-left font-montserrat text-brand-dark text-mont-item-content-mobile md:text-mont-item-content">
+                                    Texto descriptivo de ejemplo para la Carrera 1. Aquí se pueden listar enfoques, áreas de estudio y ventajas.
+                                </p>
+                                <a href="#" class="inline-flex justify-center items-center px-6 py-3 text-base font-semibold text-white rounded-full transition-colors btn-animacion bg-brand-dark hover:bg-brand-light">
+                                    Ver todas las carreras
+                                </a>
+                            </div>
+                        </div>
+                        <div class="overflow-hidden">
+                            <button type="button" class="flex gap-3 items-center px-4 py-3 w-full text-left text-black bg-transparent transition-colors text-mont-card-title-mobile md:text-mont-card-title hover:text-brand-light" data-tab-trigger="carrera-2">
+                                <span>Nombre de la Carrera 2</span>
+                                <i class="ml-auto text-3xl font-extrabold leading-none fa-solid fa-chevron-down"></i>
+                            </button>
+                            <div class="hidden px-4 pt-3 pb-4 space-y-4" data-tab-panel="carrera-2">
+                                <img src="https://placehold.co/626x248/012085/ffffff/?text=Imagen" alt="Imagen Carrera 2" class="w-full rounded-[1rem] mx-auto hk-imagen">
+                                <p class="text-left font-montserrat text-brand-dark text-mont-item-content-mobile md:text-mont-item-content">
+                                    Texto descriptivo de ejemplo para la Carrera 2. Aquí se pueden listar enfoques, áreas de estudio y ventajas.
+                                </p>
+                                <a href="#" class="inline-flex justify-center items-center px-6 py-3 text-base font-semibold text-white rounded-full transition-colors btn-animacion bg-brand-dark hover:bg-brand-light">
+                                    Ver todas las carreras
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>

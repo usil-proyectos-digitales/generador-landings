@@ -1,0 +1,78 @@
+---
+/**
+ * DesignMdPreviewLayout — layout SOLO para la prueba `/design-md-preview`.
+ * --------------------------------------------------------------
+ * Aislado de `BaseLayout.astro` a propósito (ver plan): no se toca nada de
+ * producción. Diferencias con BaseLayout:
+ *   - Carga Roboto y Poppins además de Montserrat/Anton (las 3 BUs de
+ *     prueba usan Roboto, Montserrat+Anton y Poppins respectivamente).
+ *   - No fija `data-bu` en `<html>` — cada sección de BU en la página pone
+ *     su propio `data-bu` en un contenedor, así conviven varias BUs.
+ *   - Inyecta el CSS de tipografía generado desde `src/data/design-md/*.md`
+ *     (vía `buildTypographyCss`) — clases `.dsmd-*` scopeadas por `[data-bu]`.
+ */
+import '../styles/global.css';
+import { getDesignTokens, buildTypographyCss } from '../lib/design-md.ts';
+
+interface Props {
+  title: string;
+}
+
+const { title } = Astro.props;
+
+const typographyCss = buildTypographyCss(getDesignTokens());
+
+/**
+ * Puente de color — necesario SOLO porque esta prueba pone `data-bu` en un
+ * `<div>` en vez de en `<html>`.
+ *
+ * `--color-bu-primary` (la que generan las utilities `bg-bu-*`/`text-bu-*`)
+ * se declara una única vez en `@theme` → `:root`, como
+ * `var(--bu-color-brand-primary)`. Una custom property con `var()` se
+ * resuelve en el elemento donde SE DECLARA, no en cada punto de uso: como
+ * `:root` (`<html>`) nunca tiene `data-bu` en producción normal, el valor
+ * queda fijo en el default (`#012085`) y ese valor fijo es lo que heredan
+ * todos los descendientes — el override de `[data-bu="pregrado"]` en un
+ * elemento más abajo nunca llega a recalcularla. En el Visor real esto no
+ * pasa porque `data-bu` vive en `<html>`, el mismo elemento que `:root`.
+ * Acá, con 3 BUs conviviendo en una sola página, hace falta redeclarar el
+ * puente en cada `[data-bu]` para que se recalcule ahí mismo.
+ */
+const colorBridgeCss = `
+[data-bu] {
+  --color-bu-primary: var(--bu-color-brand-primary);
+  --color-bu-secondary: var(--bu-color-brand-secondary);
+  --color-bu-accent: var(--bu-color-accent-primary);
+  --color-bu-surface: var(--bu-color-surface-light);
+  --color-bu-neutral: var(--bu-color-neutral);
+}
+`;
+---
+
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{title} | Prueba design.md</title>
+
+    <!-- Fonts: Montserrat/Anton (ya usadas en producción) + Roboto/Poppins (nuevas, solo para esta prueba) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <!-- Poppins NO es variable en Google Fonts (solo pesos fijos) — a
+         diferencia de Montserrat/Roboto, pedirla con rango `wght@100..900`
+         devuelve 200 pero sin @font-face utilizable (la API lo descarta en
+         silencio). Hay que enumerar los pesos exactos que usan los tokens
+         de Instituto de Emprendedores (regular/medium/semibold/bold/black
+         + italic en regular/medium/black). -->
+    <link
+      href="https://fonts.googleapis.com/css2?family=Anton&family=Antonio:wght@100..700&family=Montserrat:ital,wght@0,100..900;1,100..900&family=Roboto:ital,wght@0,100..900;1,100..900&family=Poppins:ital,wght@0,400;0,500;0,600;0,700;0,900;1,400;1,500;1,900&display=swap"
+      rel="stylesheet"
+    />
+
+    <style set:html={colorBridgeCss + typographyCss}></style>
+  </head>
+  <body class="min-h-screen bg-bu-surface text-bu-neutral">
+    <slot />
+  </body>
+</html>

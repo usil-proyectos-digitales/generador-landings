@@ -18,92 +18,100 @@ NO uses npm. Si ves scripts que dicen `npm`, reemplazá mentalmente por `pnpm`. 
 
 ## Arquitectura del proyecto
 
+**Este repo es standalone** (raíz = proyecto Astro, ya no vive anidado en `web/` dentro de `usil-widgets/`). El repo padre `usil-widgets` sigue existiendo por separado con `src/widgets/` (Vite + Tailwind v3 legacy) y `wp-plugin/` (PHP Elementor legacy) — ese código NO está en este checkout, así que si necesitás mirarlo hay que ir al repo padre.
+
 ```
-usil-widgets/                          (repo raíz)
-├── src/widgets/                       (Vite + Tailwind v3 legacy, NO TOCAR)
-├── src/v2/                            (Design System V2 base — referencia)
-├── wp-plugin/usil-elementor-widgets/  (PHP legacy, NO TOCAR)
-├── docs/                              (documentación)
-├── public/                            (assets compartidos)
-└── web/                               (Astro 7 — TU PROYECTO PRINCIPAL)
-    ├── astro.config.mjs               (integración Tailwind v4 vía vite)
-    ├── tsconfig.json
-    ├── package.json                   (astro 7, @tailwindcss/vite 4, pnpm)
-    └── src/
-        ├── pages/                     (rutas del sitio)
-        ├── components/                (componentes .astro)
-        ├── layouts/                   (BaseLayout.astro)
-        ├── data/                      (JSONs: widgets-catalog, bu-colors, acf-schema)
-        ├── lib/                       (wp-api.ts = cliente REST API)
-        └── styles/
-            └── global.css            (variables CSS V2 + @theme de Tailwind)
+.                                       (raíz de este repo — proyecto Astro)
+├── astro.config.mjs                    (integración Tailwind v4 vía plugin de vite, proxy /wp-json, env schema)
+├── tsconfig.json                       (strict + noUncheckedIndexedAccess, path aliases)
+├── package.json                        (astro 7, @tailwindcss/vite 4, pnpm)
+└── src/
+    ├── pages/
+    │   ├── index.astro                 (el "Visor" — UI Kit/storybook interno, ver más abajo)
+    │   └── widget-preview/[widget]/[variant]/[mode].astro  (página aislada, 1 instancia — cargada en <iframe> por el Visor)
+    ├── components/widgets/
+    │   ├── registry.ts                 (catálogo central de widgets — fuente de verdad del Visor)
+    │   └── <id>/                       (un dir por widget, ej. `6-cards-items/`)
+    │       ├── <Nombre>.astro          (componente)
+    │       └── theme.ts                (clases Tailwind por variante × modo — ver sección de theming)
+    ├── layouts/BaseLayout.astro        (aplica data-bu al <html>, carga global.css y fonts)
+    ├── data/                           (JSONs: widgets-catalog.json, bu-colors.json, acf-schema.json)
+    ├── lib/                            (wp-api.ts = cliente REST; carousel-manager.ts, swiper-nav.ts)
+    ├── migrar/                         (assets/HTML/JS legacy V1 pendientes de migrar a componentes — solo referencia, no es código en producción)
+    └── styles/global.css               (variables CSS V2 + @theme de Tailwind — FUENTE DE VERDAD de los tokens bu-*)
 ```
+
+No hay framework de testing ni linter configurado todavía — la única validación automatizada es TypeScript (`pnpm check` / `pnpm typecheck`).
 
 ## Design System V2 — Tokens `bu-*`
 
-El sistema tiene **5 colores por Unidad de Negocio (BU)** que se aplican via CSS variables y se consumen con utility classes de Tailwind.
+El sistema tiene **5 colores fijos por Unidad de Negocio (BU)**, definidos en `src/styles/global.css` (fuente de verdad — `src/data/bu-colors.json` es solo un espejo que usa el Visor para pintar swatches, no lo edites directo).
 
-### Variables CSS (en `web/src/styles/global.css`)
+### Las 5 variables canónicas (no agregar alias ni duplicados)
 
 ```css
 :root {
-  --bu-color-primary: #012085;
-  --bu-color-secondary: #1E50DC;
-  --bu-color-accent: #C5A572;
-  --bu-color-surface: #FFFFFF;
-  --bu-color-text: #1A1A1A;
+  --bu-color-brand-primary: #012085;    /* #1 — botones primarios, links, CTAs fuertes */
+  --bu-color-brand-secondary: #1e50dc;  /* #2 — soporte, texto alterno */
+  --bu-color-accent-primary: #c5a572;   /* #3 — highlights, badges */
+  --bu-color-surface-light: #ffffff;    /* #4 — fondos, cards */
+  --bu-color-neutral: #1a1a1a;          /* #5 — texto sobre fondos claros */
 }
 
 [data-bu="pregrado"] {
-  --bu-color-primary: #002663;
-  /* ... */
-}
-
-[data-bu="emprendedores"] {
-  --bu-color-primary: #FF6B35;
-  /* ... */
+  --bu-color-brand-primary: #1e50dc;
+  --bu-color-brand-secondary: #002663;
+  --bu-color-accent-primary: #817aff;
+  --bu-color-surface-light: #DFE8F7;
+  --bu-color-neutral: #FFFFFF;
 }
 ```
 
-### Theme de Tailwind v4 (CSS-first config)
+BUs definidas hoy en `global.css`: `pregrado`, `pregrado-ejecutivo`, `instituto-de-emprendedores`, `posgrado`, `csir`, `siu`, `coloring-dreams`, `usil-paraguay`, `usil-corporativo` (9). Si necesitás una BU que no está en esta lista (ver glosario más abajo, que incluye algunas aspiracionales todavía sin bloque `[data-bu]`), hay que agregarla acá primero.
+
+### Theme de Tailwind v4 (CSS-first config, dentro de `@theme` en `global.css`)
 
 ```css
 @theme {
-  --color-bu-primary: var(--bu-color-primary);
-  --color-bu-secondary: var(--bu-color-secondary);
-  --color-bu-accent: var(--bu-color-accent);
-  --color-bu-surface: var(--bu-color-surface);
-  --color-bu-text: var(--bu-color-text);
+  --color-bu-primary: var(--bu-color-brand-primary);
+  --color-bu-secondary: var(--bu-color-brand-secondary);
+  --color-bu-accent: var(--bu-color-accent-primary);
+  --color-bu-surface: var(--bu-color-surface-light);
+  --color-bu-neutral: var(--bu-color-neutral);
 }
 ```
 
-Esto genera automáticamente utility classes: `bg-bu-primary`, `text-bu-text`, `border-bu-secondary`, etc.
+Esto genera las utility classes: `bg-bu-primary`, `text-bu-secondary`, `bg-bu-accent`, `bg-bu-surface`, `text-bu-neutral`, etc. **No existe `bu-text`** — el token de texto principal es `bu-neutral` (`text-bu-neutral`).
 
 ### Widget-level aliases (redirigibles por BU sin tocar HTML)
 
 ```css
-[data-bu] {
-  --bu-widget-card-bg: var(--bu-color-primary);
-}
-
-[data-bu="emprendedores"] {
-  --bu-widget-card-bg: var(--bu-color-accent); /* override per BU */
-}
+--color-bu-widget-card-bg: var(--bu-widget-card-bg);
 ```
 
-Genera: `bg-bu-widget-card-bg`. Permite que una BU use `accent` mientras otras usan `primary`, sin cambiar el HTML.
+Patrón: declarar `--bu-widget-card-bg` en `[data-bu]` (default) y overridearla en `[data-bu="algo"]` para que esa BU puntual use otro rol (ej. `accent` en vez de `primary`) sin tocar el componente.
+
+### Modo claro/oscuro — NO son variables CSS nuevas
+
+Las 5 variables de arriba no cambian por modo. Qué rol (primary/secondary/accent/surface/neutral) usa cada parte del widget en `light` vs `dark` se decide en el `theme.ts` de cada widget (ver sección "Widgets: registry, Visor y theming"), vía clases Tailwind distintas por modo — no agregando variables CSS.
 
 ### Cómo cambiar la BU en una página
 
 ```astro
-<BaseLayout bu="pregrado">
-  <!-- usa colores de Pregrado -->
-</BaseLayout>
-
-<BaseLayout bu="emprendedores">
-  <!-- usa colores de Emprendedores (card-bg = accent/dorado) -->
+<BaseLayout bu="pregrado" title="...">
+  <!-- usa los 5 colores de Pregrado -->
 </BaseLayout>
 ```
+
+Si se omite `bu`, el `<html>` queda sin `data-bu` (usado por el Visor, que controla la BU en cliente vía el switcher).
+
+## Widgets: registry, Visor y theming
+
+- **`src/components/widgets/registry.ts`** es el catálogo central: cada widget se registra con `id`, `variants[]`, `defaults`, `component` y opcionalmente `propsAdapter` (traduce props "canónicas" del editor a las props reales del componente). Para agregar un widget nuevo: crear `src/components/widgets/<id>/<Nombre>.astro`, importarlo en `registry.ts` y sumar una entrada al array `widgetRegistry`.
+- **`src/pages/index.astro`** es el "Visor" (UI Kit / storybook interno de desarrollo, no público). Por cada combinación widget × variante × modo renderiza una instancia dentro de un `<iframe>` propio apuntando a `widget-preview/[widget]/[variant]/[mode]` — es intencional: así los breakpoints `md:`/`lg:` de Tailwind ven el ancho real del iframe (controlado por el switcher Desktop/Tablet/Mobile), no el del documento contenedor. El editor de props del drawer edita el DOM dentro de cada iframe vía `contentDocument` (mismo origen, sin `postMessage`).
+- **`src/pages/widget-preview/[widget]/[variant]/[mode].astro`** es la ruta que sirve una sola instancia aislada; existe solo como infraestructura del Visor, no está pensada para visitarse ni linkearse directamente.
+- **`theme.ts`** (uno por widget) centraliza TODAS las clases Tailwind de color por `variant × mode` en un objeto tipado (`Record<Variant, Record<Mode, VariantTheme>>`) más un `baseClasses` compartido (tipografía/layout). Para cambiar un color de un widget: editar solo su `theme.ts`, nunca hardcodear clases de color en el `.astro`.
+- **`src/migrar/`** guarda el HTML/JS/imágenes originales de V1 que todavía se están portando a componentes Astro — es referencia de migración, no se importa desde código nuevo.
 
 ## Convenciones de código
 
@@ -125,7 +133,7 @@ interface Props {
 const { title, variant = 'primary' } = Astro.props;
 ---
 
-<section class="bg-bu-surface text-bu-text py-16">
+<section class="bg-bu-surface text-bu-neutral py-16">
   <h2 class="text-3xl font-bold">{title}</h2>
 </section>
 ```
@@ -136,7 +144,8 @@ const { title, variant = 'primary' } = Astro.props;
 - No crees clases CSS custom salvo que sea estrictamente necesario
 - Para tokens del design system: usá los `bu-*` directamente (NO crees nuevas variables sin discutirlo)
 - Responsive: mobile-first (`sm:`, `md:`, `lg:`)
-- Clases comunes: `container` para limitar ancho, `bg-bu-surface` para fondos, `text-bu-text` para texto principal
+- Clases comunes: `container` para limitar ancho, `bg-bu-surface` para fondos, `text-bu-neutral` para texto principal
+- Path aliases (`tsconfig.json`): `@/*` → `src/*`, `@components/*`, `@layouts/*`, `@lib/*`, `@data/*`
 
 ### TypeScript
 
@@ -158,11 +167,12 @@ if (!landing) return Astro.redirect('/404');
 
 | Acción | Comando |
 |---|---|
-| Instalar dependencias | `pnpm install` (desde `web/`) |
-| Dev server | `pnpm dev` (puerto 4321) |
-| Build producción | `pnpm build` |
+| Instalar dependencias | `pnpm install` (desde la raíz del repo) |
+| Dev server | `pnpm dev` (puerto 4321, `--host` para red local) |
+| Build producción | `pnpm build` (genera `dist/`) |
 | Preview del build | `pnpm preview` |
-| Type check | `npx astro check` |
+| Type check (Astro) | `pnpm check` |
+| Type check (Astro + tsc) | `pnpm typecheck` |
 
 ## Hacer y NO hacer
 
@@ -197,11 +207,11 @@ if (!landing) return Astro.redirect('/404');
 1. **Si es del IA app (preview aprobado)**: reconstruir la landing en WP + Astro según el preview
 2. **Si es un bug**: reproducir primero, después arreglar, después validar
 3. **Si es una feature nueva**: analizar impacto en design system, proponer approach, esperar OK antes de implementar
-4. **Si tenés dudas sobre el design system**: revisar `src/v2/` para la documentación original
+4. **Si tenés dudas sobre el design system**: `src/styles/global.css` es la fuente de verdad de los tokens `bu-*` (el histórico `src/v2/` vive en el repo padre `usil-widgets`, no en este checkout)
 
 ## Glosario del proyecto
 
-- **BU (Business Unit)**: Unidad de Negocio. Hay 9: pregrado, ejecutivo, emprendedores, pregrado-ejecutivo, instituto-de-emprendedores, posgrado, csir, siu, usil-corporativo, coloring-dreams, usil-paraguay
+- **BU (Business Unit)**: Unidad de Negocio. 9 definidas hoy con bloque `[data-bu]` en `global.css`: pregrado, pregrado-ejecutivo, instituto-de-emprendedores, posgrado, csir, siu, coloring-dreams, usil-paraguay, usil-corporativo. (`ejecutivo` y `emprendedores` sueltas aparecían en versiones previas del glosario pero no tienen bloque propio — antes de usarlas verificar si ya existen en `global.css`/`bu-colors.json`.)
 - **Design System V2**: Sistema basado en 5 colores por BU con tokens CSS variables
 - **Token `bu-*`**: Variable CSS que cambia según la BU del `<body data-bu="...">`
 - **Widget-level alias**: Token redirigible por BU (ej. `--bu-widget-card-bg`)

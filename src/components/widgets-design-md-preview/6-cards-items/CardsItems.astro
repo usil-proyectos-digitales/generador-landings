@@ -1,0 +1,662 @@
+---
+/**
+ * CardsItems — COPIA AISLADA para la prueba `/design-md-preview`.
+ * --------------------------------------------------------------
+ * Copia de `src/components/widgets/6-cards-items/CardsItems.astro`. Misma
+ * lógica 1:1; único cambio es tipográfico (ver `./theme.ts`) — las clases
+ * literales `text-mont-block-p-*` / `font-montserrat text-mont-card-text` /
+ * `font-montserrat font-bold text-[1.12rem]` que en el original convivían
+ * sueltas junto a `baseClasses` se reemplazan acá por los roles `dsmd-*`
+ * (`dsmd-block-body`, `dsmd-card-body`, `dsmd-label`) para que la prueba
+ * sea 100% consistente con lo que define cada `design.md`.
+ *
+ * Esta copia NO se registra en `registry.ts` y no aparece en el Visor real.
+ */
+import { theme, baseClasses, type Mode, type Variant } from './theme.ts';
+
+export interface CardItem {
+  title: string;
+  text: string;
+  image?: string;
+  icon?: string;
+  ctaText?: string;
+  ctaHref?: string;
+  categoria?: string;
+  precio?: string;
+  periodo?: string;
+}
+
+interface Props {
+  title: string;
+  titleSupport?: string;
+  description?: string;
+  cards?: CardItem[];
+  variant?: Variant;
+  mode?: Mode;
+  id?: string;
+}
+
+const {
+  title,
+  titleSupport = '',
+  description = '',
+  cards = [],
+  variant = 'v6.3',
+  mode = 'light',
+  id = 'cards-items',
+} = Astro.props;
+
+const tokens = theme[variant][mode];
+
+const cardWidthV63 = (count: number) => {
+  if (count === 4) return 'lg:w-[calc(50%-1rem)]';
+  if (count % 3 === 0) return 'lg:w-[30%]';
+  return 'lg:w-[calc(50%-2rem)]';
+};
+
+const cardWidthV66 = (count: number) => {
+  if (count === 4 || count === 2) return 'lg:w-[calc(50%-1rem)]';
+  return 'lg:w-[calc((100%-4rem)/3)]';
+};
+
+const cardWidthV611 = (count: number) => {
+  if (count === 4) return 'lg:w-[calc(50%-1rem)]';
+  return 'lg:w-[calc((100%-4rem)/3)]';
+};
+
+const cardWidthV612 = (count: number) => {
+  if (count === 4) return 'lg:w-[calc(50%-1rem)]';
+  return 'lg:w-[calc((100%-4rem)/3)]';
+};
+
+const cardCount = cards?.length ?? 0;
+
+const placeholderImg = (label: string) =>
+  `https://placehold.co/270x184/012085/ffffff/?text=${encodeURIComponent(label)}`;
+const placeholderImgLarge = (label: string) =>
+  `https://placehold.co/530x242/012085/ffffff/?text=${encodeURIComponent(label)}`;
+
+const WIDGET_ASSETS = '/widgets/6-cards-items';
+
+const svgArrow = `<svg class="svg-arrow" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7"></path></svg>`;
+---
+
+<section
+  id={id}
+  data-widget="cards-items"
+  data-variant={variant}
+  data-mode={mode}
+  class:list={[baseClasses.section, tokens.section]}
+>
+  <div class={baseClasses.container}>
+
+    {variant === 'v6.3' && (
+      <div data-variant-content="v6.3">
+        <div class="mb-16 text-center">
+          <h2 class:list={[
+            'flex flex-col items-center mb-12 hk-title',
+            baseClasses.titleFont,
+            tokens.title,
+          ]}>
+            {title}
+            {titleSupport && (
+              <div class:list={[
+                'inline-block px-6 py-2 mt-2 rounded-xl hk-caja-titulo',
+                tokens.titleSupportBox,
+              ]}>
+                <span class:list={[
+                  'block hk-title-soporte',
+                  baseClasses.titleSupportFont,
+                  tokens.titleSupport,
+                ]}>{titleSupport}</span>
+              </div>
+            )}
+          </h2>
+          {description && (
+            <p class:list={[
+              'hk-desc w-full md:w-[90%] mx-auto text-pretty',
+              baseClasses.bodyFont,
+              tokens.desc,
+            ]}>{description}</p>
+          )}
+        </div>
+        <div class="flex flex-wrap gap-8 justify-center mx-auto">
+          {cards.map((card) => (
+            <div class:list={[
+              'hk-card-6-3',
+              baseClasses.cardBase,
+              baseClasses.cardBaseMd,
+              tokens.card,
+              cardWidthV63(cardCount),
+            ]}>
+              <div class="flex gap-4 justify-center items-center">
+                <img
+                  src={card.icon ?? ''}
+                  hidden={!card.icon}
+                  class="hk-card-imagen w-[75px] h-[75px] object-contain shrink-0"
+                  alt="Imagen del Card"
+                />
+                <h3 class:list={[
+                  'hk-card-title',
+                  baseClasses.cardTitleFont,
+                  tokens.cardTitle,
+                  !card.icon && 'w-full',
+                ]}>{card.title}</h3>
+              </div>
+              <p class:list={[
+                'text-left text-pretty hk-card-text',
+                baseClasses.cardTextFont,
+                tokens.cardText,
+              ]}>{card.text}</p>
+              {card.ctaText && (
+                <a href={card.ctaHref ?? '#'} class:list={[
+                  'btn-animacion hk-card-cta inline-flex items-center gap-2 !mt-8 px-6 py-2 border rounded-[2rem] no-underline transition-all duration-300 self-start',
+                  baseClasses.cardCtaFont,
+                  tokens.cardCta,
+                ]}>
+                  {card.ctaText}
+                  <Fragment set:html={svgArrow} />
+                </a>
+              )}
+            </div>
+          ))}
+        </div>
+      </div>
+    )}
+
+    {variant === 'v6.6' && (
+      <div data-variant-content="v6.6">
+        <div class="mb-16 text-left">
+          <h2 class:list={[
+            'flex flex-col items-start mb-8 hk-title',
+            baseClasses.titleFont,
+            tokens.title,
+          ]}>
+            {title}
+            {titleSupport && (
+              <div class:list={[
+                'inline-block px-6 py-2 mt-2 rounded-xl',
+                tokens.titleSupportBox,
+              ]}>
+                <span class:list={[
+                  'block hk-title-soporte',
+                  baseClasses.titleSupportFont,
+                  tokens.titleSupport,
+                ]}>{titleSupport}</span>
+              </div>
+            )}
+          </h2>
+          {description && (
+            <p class:list={[
+              'hk-desc w-full md:w-[90%] text-pretty',
+              baseClasses.bodyFont,
+              tokens.desc,
+            ]}>{description}</p>
+          )}
+        </div>
+        <div class="hk-cards-container flex flex-wrap gap-x-8 gap-y-16 justify-center mx-auto w-full">
+          {cards.map((card) => (
+            <div class:list={[
+              'hk-card-6-6 flex gap-3 justify-center items-center w-full md:w-[calc(50%-1rem)]',
+              cardWidthV66(cardCount),
+            ]}>
+              <div class:list={[
+                'hk-box-imagen flex shrink-0 justify-center items-center w-[75px] h-[75px] rounded-full',
+                tokens.cardIconBox,
+              ]}>
+                <img src={card.icon ?? `${WIDGET_ASSETS}/card_imagen.webp`} class="hk-card-imagen w-[45px]" alt="Imagen del Card" />
+              </div>
+              <div class="box-texto">
+                <h3 class:list={[
+                  'hk-card-title',
+                  baseClasses.cardTitleFont,
+                  tokens.cardTitle,
+                ]}>{card.title}</h3>
+                <p class:list={[
+                  'hk-card-text',
+                  baseClasses.cardItemTextFont,
+                  tokens.cardText,
+                ]}>{card.text}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    )}
+
+    {variant === 'v6.8' && (
+      <div data-variant-content="v6.8">
+        <div class="mb-16 text-left hk-header-container-6-8">
+          <h2 class:list={[
+            'flex flex-col items-start hk-title-6-8',
+            baseClasses.titleFont,
+            tokens.title,
+          ]}>{title}</h2>
+          <div class:list={[
+            'my-6 mr-auto w-40 h-1 rounded-full hk-header-bar-6-8',
+            tokens.bar,
+          ]}></div>
+          {description && (
+            <p class:list={[
+              'hk-paragraph-6-8 w-full text-left text-pretty',
+              baseClasses.bodyFont,
+              tokens.desc,
+            ]}>{description}</p>
+          )}
+        </div>
+        <div
+          class="hk-cards-grid-v6-8 mx-auto flex flex-wrap gap-4 justify-center max-w-[270px] md:max-w-[560px] lg:max-w-[850px] xl:max-w-[1140px]"
+        >
+          {cards.map((card) => (
+            <div class:list={[
+              'hk-card-6-8 lg:w-[calc((100%-3rem)/4)] md:w-[calc((100%-1rem)/2)] w-full max-w-[270px] mx-auto group',
+            ]}>
+              <div class="overflow-hidden relative rounded-t-2xl">
+                <img src={card.image ?? placeholderImg(card.title || 'Card')} class="w-full max-w-[270px] mx-auto h-[184px] object-cover transition-transform duration-500 hk-card-imagen-6-8 lg:group-hover:scale-110" alt="Imagen del card" />
+                <a href={card.ctaHref ?? '#'} class:list={[
+                  'hidden absolute inset-0 flex-col justify-center items-center opacity-0 transition-all duration-500 translate-y-full lg:flex group-hover:translate-y-0 group-hover:opacity-100',
+                  tokens.imageOverlay,
+                ]}>
+                  <img src={`${WIDGET_ASSETS}/ver_mas.webp`} class="mb-2" alt="Ver más icon" />
+                  <span class="text-sm font-medium tracking-wider text-bu-surface hk-vermas-texto">Ver más</span>
+                </a>
+              </div>
+              <div class:list={['p-4 rounded-b-2xl hk-box-texto', tokens.card]}>
+                <h3 class:list={[
+                  'hk-card-title',
+                  baseClasses.cardTitleFontAnton,
+                  tokens.cardTitle,
+                ]}>{card.title}</h3>
+                <div class:list={['my-3 w-14 h-1 rounded-full', tokens.bar]}></div>
+                <a href={card.ctaHref ?? '#'} class="inline-block mt-2 text-sm font-bold no-underline uppercase text-bu-primary lg:hidden">Ver más</a>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    )}
+
+    {variant === 'v6.10' && (
+      <div data-variant-content="v6.10">
+        <div class="mb-16 text-left">
+          <h2 class:list={[
+            'flex flex-col items-start mb-8 hk-title',
+            baseClasses.titleFont,
+            tokens.title,
+          ]}>
+            {title}
+            {titleSupport && (
+              <div class:list={[
+                'inline-block px-6 py-2 mt-2 rounded-xl',
+                tokens.titleSupportBox,
+              ]}>
+                <span class:list={[
+                  'block hk-title-soporte',
+                  baseClasses.titleSupportFont,
+                  tokens.titleSupport,
+                ]}>{titleSupport}</span>
+              </div>
+            )}
+          </h2>
+          {description && (
+            <p class:list={[
+              'hk-text-paragraph w-full md:w-[90%] text-pretty',
+              baseClasses.bodyFont,
+              tokens.desc,
+            ]}>{description}</p>
+          )}
+        </div>
+        <div class="flex flex-wrap gap-8 justify-center mx-auto">
+          {cards.map((card) => (
+            <div class:list={['hk-card-6-10', baseClasses.cardBaseV610]}>
+              <div class="overflow-hidden relative rounded-t-[2rem]">
+                <img src={card.image ?? placeholderImgLarge(card.title || 'Card')} class="w-full transition-transform duration-500 hk-card-imagen lg:group-hover:scale-110" alt="Imagen del card" />
+              </div>
+              <div class={baseClasses.cardBoxV610}>
+                <h3 class:list={[
+                  'hk-card-title',
+                  baseClasses.cardTitleFont,
+                  tokens.cardTitle,
+                ]}>{card.title}</h3>
+                <p class:list={[
+                  'hk-card-text text-pretty',
+                  baseClasses.cardTextFont,
+                  tokens.cardText,
+                ]}>{card.text}</p>
+                {card.ctaText && (
+                  <a href={card.ctaHref ?? '#'} class:list={[
+                    'btn-animacion hk-card-cta inline-flex items-center gap-2 mt-4 px-6 py-2 border rounded-[2rem] no-underline transition-all duration-300',
+                    baseClasses.cardCtaFontAntonio,
+                    tokens.cardCta,
+                  ]}>
+                    {card.ctaText}
+                    <Fragment set:html={svgArrow} />
+                  </a>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    )}
+
+    {variant === 'v6.11' && (
+      <div data-variant-content="v6.11">
+        <div class="mb-16 text-center">
+          <h2 class:list={[
+            'flex flex-col items-center mb-12 hk-title',
+            baseClasses.titleFont,
+            tokens.title,
+          ]}>
+            {title}
+            {titleSupport && (
+              <div class:list={[
+                'inline-block px-6 py-2 mt-2 rounded-xl hk-caja-titulo',
+                tokens.titleSupportBox,
+              ]}>
+                <span class:list={[
+                  'block hk-title-soporte',
+                  baseClasses.titleSupportFont,
+                  tokens.titleSupport,
+                ]}>{titleSupport}</span>
+              </div>
+            )}
+          </h2>
+          {description && (
+            <p class:list={[
+              'hk-desc w-full md:w-[90%] mx-auto text-pretty',
+              baseClasses.bodyFont,
+              tokens.desc,
+            ]}>{description}</p>
+          )}
+        </div>
+        <div class="flex flex-wrap gap-8 justify-center mx-auto">
+          {cards.map((card) => (
+            <div class:list={[
+              'hk-card-6-11',
+              baseClasses.cardBaseV611,
+              baseClasses.cardBaseV611Lg,
+              cardWidthV611(cardCount),
+              tokens.card,
+            ]}>
+              <div class="w-full">
+                <span class:list={[
+                  'text-left hk-card-title-categoria',
+                  baseClasses.cardTitleFont,
+                  tokens.cardTitle,
+                ]}>{card.categoria ?? 'Categoria'}</span>
+                <div class="w-full h-[1px] bg-bu-surface my-2"></div>
+              </div>
+              <h3 class:list={[
+                'text-left hk-card-title',
+                baseClasses.cardTextFont,
+                tokens.cardTitle,
+              ]}>{card.title}</h3>
+              <div class="w-full h-[1px] bg-bu-surface my-4"></div>
+              <p class:list={[
+                'm-0 text-left hk-card-text text-balance leading-[1.2]',
+                baseClasses.cardTextFont,
+                tokens.cardText,
+              ]}>
+                <span class="hk-precio-texto">Precio:</span><br />
+                <span class="hk-precio-monto">{card.precio ?? 'S/ xxx.xx'}</span>
+              </p>
+              {card.ctaText && (
+                <a href={card.ctaHref ?? '#'} class:list={[
+                  'btn-animacion hk-card-cta inline-flex items-center gap-2 mt-4 px-6 py-2 border rounded-[2rem] no-underline transition-all duration-300',
+                  baseClasses.cardCtaFont,
+                  tokens.cardCta,
+                ]}>
+                  {card.ctaText}
+                  <Fragment set:html={svgArrow} />
+                </a>
+              )}
+            </div>
+          ))}
+        </div>
+      </div>
+    )}
+
+    {variant === 'v6.12' && (
+      <div data-variant-content="v6.12">
+        <div class="mb-16 text-center">
+          <h2 class:list={[
+            'flex flex-col items-center mb-12 hk-title',
+            baseClasses.titleFont,
+            tokens.title,
+          ]}>
+            {title}
+            {titleSupport && (
+              <div class:list={[
+                'inline-block px-6 py-2 mt-2 rounded-xl hk-caja-titulo',
+                tokens.titleSupportBox,
+              ]}>
+                <span class:list={[
+                  'block hk-title-soporte',
+                  baseClasses.titleSupportFont,
+                  tokens.titleSupport,
+                ]}>{titleSupport}</span>
+              </div>
+            )}
+          </h2>
+          {description && (
+            <p class:list={[
+              'hk-desc w-full md:w-[90%] mx-auto text-pretty',
+              baseClasses.bodyFont,
+              tokens.desc,
+            ]}>{description}</p>
+          )}
+        </div>
+        <div class="flex flex-wrap gap-8 justify-center mx-auto">
+          {cards.map((card) => (
+            <div class:list={[
+              'hk-card-6-12',
+              baseClasses.cardBaseV612,
+              baseClasses.cardBaseV612Lg,
+              cardWidthV612(cardCount),
+              tokens.card,
+            ]}>
+              <div class="flex gap-3 items-center px-4 py-1 bg-bu-surface rounded-lg hk-date-badge">
+                <img src={`${WIDGET_ASSETS}/mini_calendario.webp`} class="hk-date-icon" alt="Calendario" />
+                <p class:list={[
+                  'hk-card-periodo dsmd-label hk-date-text',
+                  tokens.dateBadgeText,
+                ]}>{card.periodo ?? 'Del xx/xx al xx/xx'}</p>
+              </div>
+              <h3 class:list={[
+                '!font-bold hk-card-title',
+                baseClasses.cardTitleFont,
+                tokens.cardTitle,
+              ]}>{card.title}</h3>
+              <p class:list={[
+                'hk-card-text text-pretty dsmd-card-body',
+                tokens.cardText,
+              ]}>{card.text}</p>
+              {card.ctaText && (
+                <a href={card.ctaHref ?? '#'} class:list={[
+                  'btn-animacion hk-card-cta inline-flex items-center gap-2 mt-4 px-6 py-2 border rounded-[2rem] no-underline transition-all duration-300',
+                  baseClasses.cardCtaFont,
+                  tokens.cardCta,
+                ]}>
+                  {card.ctaText}
+                  <Fragment set:html={svgArrow} />
+                </a>
+              )}
+            </div>
+          ))}
+        </div>
+      </div>
+    )}
+
+  </div>
+</section>
+
+<style>
+  .hk-cards-grid-v6-8 {
+    --swiper-theme-color: var(--bu-color-brand-primary);
+  }
+</style>
+
+<script>
+  import { initDynamicCarousel } from '@lib/carousel-manager.ts';
+  import type Swiper from 'swiper';
+
+  const V68_ITEM_SELECTOR = '.hk-card-6-8';
+  const V68_FLEX_CLASSES = [
+    'flex', 'flex-wrap', 'gap-4', 'justify-center',
+    'max-w-[270px]', 'md:max-w-[560px]', 'lg:max-w-[850px]', 'xl:max-w-[1140px]',
+  ];
+
+  function normalizeSwiperSlides(container: HTMLElement) {
+    const wrapper = container.querySelector<HTMLElement>(':scope > .swiper-wrapper');
+    if (!wrapper) return;
+    Array.from(wrapper.children).forEach((child) => {
+      if (!(child instanceof HTMLElement)) return;
+      if (!child.classList.contains('hk-card-6-8') || child.classList.contains('swiper-slide')) return;
+      child.classList.add('swiper-slide');
+      child.classList.remove(
+        'lg:w-[calc((100%-3rem)/4)]', 'md:w-[calc((100%-1rem)/2)]', 'w-full', 'max-w-[270px]'
+      );
+      child.style.width = 'auto';
+      child.style.height = 'auto';
+    });
+  }
+
+  function revertCarousel(container: HTMLElement) {
+    (container as HTMLElement & { swiper?: Swiper }).swiper?.destroy(true, true);
+
+    const wrapper = container.querySelector<HTMLElement>(':scope > .swiper-wrapper');
+    const items = wrapper
+      ? Array.from(wrapper.children).filter((el): el is HTMLElement => el instanceof HTMLElement)
+      : Array.from(container.querySelectorAll<HTMLElement>(V68_ITEM_SELECTOR));
+
+    items.forEach((item) => {
+      item.classList.remove('swiper-slide');
+      item.style.width = '';
+      item.style.height = '';
+    });
+
+    const outerWrapper =
+      container.parentElement?.classList.contains('hk-swiper-wrapper')
+        ? container.parentElement
+        : null;
+
+    if (outerWrapper) {
+      outerWrapper.parentElement?.insertBefore(container, outerWrapper);
+      outerWrapper.remove();
+    }
+
+    wrapper?.remove();
+    items.forEach((item) => container.appendChild(item));
+
+    container.classList.remove('swiper', 'swiper-initialized', 'pb-28', 'pb-8', 'hk-cards-carousel');
+    container.style.width = '';
+    container.style.overflow = '';
+    container.classList.add(...V68_FLEX_CLASSES);
+  }
+
+  function initCarouselV68() {
+    const sections = document.querySelectorAll<HTMLElement>(
+      'section[data-widget="cards-items"][data-variant="v6.8"]'
+    );
+    sections.forEach((section) => {
+      const container =
+        section.querySelector<HTMLElement>('.hk-swiper-wrapper > .hk-cards-grid-v6-8') ??
+        section.querySelector<HTMLElement>('.hk-cards-grid-v6-8');
+      if (!container) return;
+
+      const itemCount = container.querySelectorAll(V68_ITEM_SELECTOR).length;
+
+      if (itemCount <= 4) {
+        if (container.classList.contains('swiper-initialized')) revertCarousel(container);
+        return;
+      }
+
+      normalizeSwiperSlides(container);
+      initDynamicCarousel({ container, itemSelector: V68_ITEM_SELECTOR });
+    });
+  }
+
+  function setCardWidths(
+    selector: string,
+    containerSelector: string,
+    widthFor: (count: number) => string
+  ) {
+    const sections = document.querySelectorAll<HTMLElement>(selector);
+    sections.forEach((section) => {
+      const container =
+        section.querySelector<HTMLElement>(containerSelector) ||
+        section.querySelector<HTMLElement>('.flex.flex-wrap.gap-8');
+      if (!container) return;
+      const cards = Array.from(container.children).filter(
+        (el) => el.tagName === 'DIV'
+      ) as HTMLElement[];
+      const count = cards.length;
+      cards.forEach((card) => {
+        card.className = card.className
+          .split(' ')
+          .filter(
+            (c) =>
+              !c.startsWith('lg:w-') &&
+              !c.startsWith('md:w-') &&
+              !c.startsWith('w-full') &&
+              !c.startsWith('max-w-')
+          )
+          .join(' ');
+        card.classList.add('w-full', 'md:w-[calc(50%-1rem)]');
+        card.classList.add(widthFor(count));
+      });
+    });
+  }
+
+  function applyDynamicLayouts() {
+    setCardWidths(
+      'section[data-widget="cards-items"][data-variant="v6.3"]',
+      '.hk-cards-grid-v6-3, .flex.flex-wrap.gap-8',
+      (count) => {
+        if (count === 4) return 'lg:w-[calc(50%-1rem)]';
+        if (count % 3 === 0) return 'lg:w-[30%]';
+        return 'lg:w-[calc(50%-2rem)]';
+      }
+    );
+    setCardWidths(
+      'section[data-widget="cards-items"][data-variant="v6.6"]',
+      '.hk-cards-container',
+      (count) =>
+        count === 4 || count === 2
+          ? 'lg:w-[calc(50%-1rem)]'
+          : 'lg:w-[calc((100%-4rem)/3)]'
+    );
+    setCardWidths(
+      'section[data-widget="cards-items"][data-variant="v6.11"]',
+      '.hk-cards-container, .flex.flex-wrap.gap-8',
+      (count) =>
+        count === 4
+          ? 'lg:w-[calc(50%-1rem)]'
+          : 'lg:w-[calc((100%-4rem)/3)]'
+    );
+    setCardWidths(
+      'section[data-widget="cards-items"][data-variant="v6.12"]',
+      '.hk-cards-container, .flex.flex-wrap.gap-8',
+      (count) =>
+        count === 4
+          ? 'lg:w-[calc(50%-1rem)]'
+          : 'lg:w-[calc((100%-4rem)/3)]'
+    );
+  }
+
+  applyDynamicLayouts();
+  initCarouselV68();
+
+  document.addEventListener('astro:page-load', () => {
+    applyDynamicLayouts();
+    initCarouselV68();
+  });
+
+  document.addEventListener('visor:cards-changed', (e: Event) => {
+    const detail = (e as CustomEvent).detail;
+    if (detail?.widgetId !== '6-cards-items') return;
+    applyDynamicLayouts();
+    initCarouselV68();
+  });
+</script>

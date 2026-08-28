@@ -1,0 +1,105 @@
+---
+/**
+ * /design-md-preview — PRUEBA aislada.
+ * --------------------------------------------------------------
+ * Renderiza los widgets de `src/components/widgets-design-md-preview/`
+ * (copias de `6-cards-items` y `7-bloque-ponentes-testimonios`) una vez por
+ * cada BU de prueba, tomando color + tipografía de `src/data/design-md/*.md`.
+ * Cambiar `data-bu` en el contenedor de cada sección ya alcanza para que
+ * el color (tokens `bu-*` existentes) y la tipografía (clases `dsmd-*`
+ * generadas por `buildTypographyCss`) se pinten distinto — sin JS.
+ *
+ * No se registra en `registry.ts`, no aparece en el Visor real (`/`).
+ */
+import DesignMdPreviewLayout from '../layouts/DesignMdPreviewLayout.astro';
+import CardsItems from '../components/widgets-design-md-preview/6-cards-items/CardsItems.astro';
+import BloquePonentesTestimonios from '../components/widgets-design-md-preview/7-bloque-ponentes-testimonios/BloquePonentesTestimonios.astro';
+import { getDesignTokens } from '../lib/design-md.ts';
+import type { Mode } from '../components/widgets-design-md-preview/6-cards-items/theme.ts';
+
+const allTokens = getDesignTokens();
+
+const buLabels: Record<string, string> = {
+  pregrado: 'Pregrado',
+  'pregrado-ejecutivo': 'Pregrado Ejecutivo',
+  'instituto-de-emprendedores': 'Instituto de Emprendedores',
+};
+
+const modeLabels: Record<Mode, string> = { light: 'Modo claro', dark: 'Modo oscuro' };
+
+const bus = ['pregrado', 'pregrado-ejecutivo', 'instituto-de-emprendedores'] as const;
+const modes: Mode[] = ['light', 'dark'];
+
+const sampleCards = [
+  { title: 'Ingeniería', text: 'Formación en tecnología y ciencia aplicada para resolver problemas reales.', ctaText: 'Ver carrera', ctaHref: '#' },
+  { title: 'Negocios', text: 'Liderazgo, gestión y visión estratégica para el mundo empresarial.', ctaText: 'Ver carrera', ctaHref: '#' },
+  { title: 'Diseño', text: 'Creatividad aplicada a producto, marca y experiencia de usuario.', ctaText: 'Ver carrera', ctaHref: '#' },
+];
+---
+
+<DesignMdPreviewLayout title="Prueba design.md por BU">
+  <main class="py-12">
+    <div class="container px-4 mx-auto mb-12 md:px-6">
+      <h1 class="text-3xl font-bold text-bu-neutral">Prueba: design.md por BU</h1>
+      <p class="mt-2 text-bu-neutral/70">
+        Color y tipografía leídos en build time desde <code>src/data/design-md/*.md</code>.
+        Cada sección abajo fija su propio <code>data-bu</code> — nada de JS.
+      </p>
+    </div>
+
+    {bus.map((bu) => {
+      const tokens = allTokens[bu];
+      return (
+        <section data-bu={bu} class="mb-16">
+          <div class="container px-4 mx-auto mb-6 md:px-6">
+            <h2 class="inline-block px-4 py-1 text-sm font-bold text-bu-neutral bg-bu-primary rounded-full">
+              {buLabels[bu]} — fuente: {tokens?.typography[0]?.fontFamily}
+            </h2>
+          </div>
+
+          <div class="mb-12">
+            <div class="container px-4 mx-auto mb-2 md:px-6">
+              <h3 class="text-lg font-bold text-bu-neutral">6-cards-items (v6.3)</h3>
+            </div>
+            {modes.map((mode) => (
+              <div class="mb-4">
+                <div class="container px-4 mx-auto mb-4 md:px-6">
+                  <span class="inline-block px-3 py-1 text-xs font-bold tracking-wide uppercase rounded-full border border-bu-primary text-bu-primary">
+                    {modeLabels[mode]}
+                  </span>
+                </div>
+                <CardsItems
+                  variant="v6.3"
+                  mode={mode}
+                  title="Nuestras carreras"
+                  description="Elegí la carrera que mejor se adapta a tu futuro profesional."
+                  cards={sampleCards}
+                />
+              </div>
+            ))}
+          </div>
+
+          <div class="mb-12">
+            <div class="container px-4 mx-auto mb-2 md:px-6">
+              <h3 class="text-lg font-bold text-bu-neutral">7-bloque-ponentes-testimonios (v7.2)</h3>
+            </div>
+            {modes.map((mode) => (
+              <div class="mb-4">
+                <div class="container px-4 mx-auto mb-4 md:px-6">
+                  <span class="inline-block px-3 py-1 text-xs font-bold tracking-wide uppercase rounded-full border border-bu-primary text-bu-primary">
+                    {modeLabels[mode]}
+                  </span>
+                </div>
+                <BloquePonentesTestimonios
+                  variant="v7.2"
+                  mode={mode}
+                  title="Ponentes"
+                />
+              </div>
+            ))}
+          </div>
+        </section>
+      );
+    })}
+  </main>
+</DesignMdPreviewLayout>
