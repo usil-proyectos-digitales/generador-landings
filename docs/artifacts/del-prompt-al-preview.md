@@ -30,6 +30,10 @@ Tres formas de que el usuario le cuente a la IA qué landing quiere. Cada una ca
 
 Del primer clic al preview navegable. Cada paso describe qué ve el usuario y qué decisión toma — no cómo se resuelve técnicamente por dentro.
 
+### 0. Login — Cuenta de WordPress
+
+Antes de tocar contenido, el usuario entra con su propia cuenta de WordPress (login y roles nativos de WP, sin sistema de usuarios aparte) — eso identifica quién hace la solicitud y habilita su historial personal ("Mis solicitudes").
+
 ### 1. Onboarding — Selección de Unidad de Negocio
 
 Primer y único paso obligatorio antes de tocar contenido: elegir para qué BU es la landing (Pregrado, Posgrado, Instituto de Emprendedores...). Esa elección no es cosmética — fija de entrada la identidad de marca completa de todo lo que sigue.
@@ -62,7 +66,7 @@ Nada de este paso se guarda todavía — es un proceso efímero. Si el usuario c
 El boceto responsive, ya con los colores y tipografía de la BU aplicados, en una URL temporal de prueba.
 
 - Este preview es estructura, no producto terminado — los textos son los que el usuario ingresó, sin pulido editorial ni imágenes finales.
-- Aprobarlo no publica nada: crea una landing en borrador (mismos bloques, en gris donde falta contenido real) para que Desarrollo la complete antes de publicar.
+- Aprobarlo no publica nada: crea una landing en Borrador — el mismo build real que vio el usuario en el preview, con la estructura y los textos ya cargados. Lo que falta (imágenes finales, SEO, Open Graph) lo completa Desarrollo antes de publicar, no un placeholder visual.
 
 ## 03 — La pantalla de preview, en detalle
 
@@ -71,7 +75,7 @@ Qué componentes necesita la pantalla de resultado para que el usuario pueda rev
 | Componente | Descripción |
 |---|---|
 | **Contenedor** — Vista responsive | Toggle Desktop / Mobile sobre el mismo preview — mismo contenido, sin recargar ni regenerar, solo cambia el ancho del lienzo. |
-| **Identificador** — URL temporal | Generada automáticamente al entregar el boceto, para compartir con quien tenga que dar el visto bueno sin pedirle que abra la plataforma. |
+| **Identificador** — URL temporal | No es un boceto abstracto: es un build real de Astro con el contenido que armó la IA, disparado por GitHub Actions (mismo mecanismo que el deploy real) y subido a `previews/` en el mismo bucket S3 — servido por CloudFront. Se comparte esa URL con quien tenga que dar el visto bueno, sin pedirle que abra la plataforma. |
 | **Panel lateral** — Editar textos | Ajustes puntuales sobre lo ya generado — título, texto de una card, CTA — sin volver a pasar por el wizard. |
 | **Panel lateral** — Regenerar una sección | Pedirle a la IA que vuelva a intentar *solo* un bloque puntual — cambia su variante y sus props, no toca el resto del preview. |
 | **Panel lateral** — Modo claro / oscuro | Alternar el widget entre `light` y `dark` — cada modo resuelve su propio color y tipografía dentro del mismo `design.md` de la BU, nunca sale de esa identidad de marca. |

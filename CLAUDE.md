@@ -226,7 +226,7 @@ if (!landing) return Astro.redirect('/404');
 - **`design.md` por BU**: Documento estructurado (`src/data/design-md/*.md`) con color (mismos 5 roles que `bu-*`) + tipografía + roles tipográficos por BU; enfoque de theming en adopción hacia adelante, hoy cubre 3 de 9 BU — ver sección "`design.md` por BU" arriba
 - **Widget-level alias**: Token redirigible por BU (ej. `--bu-widget-card-bg`)
 - **Headless CMS**: WP usado solo como backend de datos, sin renderizar frontend
-- **IA App**: Aplicación que Marketing usa para solicitar landings (Gemini en dev, Bedrock en prod) — ver `AI-LANDING-FLOW.md` para el flujo E2E completo de generación con IA
+- **IA App**: el chat/wizard que Marketing usa para solicitar landings — vive como plugin PHP dentro de WordPress en SiteGround (no una app externa con hosting propio). Motor de IA: **Google Gemini en dev** (tier gratis — ahí la confidencialidad no es un problema, evitar igual usar contenido real de Marketing) y **AWS Bedrock (Claude Haiku 4.5) en producción** — recomendación del equipo de Infraestructura por garantías de confidencialidad de datos (no se usa para entrenar modelos) y consolidación en AWS junto con S3/CloudFront. Login y roles son los nativos de WP. Ver `AI-LANDING-FLOW.md` para el flujo E2E completo de generación con IA
 
 ## Información de contacto del proyecto
 

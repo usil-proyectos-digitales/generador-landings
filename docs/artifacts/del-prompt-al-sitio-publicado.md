@@ -9,7 +9,7 @@ Arquitectura de proceso end-to-end: desde que el cliente completa su solicitud c
 - **Alcance**: solicitud del cliente hasta sitio en producción
 - **Continúa**: el flujo de captura y preview ya definido en "Del prompt al preview"
 
-Este documento describe el proceso completo sobre la arquitectura que ya está vigente hoy: **WordPress como CMS headless**, consumido por el sitio en Astro. No es el backend alternativo (Payload) que se exploró en el documento de comparación de stack — ese es un análisis de arquitectura aparte. Acá se asume que el CMS de destino sigue siendo WordPress, y el foco es cómo la IA, el CMS y el Dev se pasan la posta entre sí hasta que la landing queda en producción.
+Este documento describe el proceso completo sobre la arquitectura decidida: **WordPress como CMS headless**, consumido por el sitio en Astro. Se descartó explícitamente considerar Payload u otras alternativas — no hay comparación pendiente. El foco acá es cómo la IA, el CMS y el Dev se pasan la posta entre sí hasta que la landing queda en producción.
 
 El motor de marca que pinta cada landing —en el preview inicial y en lo que la IA le entrega a WordPress— es el `design.md` por Unidad de Negocio: color, tipografía y qué rol tipográfico usa cada parte de un bloque. Es el reemplazo del esquema anterior de clases de color fijas por BU, que queda en desuso.
 
@@ -27,9 +27,9 @@ El punto de partida de todo el proceso — detalle completo en "Del prompt al pr
 
 Qué pasa apenas el cliente confirma su solicitud — sin intervención humana todavía de por medio.
 
-### 1. La IA / API intermedia interpreta el input
+### 1. El plugin IA (dentro de WordPress) interpreta el input
 
-Toma lo que llegó del wizard híbrido (campos + prompt + documento adjunto, si lo hubo) y lo traduce a la estructura real que WordPress espera: un layout de ACF Flexible Content por cada bloque de la landing.
+Toma lo que llegó del wizard híbrido (campos + prompt + documento adjunto, si lo hubo) y lo traduce a la estructura real que WordPress espera: un layout de ACF Flexible Content por cada bloque de la landing. Este plugin corre como código PHP dentro de la misma instalación de WordPress en SiteGround — no es una aplicación externa con su propio hosting.
 
 ### 2. Arma el JSON por bloque
 
@@ -53,7 +53,7 @@ Ejemplo — bloque hero generado por la IA:
 
 ### 3. Crea la entrada en WordPress, en Borrador
 
-El JSON completo se envía por REST API (o GraphQL) y crea una nueva entrada del tipo de contenido `landing` en estado **Borrador**, con todos los bloques generados ya cargados.
+El plugin crea la entrada directo en la base de datos de WP (`wp_insert_post` + campos ACF) — no hay un POST a un sistema externo, porque corre dentro de la misma instalación. Queda una nueva entrada del tipo de contenido `landing` en estado **Borrador**, con todos los bloques generados ya cargados, y con el usuario WP que la solicitó registrado en un campo custom (`requested_by`) — la base del historial de solicitudes (detalle completo en el documento maestro "Del Prompt a Landing", §05).
 
 - La entrada existe y es editable en el admin de WordPress — el Dev no arranca de cero, entra a completar algo que ya tiene estructura y textos.
 - Nada de esto es visible en el sitio público: un Borrador no se renderiza en producción.
@@ -62,7 +62,7 @@ El JSON completo se envía por REST API (o GraphQL) y crea una nueva entrada del
 
 ## 03 — Workflow operativo del Dev / Maquetador
 
-Seis pasos, todos sobre la misma entrada en Borrador que ya generó la IA — no hay handoff a un sistema distinto entre uno y otro.
+Seis pasos, todos sobre la misma entrada en Borrador que ya generó la IA — no hay handoff a un sistema distinto entre uno y otro. El Dev trabaja con su propio usuario y rol de WordPress (login nativo, el mismo con el que ya entra a `wp-admin`) — al abrir el borrador queda registrado en `assigned_dev`, y al publicar queda en `published_by`/`published_at` (detalle completo en "Del Prompt a Landing", §05).
 
 1. **Contenido — Revisión y ajuste de textos**: validar lo que generó la IA directo en los Custom Fields de ACF. El propio schema ya marca los límites — un `cta_text` de más de 30 caracteres o un `title` de más de 80 se detectan solos, no hace falta un criterio nuevo para saber qué acortar.
 2. **Recursos visuales — Selección e inserción de imágenes**: completar los campos `image_url`/`image_alt` que la IA dejó vacíos en cada bloque, con recursos e íconos acordes al manual de marca de la BU (su `design.md`).

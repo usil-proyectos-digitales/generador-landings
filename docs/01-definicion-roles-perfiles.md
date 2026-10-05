@@ -39,12 +39,14 @@ El presente documento establece el modelo de roles, perfiles, responsabilidades 
 │                   BACKEND (WordPress Headless)                          │
 │              SiteGround — Solo admin (sin frontend público)             │
 │   Custom Post Types + ACF Flexible Content + REST API expuesta          │
+│   + Plugin IA (Gemini dev / AWS Bedrock prod, login nativo WP)          │
 └─────────────────────────────────┬───────────────────────────────────────┘
                                   │ Admin (wp-admin)
                                   ▼
 ┌─────────────────────────────────────────────────────────────────────────┐
 │              EQUIPO DE MARKETING / DESARROLLADORES                       │
-│         WordPress admin + GitHub + Vercel/Netlify (staging)              │
+│         WordPress admin (login nativo) + GitHub Actions + S3/CloudFront  │
+│         (staging = prefijo `staging/` del mismo bucket)                  │
 └─────────────────────────────────────────────────────────────────────────┘
 ```
 
@@ -66,17 +68,17 @@ El presente documento establece el modelo de roles, perfiles, responsabilidades 
 
 | # | Perfil | Capa | Acceso principal | Frecuencia de uso |
 |---|---|---|---|---|
-| 1 | Solicitante de Landing (Marketing) | App con IA | Aplicación web con Asistente IA | Diaria |
-| 2 | Administrador de Marketing / Growth / SEO | Backend (WordPress) + App IA | wp-admin (rol: Administrator), App IA | Diaria |
+| 1 | Solicitante de Landing (Marketing) | WordPress (plugin IA) | Chat con IA dentro de WP — login con cuenta WP nativa, rol limitado | Diaria |
+| 2 | Administrador de Marketing / Growth / SEO — funciones de **Administrador** y **Supervisor** | Backend (WordPress) + Plugin IA | wp-admin (rol: Administrator), plugin IA | Diaria |
 | 3 | Desarrollador Frontend | Frontend (Astro) + Backend (WP) | GitHub, VS Code, Terminal, **WordPress admin** | Diaria |
 | 4 | Administrador de Sistemas / DevOps | Infraestructura | AWS Console, SiteGround, GitHub Actions | Semanal |
 | 5 | Usuario Final / Visitante Web | Frontend público | Navegador web | Variable (tráfico del sitio) |
 
 ### 2.2. Matriz de permisos por capa
 
-| Perfil | App con IA | WordPress Admin | GitHub Repo | AWS Console | SiteGround Panel | Frontend público |
+| Perfil | Chat IA (plugin en WP) | WordPress Admin (`wp-admin`) | GitHub Repo | AWS Console | SiteGround Panel | Frontend público |
 |---|---|---|---|---|---|---|
-| Solicitante (Marketing) | ✅ Solicita + valida previews | ❌ | ❌ | ❌ | ❌ | ✅ Solo lectura |
+| Solicitante (Marketing) | ✅ Solicita + valida previews (login WP, rol limitado) | ⚠️ Solo el plugin de solicitud, no el panel general | ❌ | ❌ | ❌ | ✅ Solo lectura |
 | Administrador Marketing | ✅ Valida previews | ❌ | ❌ | ❌ | ❌ | ✅ Solo lectura |
 | Desarrollador Frontend | ⚠️ Lectura de previews | ✅ **Construye landings** | ✅ Push/Merge/Deploy | ⚠️ Lectura | ⚠️ Lectura | ✅ Solo lectura |
 | Administrador Sistemas | ⚠️ Lectura | ⚠️ Lectura (debug) | ✅ Admin (settings, secrets) | ✅ Control total | ✅ Control total | ✅ Solo lectura |
@@ -90,16 +92,16 @@ El presente documento establece el modelo de roles, perfiles, responsabilidades 
 
 #### Nivel de acceso
 
-- **Rol WordPress**: Sin acceso
-- **Acceso**: Solo a la aplicación web con IA (chat conversacional)
-- **No tiene acceso**: A WordPress, código fuente, ni infraestructura
+- **Rol WordPress**: rol nativo limitado (ej. `landing_client`) — login con su propia cuenta de WordPress, sin acceso al panel administrativo general
+- **Acceso**: solo al chat/wizard con IA (plugin dentro de WordPress) y a su propio historial de solicitudes ("Mis solicitudes")
+- **No tiene acceso**: al panel de administración de WordPress (`wp-admin` general), código fuente, ni infraestructura
 
 #### Herramientas e interfaces
 
 | Herramienta | Propósito |
 |---|---|
-| Aplicación web con IA (Asistente de Landings) | Solicitar landings mediante prompts en lenguaje natural |
-| Interfaz de preview | Revisar el preview visual generado por la IA antes de aprobar |
+| Chat/wizard con IA (plugin dentro de WordPress) | Solicitar landings mediante prompts en lenguaje natural — no es una aplicación aparte, corre como plugin PHP sobre la misma instalación de WP |
+| Interfaz de preview | Revisar el preview visual generado por la IA antes de aprobar — build puntual servido desde `previews/` en S3 + CloudFront |
 | Brief de campaña (recurso externo) | Documento con objetivos, audiencia, BU, copy base, deadline |
 
 #### Responsabilidades principales
@@ -115,7 +117,7 @@ El presente documento establece el modelo de roles, perfiles, responsabilidades 
 #### Flujo de trabajo típico
 
 1. **Recibe el briefing** de la campaña (objetivo, audiencia, BU, deadline, copy base)
-2. **Accede a la aplicación con IA** y abre un nuevo chat de solicitud
+2. **Accede al chat con IA dentro de WordPress** (login con su cuenta) y abre un nuevo chat de solicitud
 3. **Describe la landing** en lenguaje natural: "Necesito una landing para Pregrado Ejecutivo sobre la Maestría en Marketing Digital, debe tener hero con CTA principal a inscripción, 3 cards de especializaciones, sección de testimonios, y formulario de contacto"
 4. **Proporciona la información** que la IA pide (textos, imágenes, links)
 5. **Recibe el preview** generado por la IA (estructura de widgets + contenido)
@@ -126,6 +128,11 @@ El presente documento establece el modelo de roles, perfiles, responsabilidades 
 ---
 
 ### 3.2. Perfil: Administrador de Marketing / Growth / SEO
+
+Este perfil cumple **dos funciones distintas**, hoy combinadas en la misma persona/rol WP — se listan por separado porque son responsabilidades de naturaleza distinta:
+
+- **Función Administrador** (gestión de plataforma): usuarios, plugins, ACF, taxonomías, configuración técnica del CMS — nivel de acceso alto (`Administrator` en WP).
+- **Función Supervisor** (aprobador de solicitudes): revisa y aprueba (o rechaza con feedback) cada solicitud de landing del Solicitante antes de que pase a Desarrollo — es el punto de control de calidad/marca entre "Marketing pidió algo" y "Dev lo construye".
 
 #### Nivel de acceso
 
@@ -183,9 +190,9 @@ El presente documento establece el modelo de roles, perfiles, responsabilidades 
 | Storybook (opcional) | Documentación visual de componentes Astro |
 | Chrome DevTools | Debug de CSS, performance, accesibilidad |
 | Lighthouse / WebPageTest | Auditoría de performance y SEO |
-| AWS Console (lectura) | Ver logs de CloudFront, S3, Bedrock |
+| AWS Console (lectura) | Ver logs de CloudFront, S3 |
 | Microsoft Copilot / Claude Code (provisional) | Asistencia con IA para código y debugging |
-| Aplicación con IA (modo lectura) | Recibir previews aprobados por Marketing para construir |
+| Plugin IA en WordPress (modo lectura) | Recibir previews aprobados por Marketing para construir |
 
 #### Responsabilidades principales
 
@@ -202,7 +209,7 @@ El presente documento establece el modelo de roles, perfiles, responsabilidades 
 
 #### Flujo de trabajo típico
 
-1. **Recibe notificación** de que Marketing aprobó un preview de landing (vía la app con IA)
+1. **Recibe notificación** de que Marketing aprobó un preview de landing (vía el plugin IA en WordPress)
 2. **Revisa el preview aprobado**: estructura de widgets, contenido, BU, CTAs
 3. **Accede a WordPress** (`wp-admin`) y crea una nueva entrada en el CPT "Landing"
 4. **Selecciona la BU** en el campo correspondiente (esto define la paleta de colores via `data-bu`)
@@ -228,7 +235,7 @@ El presente documento establece el modelo de roles, perfiles, responsabilidades 
 
 | Herramienta | Propósito |
 | --- | --- |
-| AWS Console | S3 (hosting estático), CloudFront (CDN), Bedrock (IA producción), IAM, CloudWatch |
+| AWS Console | S3 (hosting estático), CloudFront (CDN), IAM, CloudWatch |
 | SiteGround Panel | Gestión del servidor WordPress, backups, SSL, PHP, MySQL |
 | GitHub | Settings del repo, Actions (CI/CD), Secrets, branch protection rules |
 | Terraform / Pulumi (opcional) | Infrastructure as Code para AWS |
@@ -238,12 +245,12 @@ El presente documento establece el modelo de roles, perfiles, responsabilidades 
 
 #### Responsabilidades principales
 
-- **Administrar la infraestructura AWS**: S3 buckets, CloudFront distributions, IAM roles, Bedrock access
+- **Administrar la infraestructura AWS**: S3 buckets, CloudFront distributions, IAM roles
 - **Mantener el servidor WordPress**: actualizaciones de seguridad, backups automáticos, monitoreo de uptime
 - **Gestionar CI/CD**: GitHub Actions workflows, secrets, environment protection rules
 - **Configurar CDN y caché**: CloudFront behaviors, TTL, compresión, cache invalidation
 - **Monitoreo y alertas**: CloudWatch alarms para errores 5xx, latencia alta, costos excedidos
-- **Gestión de secretos**: API keys de Gemini, AWS credentials, tokens de HubSpot
+- **Gestión de secretos**: API key de Gemini (dev), credenciales de AWS Bedrock (prod), AWS credentials, tokens de HubSpot
 - **Seguridad**: rate limiting, WAF, headers de seguridad (CSP, HSTS), protección contra DDoS
 - **Costos**: monitorear gasto mensual de AWS y SiteGround, alertar si se excede el presupuesto
 - **Respuesta a incidentes**: estar disponible para resolver caídas o problemas críticos
@@ -254,7 +261,7 @@ El presente documento establece el modelo de roles, perfiles, responsabilidades 
 2. **Backups**: validar que los backups automáticos de WP y de S3 versioning funcionen
 3. **Actualizaciones de seguridad**: aplicar parches de WordPress, PHP, Node.js cuando hay vulnerabilidades críticas
 4. **Gestión de credenciales**: rotar API keys trimestralmente, actualizar secrets en GitHub
-5. **Optimización de costos**: revisar uso de AWS Bedrock, ajustar thresholds de alertas
+5. **Optimización de costos**: revisar uso de AWS Bedrock en prod (Gemini en dev es gratis), ajustar thresholds de alertas
 6. **Respuesta a incidentes**: cuando se reporta un bug crítico, revisar logs, métricas, y desplegar hotfix
 7. **Documentación**: mantener actualizada la documentación de infraestructura (runbooks, diagramas)
 
@@ -314,18 +321,20 @@ El presente documento establece el modelo de roles, perfiles, responsabilidades 
 ```
 ┌─────────────────────────────────────────────────────────────────────────┐
 │  FASE 1: SOLICITUD DE LANDING                                          │
-│  Marketing Strategist → Asistente IA                                    │
+│  Marketing Strategist → Chat IA (plugin dentro de WordPress)            │
 │  • Define objetivo, audiencia, BU, deadline                            │
 │  • Prepara brief con copy base, imágenes, requisitos                   │
-│  • Ingresa a la app con IA y describe la landing que necesita           │
+│  • Login con su cuenta WP (rol limitado) y describe la landing          │
 └─────────────────────────────────┬───────────────────────────────────────┘
                                   ▼
 ┌─────────────────────────────────────────────────────────────────────────┐
 │  FASE 2: GENERACIÓN DE PREVIEW POR IA                                  │
-│  Asistente IA (Gemini en dev, Bedrock en prod)                         │
+│  Plugin IA en WordPress (Gemini en dev, AWS Bedrock en prod)           │
 │  • Recibe prompt + información de Marketing                            │
 │  • Selecciona widgets del catálogo + tokens `bu-*` de la BU            │
-│  • Genera preview: estructura de widgets + contenido en JSON            │
+│  • Genera estructura de widgets + contenido en JSON                     │
+│  • Dispara un build puntual (GitHub Actions) a `previews/` en S3,       │
+│    servido por CloudFront — mismo mecanismo que el deploy real          │
 │  • Marketing itera con feedback hasta aprobar el preview                │
 │  • Estado: PREVIEW APROBADO                                            │
 └─────────────────────────────────┬───────────────────────────────────────┘
@@ -342,12 +351,13 @@ El presente documento establece el modelo de roles, perfiles, responsabilidades 
 ┌─────────────────────────────────────────────────────────────────────────┐
 │  FASE 4: CONSTRUCCIÓN EN WORDPRESS                                      │
 │  Desarrollador Frontend                                                  │
-│  • Recibe el preview aprobado (vía la app o notificación)               │
-│  • Accede a WordPress (`wp-admin`) y crea nueva entrada en CPT Landing │
-│  • Selecciona la BU en campo ACF (define data-bu → paleta de colores)  │
-│  • Configura orden de widgets (Flexible Content de ACF)                │
-│  • Llena campos de cada widget replicando el preview aprobado           │
-│  • Estado: BORRADOR EN WP                                               │
+│  • Recibe notificación de que hay un preview aprobado                   │
+│  • Accede a WordPress (`wp-admin`) y abre la entrada que el plugin IA   │
+│    ya creó en Borrador (llamada directa `wp_insert_post`, sin POST      │
+│    externo — BU, widgets y textos ya vienen cargados)                   │
+│  • Completa lo que la IA no puede resolver: imágenes, SEO, Open Graph   │
+│  • Ajusta campos de cada widget si hace falta                           │
+│  • Estado: BORRADOR EN WP (asignado a este Dev)                         │
 └─────────────────────────────────┬───────────────────────────────────────┘
                                   ▼
 ┌─────────────────────────────────────────────────────────────────────────┐
@@ -356,7 +366,8 @@ El presente documento establece el modelo de roles, perfiles, responsabilidades 
 │  • Commit + push del código Astro necesario                             │
 │  • Merge a `main` (o PR aprobado)                                       │
 │  • GitHub Actions: Astro build → fetch data desde WP REST API          │
-│  • Deploy automático a staging (Vercel/Netlify)                        │
+│  • Deploy automático a staging (prefijo `staging/` en el mismo bucket   │
+│    S3 + CloudFront — sin plataformas nuevas)                            │
 │  • URL temporal generada y enviada al equipo                            │
 └─────────────────────────────────┬───────────────────────────────────────┘
                                   ▼
@@ -393,7 +404,7 @@ El presente documento establece el modelo de roles, perfiles, responsabilidades 
 
 | Trigger | Acción | Herramienta |
 |---|---|---|
-| Marketing aprueba preview en la app con IA | Notificación al Desarrollador con el preview | App con IA → Slack/email |
+| Marketing aprueba preview en el plugin IA (WP) | Notificación al Desarrollador con el preview | WordPress → Slack/email |
 | Merge a `main` en GitHub | Build + deploy a S3 + invalidar CDN | GitHub Actions |
 | Lighthouse score < 90 en build | Falla el deploy, notifica al dev | GitHub Actions + Lighthouse CI |
 | Error 5xx en CloudFront (> 1% del tráfico) | Alarma a DevOps | CloudWatch Alarm + SNS |
@@ -404,7 +415,7 @@ El presente documento establece el modelo de roles, perfiles, responsabilidades 
 | Fase | Responsable | Duración estimada | Bloqueante |
 |---|---|---|---|
 | 1. Solicitud de landing | Marketing + Asistente IA | 0.5-1 día (con iteración) | — |
-| 2. Generación de preview por IA | Asistente IA (Gemini/Bedrock) | 5-30 minutos | Depende de Fase 1 |
+| 2. Generación de preview por IA | Plugin IA en WordPress (Gemini/Bedrock) | 5-30 minutos | Depende de Fase 1 |
 | 3. Validación de Marketing | Admin Marketing | 0.5 día (opcional) | Depende de Fase 2 |
 | 4. Construcción en WordPress | Desarrollador | 1-2 días | Depende de Fase 2/3 |
 | 5. Build a staging | Automático | 5-10 minutos | Depende de Fase 4 |
@@ -422,15 +433,33 @@ En caso de error crítico post-deploy:
 3. **Rollback inmediato**: revertir merge en GitHub → rebuild automático → deploy
 4. **Post-mortem**: documentar causa raíz, acción correctiva, prevenir recurrencia
 
+### 4.5. Estado de la solicitud e historial
+
+El post_status nativo de WordPress (Borrador/Publicado) no alcanza para rastrear quién pidió, aprobó y publicó cada landing — se necesitan campos adicionales a nivel de entrada sobre el CPT `landings` (hoy no modelados en `acf-schema.json`, que solo define bloques de contenido; es trabajo pendiente, no implementado todavía):
+
+| Campo (post meta) | Se llena en | Quién lo escribe |
+|---|---|---|
+| `requested_by` | Fase 1 | Plugin IA, con el usuario WP logueado |
+| `client_approved_at` | Fase 2 | Plugin IA, al aprobar el preview |
+| `assigned_dev` | Fase 4 | Se asigna cuando un Dev abre el borrador |
+| `published_by` / `published_at` | Fase 7 | WordPress, al publicar |
+
+Lifecycle resultante: `Solicitado` → `Preview aprobado` → `Borrador en WP` → `En trabajo (Dev)` → `Publicado`.
+
+Estos campos se exponen vía REST API (`register_rest_field`) para alimentar dos vistas de historial, sin sumar ningún servicio nuevo — todo vive en la base de datos de WordPress que ya existe:
+
+- **Historial del Solicitante** ("Mis solicitudes"): filtra `landings` por `requested_by` = su propio usuario WP.
+- **Historial del Dev**: filtra por `assigned_dev` / `published_by` — qué landings tomó y cuáles publicó.
+
 ---
 
 ## 5. Resumen de Herramientas por Perfil
 
 | Perfil | Herramientas principales | Frecuencia |
 |---|---|---|
-| **Solicitante (Marketing)** | App con IA (Asistente de Landings), Brief de campaña | Diaria |
-| **Admin Marketing / SEO** | App con IA (validación), WordPress Admin, GA, GSC, HubSpot, SEMrush, Microsoft Clarity | Diaria |
-| **Desarrollador Frontend** | App con IA (lectura), WordPress Admin, VS Code, Git, pnpm, Astro CLI, Chrome DevTools | Diaria |
+| **Solicitante (Marketing)** | Plugin IA en WordPress (login WP, rol limitado), Brief de campaña | Diaria |
+| **Admin Marketing / SEO** | Plugin IA en WordPress (validación), WordPress Admin, GA, GSC, HubSpot, SEMrush, Microsoft Clarity | Diaria |
+| **Desarrollador Frontend** | Plugin IA en WordPress (lectura), WordPress Admin, VS Code, Git, pnpm, Astro CLI, Chrome DevTools | Diaria |
 | **Admin Sistemas / DevOps** | AWS Console, SiteGround, GitHub Actions, CloudWatch | Semanal |
 | **Usuario Final** | Navegador web (cualquier dispositivo) | Variable |
 

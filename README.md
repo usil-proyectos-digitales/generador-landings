@@ -12,7 +12,7 @@ Frontend público del Generador de LPs V2. Astro consume WordPress headless vía
 - **Tailwind CSS v4** vía `@tailwindcss/vite` (CSS-first config con `@theme`)
 - **pnpm** — gestor de dependencias (más rápido y eficiente que npm)
 - **WordPress Headless** como CMS (SiteGround staging)
-- **Google Gemini** en dev (gratis), **AWS Bedrock** en producción
+- **Google Gemini** en dev (gratis), **AWS Bedrock (Claude Haiku 4.5)** en producción — recomendación de Infraestructura por confidencialidad de datos (en dev no aplica, no se maneja info sensible real)
 
 ## Estructura
 
@@ -48,7 +48,7 @@ pnpm install
 
 ```bash
 cp .env.example .env
-# Editar .env con tu WP_API_URL real y GEMINI_API_KEY
+# Editar .env con tu WP_API_URL real y GEMINI_API_KEY (dev)
 ```
 
 ### 3. Levantar dev server
@@ -168,10 +168,10 @@ usil-widgets/                       (repo padre)
 
 ## Próximos pasos
 
-1. **Spike de 1 semana** (recomendado): validar el flujo Astro + WP Headless + Gemini
+1. **Spike de 1 semana** (recomendado): validar el flujo Astro + WP Headless + IA (Gemini dev / Bedrock prod)
 2. **Migrar widgets V2** desde el `src/widgets/` del repo padre a `src/components/` de este repo
-3. **Setup del plugin IA** que consume `src/data/` de este repo para generar landings con Gemini
-4. **Deploy a staging** en SiteGround o Netlify para preview del cliente
+3. **Setup del plugin IA** que consume `src/data/` de este repo para generar landings (Gemini en dev, AWS Bedrock/Claude Haiku 4.5 en producción)
+4. **Preview del cliente** vía build puntual (GitHub Actions) a una carpeta `previews/` del mismo bucket S3, servido por CloudFront — sin plataformas nuevas (nada de Vercel/Netlify)
 5. **Deploy a producción** en AWS S3 + CloudFront cuando esté validado
 
 ## Referencias
