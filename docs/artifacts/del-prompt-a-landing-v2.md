@@ -1,6 +1,8 @@
 # Del Prompt a Landing — v2 (WordPress + Elementor + EMCP)
 
 > Segunda versión de este documento. La v1 (flujo Astro + ACF Flexible Content + pipeline S3/CloudFront) **no se borra** — queda en `del-prompt-a-landing.md` y en su artifact original de claude.ai (https://claude.ai/code/artifact/99f4bc57-6466-4f70-ab06-bdfbfb6a36b7), tal cual estaban. Este documento reemplaza ese flujo por el nuevo: WordPress + Elementor renderiza la landing directo, con [elementor-mcp (EMCP Tools)](https://github.com/msrbuilds/elementor-mcp) como puente entre el Dev y la página real. Ver también `AI-LANDING-FLOW.md` en la raíz del repo (pendiente de actualizar a esta versión) y el plan de arquitectura completo en `C:\Users\jmadrid\.claude\plans\necesito-que-analices-el-enchanted-stonebraker.md`.
+>
+> Versión en diapositivas de este mismo documento (deck interactivo, 14 slides): https://claude.ai/code/artifact/21232afa-794b-456f-93f1-73ac545de92c
 
 Arquitectura E2E completa del generador de landings con IA: interfaces del cliente, procesamiento de IA, creación del borrador en WordPress (ahora como página Elementor real) y workflow técnico del Dev hasta el sitio publicado.
 
