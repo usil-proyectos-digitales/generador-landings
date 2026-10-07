@@ -16,7 +16,9 @@ Copiado literal de `src/styles/global.css` / `src/data/bu-colors.json` (fuente r
 
 ## Tipografía
 
-Mezcla **Stelvio Grotesk** (texto general) + **Anton** (headline-2 y links) — transcrito de la tabla de Figma de Posgrado (captura provista).
+Mezcla **Montserrat** (texto general) + **Anton** (headline-2 y links) — transcrito de la tabla de Figma de Posgrado (captura provista).
+
+> En Figma el texto general era **Stelvio Grotesk**. Se reemplazó por **Montserrat** (2026-10-07) porque Stelvio no está en Google Fonts y no carga en Elementor. Tamaños, pesos y line heights se mantienen.
 
 > La tabla original no trae columnas de peso ni de letter spacing. El peso se infiere del sufijo del nombre (`-regular`→400, `-medium`→500, `-bold`→700, `-extrabold`→800). El letter spacing no está en la fuente: se deja en `0%` para todos los tokens hasta confirmarlo con Marketing o Figma.
 >
@@ -24,19 +26,19 @@ Mezcla **Stelvio Grotesk** (texto general) + **Anton** (headline-2 y links) — 
 
 | Token | Fuente | Peso | Tamaño | Line height | Letter spacing |
 |---|---|---|---|---|---|
-| display-1-extrabold | Stelvio Grotesk | 800 | 72px | 60px | 0% |
-| headline-1-extrabold | Stelvio Grotesk | 800 | 46px | 40px | 0% |
-| headline-1-extrabold-52 | Stelvio Grotesk | 800 | 52px | 60px | 0% |
+| display-1-extrabold | Montserrat | 800 | 72px | 60px | 0% |
+| headline-1-extrabold | Montserrat | 800 | 46px | 40px | 0% |
+| headline-1-extrabold-52 | Montserrat | 800 | 52px | 60px | 0% |
 | headline-2-regular | Anton | 400 | 52px | 54px | 0% |
-| title-1-extrabold | Stelvio Grotesk | 800 | 30px | 36px | 0% |
-| title-1-bold | Stelvio Grotesk | 700 | 30px | 36px | 0% |
-| title-1-regular | Stelvio Grotesk | 400 | 30px | 36px | 0% |
-| body-1-medium | Stelvio Grotesk | 500 | 26px | 32px | 0% |
-| body-1-regular | Stelvio Grotesk | 400 | 26px | 32px | 0% |
-| body-2-bold | Stelvio Grotesk | 700 | 24px | 32px | 0% |
-| body-2-regular | Stelvio Grotesk | 400 | 24px | 32px | 0% |
-| label-1-medium | Stelvio Grotesk | 500 | 22px | 30px | 0% |
-| label-2-bold | Stelvio Grotesk | 700 | 18px | 24px | 0% |
+| title-1-extrabold | Montserrat | 800 | 30px | 36px | 0% |
+| title-1-bold | Montserrat | 700 | 30px | 36px | 0% |
+| title-1-regular | Montserrat | 400 | 30px | 36px | 0% |
+| body-1-medium | Montserrat | 500 | 26px | 32px | 0% |
+| body-1-regular | Montserrat | 400 | 26px | 32px | 0% |
+| body-2-bold | Montserrat | 700 | 24px | 32px | 0% |
+| body-2-regular | Montserrat | 400 | 24px | 32px | 0% |
+| label-1-medium | Montserrat | 500 | 22px | 30px | 0% |
+| label-2-bold | Montserrat | 700 | 18px | 24px | 0% |
 | link-1-regular | Anton | 400 | 24px | 32px | 0% |
 | link-2-regular | Anton | 400 | 16px | 20px | 0% |
 
@@ -47,19 +49,19 @@ Mezcla **Stelvio Grotesk** (texto general) + **Anton** (headline-2 y links) — 
   "bu": "posgrado",
   "colors": { "primary": "#000000", "secondary": "#1E50DC", "accent": "#01004E", "surface": "#DEE2EC", "neutral": "#ffffff" },
   "typography": [
-    { "token": "display-1-extrabold", "fontFamily": "Stelvio Grotesk", "fontWeight": 800, "sizePx": 72, "lineHeightPx": 60, "letterSpacingPct": 0 },
-    { "token": "headline-1-extrabold", "fontFamily": "Stelvio Grotesk", "fontWeight": 800, "sizePx": 46, "lineHeightPx": 40, "letterSpacingPct": 0 },
-    { "token": "headline-1-extrabold-52", "fontFamily": "Stelvio Grotesk", "fontWeight": 800, "sizePx": 52, "lineHeightPx": 60, "letterSpacingPct": 0 },
+    { "token": "display-1-extrabold", "fontFamily": "Montserrat", "fontWeight": 800, "sizePx": 72, "lineHeightPx": 60, "letterSpacingPct": 0 },
+    { "token": "headline-1-extrabold", "fontFamily": "Montserrat", "fontWeight": 800, "sizePx": 46, "lineHeightPx": 40, "letterSpacingPct": 0 },
+    { "token": "headline-1-extrabold-52", "fontFamily": "Montserrat", "fontWeight": 800, "sizePx": 52, "lineHeightPx": 60, "letterSpacingPct": 0 },
     { "token": "headline-2-regular", "fontFamily": "Anton", "fontWeight": 400, "sizePx": 52, "lineHeightPx": 54, "letterSpacingPct": 0 },
-    { "token": "title-1-extrabold", "fontFamily": "Stelvio Grotesk", "fontWeight": 800, "sizePx": 30, "lineHeightPx": 36, "letterSpacingPct": 0 },
-    { "token": "title-1-bold", "fontFamily": "Stelvio Grotesk", "fontWeight": 700, "sizePx": 30, "lineHeightPx": 36, "letterSpacingPct": 0 },
-    { "token": "title-1-regular", "fontFamily": "Stelvio Grotesk", "fontWeight": 400, "sizePx": 30, "lineHeightPx": 36, "letterSpacingPct": 0 },
-    { "token": "body-1-medium", "fontFamily": "Stelvio Grotesk", "fontWeight": 500, "sizePx": 26, "lineHeightPx": 32, "letterSpacingPct": 0 },
-    { "token": "body-1-regular", "fontFamily": "Stelvio Grotesk", "fontWeight": 400, "sizePx": 26, "lineHeightPx": 32, "letterSpacingPct": 0 },
-    { "token": "body-2-bold", "fontFamily": "Stelvio Grotesk", "fontWeight": 700, "sizePx": 24, "lineHeightPx": 32, "letterSpacingPct": 0 },
-    { "token": "body-2-regular", "fontFamily": "Stelvio Grotesk", "fontWeight": 400, "sizePx": 24, "lineHeightPx": 32, "letterSpacingPct": 0 },
-    { "token": "label-1-medium", "fontFamily": "Stelvio Grotesk", "fontWeight": 500, "sizePx": 22, "lineHeightPx": 30, "letterSpacingPct": 0 },
-    { "token": "label-2-bold", "fontFamily": "Stelvio Grotesk", "fontWeight": 700, "sizePx": 18, "lineHeightPx": 24, "letterSpacingPct": 0 },
+    { "token": "title-1-extrabold", "fontFamily": "Montserrat", "fontWeight": 800, "sizePx": 30, "lineHeightPx": 36, "letterSpacingPct": 0 },
+    { "token": "title-1-bold", "fontFamily": "Montserrat", "fontWeight": 700, "sizePx": 30, "lineHeightPx": 36, "letterSpacingPct": 0 },
+    { "token": "title-1-regular", "fontFamily": "Montserrat", "fontWeight": 400, "sizePx": 30, "lineHeightPx": 36, "letterSpacingPct": 0 },
+    { "token": "body-1-medium", "fontFamily": "Montserrat", "fontWeight": 500, "sizePx": 26, "lineHeightPx": 32, "letterSpacingPct": 0 },
+    { "token": "body-1-regular", "fontFamily": "Montserrat", "fontWeight": 400, "sizePx": 26, "lineHeightPx": 32, "letterSpacingPct": 0 },
+    { "token": "body-2-bold", "fontFamily": "Montserrat", "fontWeight": 700, "sizePx": 24, "lineHeightPx": 32, "letterSpacingPct": 0 },
+    { "token": "body-2-regular", "fontFamily": "Montserrat", "fontWeight": 400, "sizePx": 24, "lineHeightPx": 32, "letterSpacingPct": 0 },
+    { "token": "label-1-medium", "fontFamily": "Montserrat", "fontWeight": 500, "sizePx": 22, "lineHeightPx": 30, "letterSpacingPct": 0 },
+    { "token": "label-2-bold", "fontFamily": "Montserrat", "fontWeight": 700, "sizePx": 18, "lineHeightPx": 24, "letterSpacingPct": 0 },
     { "token": "link-1-regular", "fontFamily": "Anton", "fontWeight": 400, "sizePx": 24, "lineHeightPx": 32, "letterSpacingPct": 0 },
     { "token": "link-2-regular", "fontFamily": "Anton", "fontWeight": 400, "sizePx": 16, "lineHeightPx": 20, "letterSpacingPct": 0 }
   ],
