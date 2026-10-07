@@ -26,8 +26,8 @@
     },
     "posgrado": {
       "primary": "#000000",
-      "secondary": "#1E50DC",
-      "accent": "#01004E",
+      "secondary": "#001D6E",
+      "accent": "#1E50DC",
       "surface": "#DEE2EC",
       "neutral": "#ffffff"
     },
@@ -41,13 +41,13 @@
     "coloring-dreams": {
       "primary": "#002663",
       "secondary": "#5967D2",
-      "accent": "#A8BD54",
+      "accent": "#A9C635",
       "surface": "#EDEDED",
       "neutral": "#ffffff"
     },
     "siu": {
       "primary": "#002663",
-      "secondary": "#1172E3",
+      "secondary": "#0561CC",
       "accent": "#00BBBA",
       "surface": "#EDEDED",
       "neutral": "#ffffff"
@@ -60,8 +60,8 @@
       "neutral": "#ffffff"
     },
     "usil-corporativo": {
-      "primary": "#1E50DC",
-      "secondary": "#002663",
+      "primary": "#002663",
+      "secondary": "#1E50DC",
       "accent": "#438BE0",
       "surface": "#DFE8F7",
       "neutral": "#ffffff"

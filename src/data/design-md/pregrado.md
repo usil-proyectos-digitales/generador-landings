@@ -70,6 +70,57 @@ Qué token de tipografía usa cada parte de los widgets de prueba (`6-cards-item
     "cardBody": "body-1-regular",
     "label": "label-1-medium",
     "link": "link-1-regular"
+  },
+  "status": "provisional",
+  "colorRoles": {
+    "light": {
+      "section.bg": "surfaceLight",
+      "section.title": "brandPrimary",
+      "section.body": "brandSecondary",
+      "section.label": "brandPrimary",
+      "card.bg": "neutral",
+      "card.title": "brandPrimary",
+      "card.text": "brandSecondary",
+      "cta.bg": "brandPrimary",
+      "cta.text": "neutral",
+      "accent": "accentPrimary",
+      "saveTheDate.bg": "surfaceLight",
+      "saveTheDate.title": "brandSecondary",
+      "saveTheDate.card.bg": "accentPrimary",
+      "saveTheDate.card.text": "brandSecondary",
+      "footer.bg": "surfaceLight",
+      "footer.title": "brandPrimary",
+      "footer.text": "brandSecondary",
+      "footer.icon": "brandPrimary"
+    },
+    "dark": {
+      "section.bg": "brandSecondary",
+      "section.title": "neutral",
+      "section.body": "surfaceLight",
+      "section.label": "surfaceLight",
+      "card.bg": "surfaceLight",
+      "card.title": "brandSecondary",
+      "card.text": "brandSecondary",
+      "cta.bg": "surfaceLight",
+      "cta.text": "brandSecondary",
+      "accent": "accentPrimary",
+      "saveTheDate.bg": "brandPrimary",
+      "saveTheDate.title": "neutral",
+      "saveTheDate.card.bg": "neutral",
+      "saveTheDate.card.text": "brandPrimary",
+      "footer.bg": "brandSecondary",
+      "footer.title": "neutral",
+      "footer.text": "neutral",
+      "footer.icon": "neutral"
+    }
+  },
+  "typeRoles": {
+    "section.title": "primary",
+    "section.body": "text",
+    "section.label": "accent",
+    "card.title": "secondary",
+    "card.text": "text",
+    "cta.text": "accent"
   }
 }
 ```

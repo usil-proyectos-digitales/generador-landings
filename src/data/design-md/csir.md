@@ -70,6 +70,57 @@ Copiado literal de `src/styles/global.css` / `src/data/bu-colors.json` (fuente r
     "cardBody": "body-1-regular",
     "label": "label-1-medium",
     "link": "link-1-extrabold"
+  },
+  "status": "provisional",
+  "colorRoles": {
+    "light": {
+      "section.bg": "surfaceLight",
+      "section.title": "brandPrimary",
+      "section.body": "brandPrimary",
+      "section.label": "brandPrimary",
+      "card.bg": "neutral",
+      "card.title": "brandPrimary",
+      "card.text": "brandPrimary",
+      "cta.bg": "brandPrimary",
+      "cta.text": "neutral",
+      "accent": "accentPrimary",
+      "saveTheDate.bg": "surfaceLight",
+      "saveTheDate.title": "brandPrimary",
+      "saveTheDate.card.bg": "accentPrimary",
+      "saveTheDate.card.text": "brandPrimary",
+      "footer.bg": "surfaceLight",
+      "footer.title": "brandPrimary",
+      "footer.text": "brandPrimary",
+      "footer.icon": "brandPrimary"
+    },
+    "dark": {
+      "section.bg": "brandPrimary",
+      "section.title": "neutral",
+      "section.body": "surfaceLight",
+      "section.label": "surfaceLight",
+      "card.bg": "surfaceLight",
+      "card.title": "brandPrimary",
+      "card.text": "brandPrimary",
+      "cta.bg": "surfaceLight",
+      "cta.text": "brandPrimary",
+      "accent": "accentPrimary",
+      "saveTheDate.bg": "brandPrimary",
+      "saveTheDate.title": "neutral",
+      "saveTheDate.card.bg": "neutral",
+      "saveTheDate.card.text": "brandPrimary",
+      "footer.bg": "brandSecondary",
+      "footer.title": "neutral",
+      "footer.text": "neutral",
+      "footer.icon": "neutral"
+    }
+  },
+  "typeRoles": {
+    "section.title": "primary",
+    "section.body": "text",
+    "section.label": "accent",
+    "card.title": "secondary",
+    "card.text": "text",
+    "cta.text": "accent"
   }
 }
 ```

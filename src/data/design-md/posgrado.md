@@ -9,8 +9,8 @@ Copiado literal de `src/styles/global.css` / `src/data/bu-colors.json` (fuente r
 | Rol | Hex |
 |---|---|
 | Primary | `#000000` |
-| Secondary | `#1E50DC` |
-| Accent | `#01004E` |
+| Secondary | `#001D6E` |
+| Accent | `#1E50DC` |
 | Surface | `#DEE2EC` |
 | Neutral | `#ffffff` |
 
@@ -47,7 +47,7 @@ Mezcla **Montserrat** (texto general) + **Anton** (headline-2 y links) — trans
 ```json
 {
   "bu": "posgrado",
-  "colors": { "primary": "#000000", "secondary": "#1E50DC", "accent": "#01004E", "surface": "#DEE2EC", "neutral": "#ffffff" },
+  "colors": { "primary": "#000000", "secondary": "#001D6E", "accent": "#1E50DC", "surface": "#DEE2EC", "neutral": "#ffffff" },
   "typography": [
     { "token": "display-1-extrabold", "fontFamily": "Montserrat", "fontWeight": 800, "sizePx": 72, "lineHeightPx": 60, "letterSpacingPct": 0 },
     { "token": "headline-1-extrabold", "fontFamily": "Montserrat", "fontWeight": 800, "sizePx": 46, "lineHeightPx": 40, "letterSpacingPct": 0 },
@@ -72,6 +72,57 @@ Mezcla **Montserrat** (texto general) + **Anton** (headline-2 y links) — trans
     "cardBody": "body-1-regular",
     "label": "label-1-medium",
     "link": "link-1-regular"
+  },
+  "status": "provisional",
+  "colorRoles": {
+    "light": {
+      "section.bg": "surfaceLight",
+      "section.title": "brandPrimary",
+      "section.body": "brandPrimary",
+      "section.label": "brandPrimary",
+      "card.bg": "neutral",
+      "card.title": "brandPrimary",
+      "card.text": "brandPrimary",
+      "cta.bg": "brandPrimary",
+      "cta.text": "neutral",
+      "accent": "accentPrimary",
+      "saveTheDate.bg": "surfaceLight",
+      "saveTheDate.title": "brandPrimary",
+      "saveTheDate.card.bg": "accentPrimary",
+      "saveTheDate.card.text": "neutral",
+      "footer.bg": "surfaceLight",
+      "footer.title": "brandPrimary",
+      "footer.text": "brandPrimary",
+      "footer.icon": "brandPrimary"
+    },
+    "dark": {
+      "section.bg": "brandPrimary",
+      "section.title": "neutral",
+      "section.body": "surfaceLight",
+      "section.label": "surfaceLight",
+      "card.bg": "surfaceLight",
+      "card.title": "brandPrimary",
+      "card.text": "brandPrimary",
+      "cta.bg": "surfaceLight",
+      "cta.text": "brandPrimary",
+      "accent": "accentPrimary",
+      "saveTheDate.bg": "brandPrimary",
+      "saveTheDate.title": "neutral",
+      "saveTheDate.card.bg": "neutral",
+      "saveTheDate.card.text": "brandPrimary",
+      "footer.bg": "brandSecondary",
+      "footer.title": "neutral",
+      "footer.text": "neutral",
+      "footer.icon": "neutral"
+    }
+  },
+  "typeRoles": {
+    "section.title": "primary",
+    "section.body": "text",
+    "section.label": "accent",
+    "card.title": "secondary",
+    "card.text": "text",
+    "cta.text": "accent"
   }
 }
 ```

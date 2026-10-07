@@ -10,7 +10,7 @@ Copiado literal de `src/styles/global.css` / `src/data/bu-colors.json` (fuente r
 |---|---|
 | Primary | `#002663` |
 | Secondary | `#5967D2` |
-| Accent | `#A8BD54` |
+| Accent | `#A9C635` |
 | Surface | `#EDEDED` |
 | Neutral | `#ffffff` |
 
@@ -44,7 +44,7 @@ Copiado literal de `src/styles/global.css` / `src/data/bu-colors.json` (fuente r
 ```json
 {
   "bu": "coloring-dreams",
-  "colors": { "primary": "#002663", "secondary": "#5967D2", "accent": "#A8BD54", "surface": "#EDEDED", "neutral": "#ffffff" },
+  "colors": { "primary": "#002663", "secondary": "#5967D2", "accent": "#A9C635", "surface": "#EDEDED", "neutral": "#ffffff" },
   "typography": [
     { "token": "display-1-black", "fontFamily": "Rubik", "fontWeight": 900, "sizePx": 64, "lineHeightPx": 62, "letterSpacingPct": 0 },
     { "token": "headline-1-black", "fontFamily": "Rubik", "fontWeight": 900, "sizePx": 44, "lineHeightPx": 38, "letterSpacingPct": 0 },
@@ -70,6 +70,57 @@ Copiado literal de `src/styles/global.css` / `src/data/bu-colors.json` (fuente r
     "cardBody": "body-1-regular",
     "label": "label-1-medium",
     "link": "link-1-extrabold"
+  },
+  "status": "provisional",
+  "colorRoles": {
+    "light": {
+      "section.bg": "surfaceLight",
+      "section.title": "brandPrimary",
+      "section.body": "brandPrimary",
+      "section.label": "brandPrimary",
+      "card.bg": "neutral",
+      "card.title": "brandPrimary",
+      "card.text": "brandPrimary",
+      "cta.bg": "brandPrimary",
+      "cta.text": "neutral",
+      "accent": "accentPrimary",
+      "saveTheDate.bg": "surfaceLight",
+      "saveTheDate.title": "brandPrimary",
+      "saveTheDate.card.bg": "accentPrimary",
+      "saveTheDate.card.text": "brandPrimary",
+      "footer.bg": "surfaceLight",
+      "footer.title": "brandPrimary",
+      "footer.text": "brandPrimary",
+      "footer.icon": "brandPrimary"
+    },
+    "dark": {
+      "section.bg": "brandPrimary",
+      "section.title": "neutral",
+      "section.body": "surfaceLight",
+      "section.label": "surfaceLight",
+      "card.bg": "surfaceLight",
+      "card.title": "brandPrimary",
+      "card.text": "brandPrimary",
+      "cta.bg": "surfaceLight",
+      "cta.text": "brandPrimary",
+      "accent": "accentPrimary",
+      "saveTheDate.bg": "brandPrimary",
+      "saveTheDate.title": "neutral",
+      "saveTheDate.card.bg": "neutral",
+      "saveTheDate.card.text": "brandPrimary",
+      "footer.bg": "brandSecondary",
+      "footer.title": "neutral",
+      "footer.text": "neutral",
+      "footer.icon": "neutral"
+    }
+  },
+  "typeRoles": {
+    "section.title": "primary",
+    "section.body": "text",
+    "section.label": "accent",
+    "card.title": "secondary",
+    "card.text": "text",
+    "cta.text": "accent"
   }
 }
 ```
