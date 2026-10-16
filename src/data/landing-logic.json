@@ -1,0 +1,743 @@
+{
+  "version": "0.1",
+  "preguntas": [
+    {
+      "id": "tipo_landing",
+      "texto": "¿Qué tipo de landing necesitas?",
+      "tipo": "opcion_unica",
+      "obligatoria": true,
+      "opciones": [
+        {
+          "valor": "admision",
+          "etiqueta": "Admisión o programa (carrera, maestría, diplomado)"
+        },
+        {
+          "valor": "evento",
+          "etiqueta": "Evento presencial o híbrido"
+        },
+        {
+          "valor": "congreso",
+          "etiqueta": "Congreso (varios ponentes, programa de sesiones)"
+        },
+        {
+          "valor": "webinar",
+          "etiqueta": "Webinar o charla online"
+        },
+        {
+          "valor": "curso_corto",
+          "etiqueta": "Curso corto o taller"
+        }
+      ],
+      "produce": [
+        "tipo_landing"
+      ]
+    },
+    {
+      "id": "objetivo",
+      "texto": "¿Qué quieres que haga la persona que entra?",
+      "tipo": "opcion_unica",
+      "obligatoria": true,
+      "opciones": [
+        {
+          "valor": "inscripcion",
+          "etiqueta": "Que se inscriba o deje sus datos"
+        },
+        {
+          "valor": "informar",
+          "etiqueta": "Que conozca la propuesta (sin formulario)"
+        }
+      ],
+      "produce": [
+        "objetivo"
+      ]
+    },
+    {
+      "id": "titulo_propuesta",
+      "texto": "¿Cuál es el título o mensaje principal?",
+      "tipo": "texto",
+      "obligatoria": true,
+      "produce": []
+    },
+    {
+      "id": "oferta",
+      "texto": "¿Qué ofreces? Descríbelo en pocas líneas.",
+      "tipo": "texto_largo",
+      "obligatoria": true,
+      "produce": []
+    },
+    {
+      "id": "cta",
+      "texto": "¿Qué texto lleva el botón principal?",
+      "tipo": "texto",
+      "obligatoria": true,
+      "produce": []
+    },
+    {
+      "id": "datos_evento",
+      "texto": "Fecha, hora, lugar y modalidad",
+      "tipo": "grupo_evento",
+      "obligatoria": true,
+      "mostrar_si": [
+        {
+          "senal": "tipo_landing",
+          "op": "en",
+          "valor": [
+            "evento",
+            "congreso",
+            "webinar"
+          ]
+        }
+      ],
+      "produce": [
+        "tiene_fecha",
+        "modalidad"
+      ]
+    },
+    {
+      "id": "cierre_tipo",
+      "texto": "¿Hasta cuándo se reciben inscripciones?",
+      "ayuda": "No se muestra en la landing. Sirve para desactivar el formulario a tiempo.",
+      "tipo": "opcion_unica",
+      "obligatoria": true,
+      "interna": true,
+      "mostrar_si": [
+        {
+          "senal": "objetivo",
+          "op": "es",
+          "valor": "inscripcion"
+        }
+      ],
+      "opciones": [
+        {
+          "valor": "mismo_evento",
+          "etiqueta": "El mismo día y hora del evento",
+          "mostrar_si": [
+            {
+              "senal": "tipo_landing",
+              "op": "en",
+              "valor": [
+                "evento",
+                "congreso",
+                "webinar"
+              ]
+            }
+          ]
+        },
+        {
+          "valor": "otra_fecha",
+          "etiqueta": "Otra fecha y hora"
+        },
+        {
+          "valor": "sin_cierre",
+          "etiqueta": "No tiene fecha de cierre, o aún no está definida"
+        }
+      ],
+      "produce": [
+        "cierre_inscripcion"
+      ]
+    },
+    {
+      "id": "cierre_inscripciones",
+      "texto": "Fecha y hora de cierre de inscripciones",
+      "tipo": "fecha_hora",
+      "obligatoria": true,
+      "interna": true,
+      "destino_acf": "cierre_inscripciones",
+      "mostrar_si": [
+        {
+          "senal": "cierre_inscripcion",
+          "op": "es",
+          "valor": "otra_fecha"
+        }
+      ],
+      "produce": []
+    },
+    {
+      "id": "contenidos",
+      "texto": "¿Qué contenido tienes para mostrar?",
+      "tipo": "opcion_multiple",
+      "obligatoria": false,
+      "opciones": [
+        {
+          "valor": "ponentes",
+          "etiqueta": "Ponentes o docentes",
+          "senal": "tiene_ponentes"
+        },
+        {
+          "valor": "testimonios",
+          "etiqueta": "Testimonios de alumnos o egresados",
+          "senal": "tiene_testimonios"
+        },
+        {
+          "valor": "beneficios",
+          "etiqueta": "Beneficios o diferenciales",
+          "senal": "tiene_beneficios"
+        },
+        {
+          "valor": "temario",
+          "etiqueta": "Plan de estudios o temario",
+          "senal": "tiene_temario"
+        },
+        {
+          "valor": "faq",
+          "etiqueta": "Preguntas frecuentes",
+          "senal": "tiene_faq"
+        },
+        {
+          "valor": "video",
+          "etiqueta": "Video",
+          "senal": "tiene_video"
+        },
+        {
+          "valor": "cifras",
+          "etiqueta": "Cifras, rankings o acreditaciones",
+          "senal": "tiene_cifras"
+        },
+        {
+          "valor": "precio",
+          "etiqueta": "Precios o inversión",
+          "senal": "tiene_precio"
+        },
+        {
+          "valor": "programas",
+          "etiqueta": "Lista de carreras o programas",
+          "senal": "tiene_listado_programas"
+        },
+        {
+          "valor": "link_pago",
+          "etiqueta": "Link de pago externo",
+          "senal": "tiene_link_pago"
+        }
+      ],
+      "produce": [
+        "tiene_ponentes",
+        "tiene_testimonios",
+        "tiene_beneficios",
+        "tiene_temario",
+        "tiene_faq",
+        "tiene_video",
+        "tiene_cifras",
+        "tiene_precio",
+        "tiene_listado_programas",
+        "tiene_link_pago"
+      ]
+    },
+    {
+      "id": "imagenes",
+      "texto": "¿Tienes fotos o imágenes propias?",
+      "tipo": "opcion_unica",
+      "obligatoria": false,
+      "opciones": [
+        {
+          "valor": "si",
+          "etiqueta": "Sí, tengo imágenes"
+        },
+        {
+          "valor": "no",
+          "etiqueta": "No, usen imágenes de referencia"
+        }
+      ],
+      "produce": [
+        "tiene_imagenes"
+      ]
+    },
+    {
+      "id": "extra",
+      "texto": "¿Algo más que debamos saber? Puedes adjuntar un Word o PDF.",
+      "tipo": "texto_y_archivo",
+      "obligatoria": false,
+      "produce": []
+    }
+  ],
+  "senales": [
+    {
+      "id": "tipo_landing",
+      "tipo": "enum",
+      "valores": [
+        "admision",
+        "evento",
+        "congreso",
+        "webinar",
+        "curso_corto"
+      ],
+      "origen": "pregunta",
+      "fuente": "tipo_landing"
+    },
+    {
+      "id": "objetivo",
+      "tipo": "enum",
+      "valores": [
+        "inscripcion",
+        "informar"
+      ],
+      "origen": "pregunta",
+      "fuente": "objetivo"
+    },
+    {
+      "id": "tiene_fecha",
+      "tipo": "bool",
+      "origen": "pregunta",
+      "fuente": "datos_evento",
+      "defecto": false
+    },
+    {
+      "id": "modalidad",
+      "tipo": "enum",
+      "valores": [
+        "presencial",
+        "virtual",
+        "hibrida",
+        "no_aplica"
+      ],
+      "origen": "pregunta",
+      "fuente": "datos_evento",
+      "defecto": "no_aplica"
+    },
+    {
+      "id": "cierre_inscripcion",
+      "tipo": "enum",
+      "valores": [
+        "mismo_evento",
+        "otra_fecha",
+        "sin_cierre"
+      ],
+      "origen": "pregunta",
+      "fuente": "cierre_tipo",
+      "defecto": "sin_cierre"
+    },
+    {
+      "id": "tiene_ponentes",
+      "tipo": "bool",
+      "origen": "pregunta",
+      "fuente": "contenidos",
+      "defecto": false
+    },
+    {
+      "id": "tiene_testimonios",
+      "tipo": "bool",
+      "origen": "pregunta",
+      "fuente": "contenidos",
+      "defecto": false
+    },
+    {
+      "id": "tiene_beneficios",
+      "tipo": "bool",
+      "origen": "pregunta",
+      "fuente": "contenidos",
+      "defecto": false
+    },
+    {
+      "id": "tiene_temario",
+      "tipo": "bool",
+      "origen": "pregunta",
+      "fuente": "contenidos",
+      "defecto": false
+    },
+    {
+      "id": "tiene_faq",
+      "tipo": "bool",
+      "origen": "pregunta",
+      "fuente": "contenidos",
+      "defecto": false
+    },
+    {
+      "id": "tiene_video",
+      "tipo": "bool",
+      "origen": "pregunta",
+      "fuente": "contenidos",
+      "defecto": false
+    },
+    {
+      "id": "tiene_cifras",
+      "tipo": "bool",
+      "origen": "pregunta",
+      "fuente": "contenidos",
+      "defecto": false
+    },
+    {
+      "id": "tiene_precio",
+      "tipo": "bool",
+      "origen": "pregunta",
+      "fuente": "contenidos",
+      "defecto": false
+    },
+    {
+      "id": "tiene_listado_programas",
+      "tipo": "bool",
+      "origen": "pregunta",
+      "fuente": "contenidos",
+      "defecto": false
+    },
+    {
+      "id": "tiene_link_pago",
+      "tipo": "bool",
+      "origen": "pregunta",
+      "fuente": "contenidos",
+      "defecto": false
+    },
+    {
+      "id": "tiene_imagenes",
+      "tipo": "bool",
+      "origen": "pregunta",
+      "fuente": "imagenes",
+      "defecto": false
+    },
+    {
+      "id": "n_beneficios",
+      "tipo": "numero",
+      "origen": "inferida",
+      "defecto": 0,
+      "descripcion": "Beneficios o diferenciales distintos"
+    },
+    {
+      "id": "n_ponentes",
+      "tipo": "numero",
+      "origen": "inferida",
+      "defecto": 0,
+      "descripcion": "Ponentes o docentes con nombre"
+    },
+    {
+      "id": "n_testimonios",
+      "tipo": "numero",
+      "origen": "inferida",
+      "defecto": 0,
+      "descripcion": "Testimonios con autor"
+    },
+    {
+      "id": "n_faq",
+      "tipo": "numero",
+      "origen": "inferida",
+      "defecto": 0,
+      "descripcion": "Preguntas frecuentes"
+    },
+    {
+      "id": "n_programas",
+      "tipo": "numero",
+      "origen": "inferida",
+      "defecto": 0,
+      "descripcion": "Carreras o programas listados"
+    },
+    {
+      "id": "n_cifras",
+      "tipo": "numero",
+      "origen": "inferida",
+      "defecto": 0,
+      "descripcion": "Cifras o rankings concretos"
+    },
+    {
+      "id": "capta_leads",
+      "tipo": "bool",
+      "origen": "derivada",
+      "regla": [
+        {
+          "senal": "objetivo",
+          "op": "es",
+          "valor": "inscripcion"
+        }
+      ],
+      "defecto": false
+    },
+    {
+      "id": "genera_gracias",
+      "tipo": "bool",
+      "origen": "derivada",
+      "regla": [
+        {
+          "senal": "capta_leads",
+          "op": "es",
+          "valor": true
+        }
+      ],
+      "defecto": false
+    }
+  ],
+  "widgets": [
+    {
+      "id": "cards-items",
+      "familia": "cards",
+      "widget": "usil_cards_items",
+      "nombre": "Cards Items",
+      "variantes": [
+        {
+          "id": "v6-3",
+          "etiqueta": "Título centrado + cards verticales con icono, texto y botón",
+          "usar_cuando": "Hay de 2 a 4 beneficios o pasos y cada uno puede llevar su propio botón. Opción por defecto para pocos beneficios sin fotos.",
+          "no_usar_cuando": "Hay más de 4 ítems (usar v6-6) o los ítems son programas con foto (usar v6-8).",
+          "condiciones": [
+            {
+              "senal": "tiene_beneficios",
+              "op": "es",
+              "valor": true
+            }
+          ],
+          "senal_items": "n_beneficios",
+          "min_items": 2,
+          "max_items": 4,
+          "requiere": [
+            "cta"
+          ],
+          "modos": [
+            "light",
+            "dark"
+          ]
+        },
+        {
+          "id": "v6-6",
+          "etiqueta": "Título a la izquierda + cards horizontales con icono y texto, sin botón",
+          "usar_cuando": "Hay de 4 a 6 beneficios cortos que solo informan.",
+          "no_usar_cuando": "Cada ítem necesita su propio enlace o botón, o hay menos de 4 ítems (usar v6-3).",
+          "condiciones": [
+            {
+              "senal": "tiene_beneficios",
+              "op": "es",
+              "valor": true
+            }
+          ],
+          "senal_items": "n_beneficios",
+          "min_items": 4,
+          "max_items": 6,
+          "requiere": [
+            "icono"
+          ],
+          "modos": [
+            "light",
+            "dark"
+          ]
+        },
+        {
+          "id": "v6-8",
+          "etiqueta": "Título a la izquierda + cards verticales con foto (carrusel con más de 4)",
+          "usar_cuando": "Hay un listado de 3 o más programas o carreras con foto, y cada card enlaza a otra página.",
+          "no_usar_cuando": "El cliente no tiene imágenes propias, o los ítems son beneficios sin foto.",
+          "condiciones": [
+            {
+              "senal": "tiene_listado_programas",
+              "op": "es",
+              "valor": true
+            },
+            {
+              "senal": "tiene_imagenes",
+              "op": "es",
+              "valor": true
+            }
+          ],
+          "senal_items": "n_programas",
+          "min_items": 3,
+          "max_items": 12,
+          "requiere": [
+            "imagen"
+          ],
+          "modos": [
+            "light",
+            "dark"
+          ]
+        },
+        {
+          "id": "v6-10",
+          "etiqueta": "Título a la izquierda + 2 cards grandes con foto y botón",
+          "usar_cuando": "Hay exactamente dos opciones que se comparan o se eligen, cada una con foto y botón.",
+          "no_usar_cuando": "Hay una sola opción o más de dos, o no hay imágenes propias.",
+          "condiciones": [
+            {
+              "senal": "tiene_listado_programas",
+              "op": "es",
+              "valor": true
+            },
+            {
+              "senal": "tiene_imagenes",
+              "op": "es",
+              "valor": true
+            }
+          ],
+          "senal_items": "n_programas",
+          "min_items": 2,
+          "max_items": 2,
+          "requiere": [
+            "imagen",
+            "cta"
+          ],
+          "modos": [
+            "light",
+            "dark"
+          ]
+        },
+        {
+          "id": "v6-11",
+          "etiqueta": "Título centrado + cards de producto (categoría, título, precio, botón)",
+          "usar_cuando": "Hay de 2 a 4 opciones con precio visible.",
+          "no_usar_cuando": "El cliente no dio precios: el campo de precio no puede quedar vacío.",
+          "condiciones": [
+            {
+              "senal": "tiene_precio",
+              "op": "es",
+              "valor": true
+            }
+          ],
+          "senal_items": "n_programas",
+          "min_items": 2,
+          "max_items": 4,
+          "requiere": [
+            "precio",
+            "cta"
+          ],
+          "modos": [
+            "light",
+            "dark"
+          ]
+        },
+        {
+          "id": "v6-12",
+          "etiqueta": "Título centrado + cards con etiqueta de fecha",
+          "usar_cuando": "Hay varias fechas o sesiones que mostrar, cada una con su descripción.",
+          "no_usar_cuando": "Hay una sola fecha de evento: eso va en save-the-date.",
+          "condiciones": [
+            {
+              "senal": "tiene_fecha",
+              "op": "es",
+              "valor": true
+            }
+          ],
+          "requiere": [
+            "fecha"
+          ],
+          "modos": [
+            "light",
+            "dark"
+          ]
+        }
+      ]
+    }
+  ],
+  "recetas": [],
+  "solicitud": {
+    "version": "0.1",
+    "campos": [
+      {
+        "id": "id_solicitud",
+        "tipo": "texto",
+        "obligatorio": true,
+        "se_llena_al": "enviar",
+        "descripcion": "Id único de la solicitud"
+      },
+      {
+        "id": "bu",
+        "tipo": "texto",
+        "obligatorio": true,
+        "se_llena_al": "enviar",
+        "descripcion": "Unidad de negocio elegida"
+      },
+      {
+        "id": "subsitio_id",
+        "tipo": "entero",
+        "obligatorio": true,
+        "se_llena_al": "enviar",
+        "descripcion": "Id del subsitio de la red multisitio"
+      },
+      {
+        "id": "landing_logic_version",
+        "tipo": "texto",
+        "obligatorio": true,
+        "se_llena_al": "enviar",
+        "descripcion": "Versión de landing-logic con que se respondió"
+      },
+      {
+        "id": "respuestas",
+        "tipo": "objeto",
+        "obligatorio": true,
+        "se_llena_al": "enviar",
+        "descripcion": "id de pregunta → respuesta del cliente, sin modificar"
+      },
+      {
+        "id": "adjuntos",
+        "tipo": "lista",
+        "obligatorio": false,
+        "se_llena_al": "enviar",
+        "descripcion": "Ids de medios de los documentos adjuntos"
+      },
+      {
+        "id": "senales",
+        "tipo": "objeto",
+        "obligatorio": true,
+        "se_llena_al": "generar",
+        "descripcion": "id de señal → valor resuelto"
+      },
+      {
+        "id": "senales_inferidas",
+        "tipo": "lista",
+        "obligatorio": true,
+        "se_llena_al": "generar",
+        "descripcion": "Ids de señales deducidas por la IA"
+      },
+      {
+        "id": "receta",
+        "tipo": "texto",
+        "obligatorio": true,
+        "se_llena_al": "generar",
+        "descripcion": "Id de la receta aplicada"
+      },
+      {
+        "id": "landing_spec",
+        "tipo": "objeto",
+        "obligatorio": true,
+        "se_llena_al": "generar",
+        "descripcion": "landing-spec.json usado para crear la página"
+      },
+      {
+        "id": "page_id",
+        "tipo": "entero",
+        "obligatorio": true,
+        "se_llena_al": "generar",
+        "descripcion": "Id de la página Elementor en borrador"
+      },
+      {
+        "id": "gracias_page_id",
+        "tipo": "entero",
+        "obligatorio": false,
+        "se_llena_al": "generar",
+        "descripcion": "Id de la página de gracias, si se generó"
+      },
+      {
+        "id": "requested_by",
+        "tipo": "usuario",
+        "obligatorio": true,
+        "se_llena_al": "enviar",
+        "descripcion": "Usuario que pidió la landing"
+      },
+      {
+        "id": "requested_at",
+        "tipo": "fecha_hora",
+        "obligatorio": true,
+        "se_llena_al": "enviar",
+        "descripcion": "Fecha y hora del envío"
+      },
+      {
+        "id": "client_approved_at",
+        "tipo": "fecha_hora",
+        "obligatorio": false,
+        "se_llena_al": "aprobar",
+        "descripcion": "Aprobación del preview por el cliente"
+      },
+      {
+        "id": "assigned_dev",
+        "tipo": "usuario",
+        "obligatorio": false,
+        "se_llena_al": "asignar",
+        "descripcion": "Dev que toma la landing"
+      },
+      {
+        "id": "published_by",
+        "tipo": "usuario",
+        "obligatorio": false,
+        "se_llena_al": "publicar",
+        "descripcion": "Quién publicó"
+      },
+      {
+        "id": "published_at",
+        "tipo": "fecha_hora",
+        "obligatorio": false,
+        "se_llena_al": "publicar",
+        "descripcion": "Fecha y hora de publicación"
+      }
+    ]
+  }
+}
