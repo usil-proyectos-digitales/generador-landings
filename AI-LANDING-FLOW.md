@@ -13,7 +13,7 @@ Lo que sí existe hoy y sustenta este diseño (código real, ya en el repo):
 | Catálogo de widgets | `src/components/widgets/registry.ts` | Define qué widgets/variantes existen — es el universo que la IA tiene que mapear |
 | Cliente REST de WP | `src/lib/wp-api.ts` | Ya consume el CPT `landings` (`getLandingBySlug`, `getAllLandings`) — el borrador que crearía la IA es una entrada más de este mismo CPT |
 | Schema de bloques ACF | `src/data/acf-schema.json` | Los layouts reales (`hero`, `cards`, `form`, `footer`) a los que la IA tiene que mapear su output — no hay que inventar campos fuera de acá |
-| Tokens + tipografía por BU | `src/data/design-md/*.md` + `src/lib/design-md.ts` | El motor de marca que resuelve la IA al pintar el preview y al generar el borrador (ver `CLAUDE.md`, sección "`design.md` por BU") — hoy cubre 3 de 9 BU |
+| Tokens + tipografía por BU | `design/design-md/*.md` en el repo `usil-widgets` (única fuente; este repo no la copia) | El motor de marca que resuelve la IA al pintar el preview y al generar el borrador (ver `CLAUDE.md`, sección "`design.md` por BU") — hoy cubre 3 de 9 BU |
 | Registro de BUs vigentes | `src/data/bu-colors.json` / `global.css` | 9 BU con sus 5 roles de color, capa de compatibilidad para widgets ya construidos con `theme.ts` |
 | Auth / roles / login | — (no existe código en este repo) | `wp-api.ts` no maneja autenticación hoy. El login/roles del plugin IA (sección 5) se apoyan en las capacidades nativas de WordPress (Application Passwords / JWT), no en código de este repo — un agente no debe asumir que existe un endpoint o middleware de auth acá |
 

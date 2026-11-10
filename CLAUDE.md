@@ -35,8 +35,8 @@ NO uses npm. Si ves scripts que dicen `npm`, reemplazá mentalmente por `pnpm`. 
     │       ├── <Nombre>.astro          (componente)
     │       └── theme.ts                (clases Tailwind por variante × modo — ver sección de theming)
     ├── layouts/BaseLayout.astro        (aplica data-bu al <html>, carga global.css y fonts)
-    ├── data/                           (JSONs: widgets-catalog.json, bu-colors.json, acf-schema.json; design-md/*.md = tokens por BU, ver sección de theming)
-    ├── lib/                            (wp-api.ts = cliente REST; design-md.ts = parser de design-md; carousel-manager.ts, swiper-nav.ts)
+    ├── data/                           (JSONs: widgets-catalog.json, bu-colors.json, acf-schema.json)
+    ├── lib/                            (wp-api.ts = cliente REST; carousel-manager.ts, swiper-nav.ts)
     ├── migrar/                         (assets/HTML/JS legacy V1 pendientes de migrar a componentes — solo referencia, no es código en producción)
     └── styles/global.css               (variables CSS V2 + @theme de Tailwind — FUENTE DE VERDAD de los tokens bu-*)
 ```
@@ -109,9 +109,12 @@ Si se omite `bu`, el `<html>` queda sin `data-bu` (usado por el Visor, que contr
 
 Los widgets ya construidos (`6-cards-items`, `7-bloque-ponentes-testimonios`, etc.) siguen pintándose HOY con el patrón de arriba: las 5 variables `bu-*` + `theme.ts` por widget. Eso sigue siendo válido y no se toca en el código existente.
 
-Pero la dirección del proyecto hacia adelante es reemplazar el origen de esos estilos por un **`design.md` por BU** (`src/data/design-md/*.md`, parseado en build time por `src/lib/design-md.ts`): un documento estructurado por BU que define, en un mismo lugar, color (los mismos 5 roles de siempre), tipografía completa y qué rol tipográfico usa cada parte de un bloque (`blockTitle`, `cardTitle`, `cardBody`, `label`, `link`, etc.). El parser genera reglas `[data-bu="x"] .dsmd-{role} { ... }` — mismo mecanismo de `data-bu` que ya se usa hoy, pero con la fuente de verdad en un `.md` legible por humanos y por una IA, en vez de repartida entre `theme.ts` de cada widget.
+Pero la dirección del proyecto hacia adelante es reemplazar el origen de esos estilos por un **`design.md` por BU** (`design/design-md/*.md` en el repo `usil-widgets`): un documento estructurado por BU que define, en un mismo lugar, color (los mismos 5 roles de siempre), tipografía completa y qué rol tipográfico usa cada parte de un bloque (`blockTitle`, `cardTitle`, `cardBody`, `label`, `link`, etc.). El parser genera reglas `[data-bu="x"] .dsmd-{role} { ... }` — mismo mecanismo de `data-bu` que ya se usa hoy, pero con la fuente de verdad en un `.md` legible por humanos y por una IA, en vez de repartida entre `theme.ts` de cada widget.
 
-Estado real: hoy cubre 3 de las 9 BU (`pregrado`, `pregrado-ejecutivo`, `instituto-de-emprendedores`), visible en `/design-md-preview`. Es el enfoque en adopción, ya no una prueba descartable — cualquier trabajo nuevo de theming (y en particular lo que consume el flujo de generación con IA, ver `AI-LANDING-FLOW.md`) debería apoyarse en `design.md`, no en agregar más `theme.ts` sueltos. Extender la prueba a las 9 BU es trabajo pendiente, no un cambio de arquitectura por hacer.
+Estado real: hoy cubre 3 de las 9 BU (`pregrado`, `pregrado-ejecutivo`, `instituto-de-emprendedores`), ya no se versiona en este repo (ver regla de abajo). Es el enfoque en adopción, ya no una prueba descartable — cualquier trabajo nuevo de theming (y en particular lo que consume el flujo de generación con IA, ver `AI-LANDING-FLOW.md`) debería apoyarse en `design.md`, no en agregar más `theme.ts` sueltos. Extender la prueba a las 9 BU es trabajo pendiente, no un cambio de arquitectura por hacer.
+
+**REGLA (decidida el 10 nov 2026): para los widgets V3 (plugin `usil-elementor-widgets-v3` en WordPress) `design.md` manda en TODO — color, tipografía, qué rol usa cada parte y cada variante × modo.** Los `theme.ts` y componentes Astro de `src/components/widgets/` ya NO rigen para V3: son solo el Visor/storybook interno y pueden quedar desalineados. Si un widget V3 contradice a `design.md` (ej. 2.1 claro con fondo `primary` y botón `primary` = botón invisible), se corrige el V3 para que siga a `design.md`, nunca al revés ni copiando `theme.ts`. **Fuente única (decidido el 10 nov 2026): los `design.md` de las 9 BU viven SOLO en `usil-widgets/design/design-md/` (`C:/laragon/www/usil-widgets`); este repo no tiene copia, ni parser, ni `/design-md-preview`.** Para cambiar un valor: editar el `.md` allá y regenerar con `build-bu-css.js` y `npm run wpcode:design-md` (genera `docs/wpcode/design-md-global.php`, el snippet de WPCode).
+Contexto: los widgets V3 que hoy copian tablas de `theme.ts` (intro, cards-items, cards-items-carrusel, ponentes-testimonios, etc.) nacieron como V2/Astro; hay que adaptarlos al enfoque V3 (slots `--usil-*` generados desde `design.md`, no tablas `--e-global-color-*` propias por widget). Hoy ya lo hacen: carreras-facultades, acordeones-tabs, footer, save-the-date, thank-you.
 
 ## Widgets: registry, Visor y theming
 
@@ -119,8 +122,7 @@ Estado real: hoy cubre 3 de las 9 BU (`pregrado`, `pregrado-ejecutivo`, `institu
 - **`src/pages/index.astro`** es el "Visor" (UI Kit / storybook interno de desarrollo, no público). Por cada combinación widget × variante × modo renderiza una instancia dentro de un `<iframe>` propio apuntando a `widget-preview/[widget]/[variant]/[mode]` — es intencional: así los breakpoints `md:`/`lg:` de Tailwind ven el ancho real del iframe (controlado por el switcher Desktop/Tablet/Mobile), no el del documento contenedor. El editor de props del drawer edita el DOM dentro de cada iframe vía `contentDocument` (mismo origen, sin `postMessage`).
 - **`src/pages/widget-preview/[widget]/[variant]/[mode].astro`** es la ruta que sirve una sola instancia aislada; existe solo como infraestructura del Visor, no está pensada para visitarse ni linkearse directamente.
 - **`theme.ts`** (uno por widget) centraliza TODAS las clases Tailwind de color por `variant × mode` en un objeto tipado (`Record<Variant, Record<Mode, VariantTheme>>`) más un `baseClasses` compartido (tipografía/layout). Para cambiar un color de un widget: editar solo su `theme.ts`, nunca hardcodear clases de color en el `.astro`. Este es el patrón vigente en los widgets ya construidos; ver la sección `design.md` de arriba para el enfoque hacia el que se está migrando.
-- **`src/data/design-md/*.md` + `src/lib/design-md.ts`** — fuente estructurada de color+tipografía+roles por BU (ver sección `design.md` arriba). `src/pages/design-md-preview.astro` + `src/layouts/DesignMdPreviewLayout.astro` renderizan el visor de prueba.
-- **`src/migrar/`** guarda el HTML/JS/imágenes originales de V1 que todavía se están portando a componentes Astro — es referencia de migración, no se importa desde código nuevo. No confundir con `design-md/`, que sí es infraestructura activa.
+- **`src/migrar/`** guarda el HTML/JS/imágenes originales de V1 que todavía se están portando a componentes Astro — es referencia de migración, no se importa desde código nuevo.
 
 ## Convenciones de código
 
@@ -216,14 +218,14 @@ if (!landing) return Astro.redirect('/404');
 1. **Si es del IA app (preview aprobado)**: reconstruir la landing en WP + Astro según el preview
 2. **Si es un bug**: reproducir primero, después arreglar, después validar
 3. **Si es una feature nueva**: analizar impacto en design system, proponer approach, esperar OK antes de implementar
-4. **Si tenés dudas sobre el design system**: `src/styles/global.css` es la fuente de verdad de los tokens `bu-*` que consumen los widgets ya construidos (el histórico `src/v2/` vive en el repo padre `usil-widgets`, no en este checkout). Para theming nuevo, mirar primero `src/data/design-md/*.md` — es el enfoque en adopción, ver sección "`design.md` por BU" más arriba.
+4. **Si tenés dudas sobre el design system**: `src/styles/global.css` es la fuente de verdad de los tokens `bu-*` que consumen los widgets ya construidos (el histórico `src/v2/` vive en el repo padre `usil-widgets`, no en este checkout). Para theming nuevo, mirar primero `design/design-md/*.md` del repo `usil-widgets` — es el enfoque en adopción, ver sección "`design.md` por BU" más arriba.
 
 ## Glosario del proyecto
 
 - **BU (Business Unit)**: Unidad de Negocio. 9 definidas hoy con bloque `[data-bu]` en `global.css`: pregrado, pregrado-ejecutivo, instituto-de-emprendedores, posgrado, csir, siu, coloring-dreams, usil-paraguay, usil-corporativo. (`ejecutivo` y `emprendedores` sueltas aparecían en versiones previas del glosario pero no tienen bloque propio — antes de usarlas verificar si ya existen en `global.css`/`bu-colors.json`.)
 - **Design System V2**: Sistema basado en 5 colores por BU con tokens CSS variables — el mecanismo `data-bu` que usan tanto `bu-*`/`theme.ts` como `design.md`
 - **Token `bu-*`**: Variable CSS que cambia según la BU del `<body data-bu="...">` — origen de verdad para los widgets ya construidos
-- **`design.md` por BU**: Documento estructurado (`src/data/design-md/*.md`) con color (mismos 5 roles que `bu-*`) + tipografía + roles tipográficos por BU; enfoque de theming en adopción hacia adelante, hoy cubre 3 de 9 BU — ver sección "`design.md` por BU" arriba
+- **`design.md` por BU**: Documento estructurado (`design/design-md/*.md` en el repo `usil-widgets`) con color (mismos 5 roles que `bu-*`) + tipografía + roles tipográficos por BU; enfoque de theming en adopción hacia adelante, hoy cubre 3 de 9 BU — ver sección "`design.md` por BU" arriba
 - **Widget-level alias**: Token redirigible por BU (ej. `--bu-widget-card-bg`)
 - **Headless CMS**: WP usado solo como backend de datos, sin renderizar frontend
 - **IA App**: el chat/wizard que Marketing usa para solicitar landings — vive como plugin PHP dentro de WordPress en SiteGround (no una app externa con hosting propio). Motor de IA: **Google Gemini en dev** (tier gratis — ahí la confidencialidad no es un problema, evitar igual usar contenido real de Marketing) y **AWS Bedrock (Claude Haiku 4.5) en producción** — recomendación del equipo de Infraestructura por garantías de confidencialidad de datos (no se usa para entrenar modelos) y consolidación en AWS junto con S3/CloudFront. Login y roles son los nativos de WP. Ver `AI-LANDING-FLOW.md` para el flujo E2E completo de generación con IA
@@ -240,7 +242,8 @@ if (!landing) return Astro.redirect('/404');
 This project has a knowledge graph at graphify-out/ with god nodes, community structure, and cross-file relationships.
 
 Rules:
-- For codebase questions, first run `graphify query "<question>"` when graphify-out/graph.json exists. Use `graphify path "<A>" "<B>"` for relationships and `graphify explain "<concept>"` for focused concepts. These return a scoped subgraph, usually much smaller than GRAPH_REPORT.md or raw grep output.
+- When graphify-out/graph.json exists, run `graphify query "<question>"` before your first grep, search or source-file read for a codebase question, and put this rule in every subagent prompt that explores code. Read raw files only for lines the graph or an earlier read already located. Use `graphify path "<A>" "<B>"` for relationships and `graphify explain "<concept>"` for focused concepts. These return a scoped subgraph, usually much smaller than GRAPH_REPORT.md or raw grep output.
 - If graphify-out/wiki/index.md exists, use it for broad navigation instead of raw source browsing.
 - Read graphify-out/GRAPH_REPORT.md only for broad architecture review or when query/path/explain do not surface enough context.
 - After modifying code, run `graphify update .` to keep the graph current (AST-only, no API cost).
+- A committed graphify-out/graph.json is rewritten whole on every build, so a large diff to it in a pull request is expected. Do not flag it as churn or suggest skipping the graph rebuild or its hooks.
