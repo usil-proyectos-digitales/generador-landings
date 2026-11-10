@@ -27,3 +27,5 @@ Thumbs.db
 
 # Astro
 .astro/
+# graphify
+graphify-out/cache/
