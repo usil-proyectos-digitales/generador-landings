@@ -10,6 +10,22 @@
 >
 > Hay una versión a **8 horas/día** (ver el [artifact interactivo](https://claude.ai/code/artifact/b39b318b-f05f-4337-8832-2f6c88c1c941), con toggle 4h/8h) que comprime el mismo trabajo a **48 días hábiles**.
 
+> **Revisión 4 (02/11/2026, replanificación por retoma):** el ritmo real desde el inicio fue **8h/día** (arranque 06/10). Último commit: **vie 16/10/2026**, con B3 en curso: B3 empezó el 09/10 y se avanzó 6 de sus 19 días a 8h (= 12 de 37 a 4h). Se retoma el **lun 16/11/2026**. Se saltan 14–21 dic (vacación), 25 dic y 1 ene. Track A asumido no iniciado.
+>
+> | Tarea (8h/día) | Días | Fechas |
+> |---|---|---|
+> | B1, B2 | hechas | 6–8 oct |
+> | B3 hecho / restante | 6 / 13 | 9–16 oct / 16 nov – 2 dic |
+> | A1 / A2 (paralelo) | 3 / 3 | 16–18 nov / 19–23 nov |
+> | B4 | 4 | 3–8 dic |
+> | B5 | 3 | 9–11 dic |
+> | B6 – B8 | 3 / 1 / 3 | 22–24 dic / 28 dic / 29–31 dic |
+> | B9 – B12 | 2 / 2 / 1 / 2 | 4–5 ene / 6–7 ene / 8 ene / 11–12 ene |
+> | B13 | 5 | 13–19 ene |
+> | Marcha Blanca | 15 cal. | 20 ene – 3 feb 2027 |
+>
+> Camino crítico restante: **39 días hábiles a 8h** (termina 19 ene 2027). A **4h/día**: B3 restante 25 días (16 nov – 29 dic), B4 30 dic – 11 ene, …, B13 24 feb – 9 mar, Marcha Blanca 10–24 mar 2027; **74 días hábiles**. Las duraciones por tarea de las tablas de abajo no cambian; solo el calendario.
+
 ## El dato principal sigue siendo la duración, no fechas
 
 Igual que en v1, hay **dos tracks que corren en paralelo**:
